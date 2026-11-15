@@ -788,7 +788,7 @@ function dueList(){const t=today();return Object.entries(S.mistakes).filter(([,m
 function dueHTML(){
   const d=dueList();
   if(!d.length)return `<p class="empty">今天沒有要複習的錯題。<a href="#exam">新增錯題</a></p>`;
-  return `<div class="list">${d.slice(0,5).map(([id,m])=>`<div class="li">${sdot(m.sub)}<div class="grow">${esc((m.q||'').slice(0,40))}</div><span class="pill ${m.due<today()?'bad':'warn'}">${m.due<today()?'逾期':'今天'}</span></div>`).join('')}</div>
+  return `<div class="list">${d.slice(0,5).map(([id,m])=>`<div class="li">${mkDot(m.sub)}<div class="grow">${esc((m.q||'').slice(0,40))}</div><span class="pill ${m.due<today()?'bad':'warn'}">${m.due<today()?'逾期':'今天'}</span></div>`).join('')}</div>
   <div class="row sb" style="margin-top:10px"><span class="muted">共 ${d.length} 題</span><a class="btn" href="#exam" data-act="goReview">開始複習</a></div>`;
 }
 function nextStepsHTML(){
@@ -1009,7 +1009,11 @@ function weekReview(keys,A,subs){
 }
 
 /* ---------- exam view ---------- */
-let mkFilter='due',tEditing=false;
+let mkFilter='due',tEditing=false,mkSubEdit=false,mkSubAdding=false;
+const MK_DEF=[{id:'mk1',n:'閱讀',c:0},{id:'mk2',n:'聽力',c:3},{id:'mk3',n:'口說',c:2},{id:'mk4',n:'寫作',c:1},{id:'mk5',n:'其他',c:7}];
+function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:MK_DEF}
+function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_DEF.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
+const mkDot=id=>`<span class="dot" style="background:var(--c${mkSub(id).c})" title="${esc(mkSub(id).n)}"></span>`;
 const ENC=['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'];
 function encLine(p){if(T.running)return '專心作答中，每段結束都會響鈴提醒你。';if(T.left===0)return '完成了！給自己一點肯定，記得在下方記錄分數或錯題。';const d=Math.floor(Date.now()/864e5);return ENC[(d+T.seg)%ENC.length]}
 function vExam(){
@@ -1054,7 +1058,7 @@ function vExam(){
   </section>
   <section class="card" id="mistakes"><h2>錯題本 <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
     <div class="fields" style="margin-bottom:10px">
-      <label class="f">科目<select id="msS">${subjOptions('R')}</select></label>
+      <label class="f"><span class="row sb">科目<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:12px">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS"><option value="">（選擇科目）</option>${mkSubs().map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('')}<option value="__add">＋ 自填…</option></select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、法學、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
       <label class="f w2">題目或摘要<input id="msQ" type="text" placeholder="例：TPO 48 R2 Q7 修辭目的題"></label>
       <label class="f">錯因<select id="msC">${CAUSES.map(x=>`<option>${x}</option>`).join('')}</select></label>
       <label class="f" style="grid-column:1/-1">正解與學到什麼<textarea id="msA" rows="2" placeholder="下次看到這種題目要注意什麼"></textarea></label>
@@ -1062,7 +1066,7 @@ function vExam(){
     <div class="row sb" style="margin-bottom:14px"><button class="sec" data-act="msAdd">加入錯題本</button>
       <div class="legend">${Object.entries(causeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div></div>
     <div class="seg" style="margin-bottom:10px">${[['due','待複習 '+dueList().length],['all','全部 '+mlist.length],['master','已熟練']].map(([m,n])=>`<button data-act="msF" data-m="${m}" aria-pressed="${mkFilter===m}">${n}</button>`).join('')}</div>
-    <div class="list">${shown.length?shown.map(([id,m])=>`<div class="li" style="align-items:flex-start">${sdot(m.sub)}<div class="grow"><div><b>${esc(m.q)}</b> <span class="muted">${(m.causes||[]).join('、')}</span></div>${m.a?`<details><summary class="muted">看正解</summary><div class="qa">${esc(m.a)}</div></details>`:''}<div class="muted">第 ${m.stage+1}/${SRS.length+1} 輪・${m.due?'下次 '+fmtMD(m.due):'已熟練'}</div></div>
+    <div class="list">${shown.length?shown.map(([id,m])=>`<div class="li" style="align-items:flex-start">${mkDot(m.sub)}<div class="grow"><div><b>${esc(m.q)}</b> <span class="muted">${(m.causes||[]).join('、')}</span></div>${m.a?`<details><summary class="muted">看正解</summary><div class="qa">${esc(m.a)}</div></details>`:''}<div class="muted">第 ${m.stage+1}/${SRS.length+1} 輪・${m.due?'下次 '+fmtMD(m.due):'已熟練'}</div></div>
       ${m.due?`<button class="sm" data-act="msRev" data-id="${id}" data-ok="0">忘了</button><button class="sm sec" data-act="msRev" data-id="${id}" data-ok="1">記得</button>`:''}<button class="ghost sm" data-act="msDel" data-id="${id}" aria-label="刪除">×</button></div>`).join(''):`<p class="empty">${mkFilter==='due'?'今天沒有待複習的題目。':'這裡還是空的。'}</p>`}</div>
   </section>`;
 }
@@ -1361,9 +1365,12 @@ const A={
   tDefault:()=>{const d=DEF.timers.find(x=>x.id===T.pid);editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t&&d)t.segs=clone(d.segs);else if(!d){c.timers=clone(DEF.timers);T.pid='n1'}c.tv=2});T.seg=0;T.left=null;savT();toast(d?'已恢復預設時間':'已恢復全部預設');render()},
   exAdd:()=>{editCfg(c=>c.exams.push({id:rid(),name:'新的考試',date:''}));render()},
   exDel:el=>{if(!twoStep(el))return;editCfg(c=>c.exams.splice(+el.dataset.i,1));render()},
+  mkSubEditT:()=>{mkSubEdit=!mkSubEdit;mkSubAdding=false;render()},
+  mkSubDel:el=>{const id=el.dataset.id,t=mkSubs().find(x=>x.id===id);if(!t)return;editCfg(c=>{c.mkSubjects=mkSubs().filter(x=>x.id!==id);c.mkArchived=(c.mkArchived||[]).concat([t])});toast('已刪除「'+t.n+'」，舊的錯題仍保留');render()},
+  mkSubAdd:()=>{const n=$('#mkSubNew').value.trim();if(!n)return toast('先寫科目名稱');if(mkSubs().some(x=>x.n===n))return toast('已經有「'+n+'」');const id='mk'+rid();editCfg(c=>{c.mkSubjects=mkSubs().concat([{id,n,c:mkSubs().length%12}])});mkSubAdding=false;render();setTimeout(()=>{const sel=$('#msS');if(sel)sel.value=id},20)},
   mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:cfg().scale,note:$('#mkN').value.trim()};let any=false;scoreSpec(cfg().scale).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
-  msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:$('#msS').value,q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
+  msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:(($('#msS')||{}).value||'').replace('__add',''),q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
   msF:el=>{mkFilter=el.dataset.m;render()},
   msRev:el=>{const m=clone(S.mistakes[el.dataset.id]);const ok=el.dataset.ok==='1';m.hist=(m.hist||[]).concat([{d:today(),ok}]);if(ok){m.stage++;m.due=m.stage>=SRS.length?null:addDays(today(),SRS[m.stage])}else{m.stage=0;m.due=addDays(today(),1)}save('mistakes',el.dataset.id,m);render()},
   msDel:el=>{if(!twoStep(el))return;remove('mistakes',el.dataset.id);render()},
@@ -2164,6 +2171,7 @@ Object.assign(A,{
 Object.assign(C,{
   npType:el=>{const x=$('#npTypeX');x.hidden=el.value!=='other';if(!x.hidden)x.focus()},
   npMethod:el=>{const x=$('#npMethodX');x.hidden=el.value!=='custom';if(!x.hidden)x.focus()},
+  msS:el=>{if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
   examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()||'考試準備'})},
   pjF:el=>{editProj(p=>{p[el.dataset.f]=el.value});render()},
   stF:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id)[el.dataset.f]=el.value});if(el.dataset.f!=='name')render()},

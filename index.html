@@ -3,19 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="番茄鐘、月曆、統計、考試衝刺、論文地圖、覺察日記、靜心與自訂頁面的個人讀書工作台。資料只存在你的瀏覽器。">
+<meta name="description" content="日課：番茄鐘、月曆、統計、論文地圖、覺察日記與靜心，每天一點，日積月累。資料只存在你的瀏覽器。">
 <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="讀書工作台">
+<meta name="apple-mobile-web-app-title" content="日課">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script>if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>讀書工作台</title>
+<title>日課</title>
 </head>
 <body>
 
@@ -55,6 +56,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .app{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:100%}
 nav.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;padding:20px 12px 20px max(12px,env(safe-area-inset-left,0px));border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;background:var(--sunk)}
 .brand{font-family:var(--f-display);font-weight:700;font-size:18px;padding:4px 10px 16px;letter-spacing:.02em}
+.brand{display:flex;align-items:center;gap:10px}
+.brand>span{font-size:22px;line-height:1.25;letter-spacing:.08em}
+.brand small{letter-spacing:.02em}
+.blogo{width:36px;height:36px;border-radius:9px;flex:none}
 .brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.04em}
 nav.rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500}
 nav.rail a:hover{background:var(--surface)}
@@ -435,7 +440,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
 
 <div class="app">
   <nav class="rail" id="rail" aria-label="主要區塊">
-    <div class="brand">讀書工作台<small>讀書・研究・生活</small></div>
+    <div class="brand"><img class="blogo" src="data:image/png;base64,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" alt="" width="36" height="36"><span>日課<small title="每天一點，日積月累">Daily Practice</small></span></div>
     <div id="navLinks" class="navlinks"></div>
     <button class="sharebtn" data-act="share">複製連結・分享</button>
     <button class="ghost sm fbbtn" data-act="fbOpen">問題回報</button>
@@ -1415,7 +1420,7 @@ const A={
   csDel:el=>{const cs=A.csRead();cs.secs.splice(+el.dataset.i,1);editCfg(c=>{c.customScore=cs});render()},
   csSave:()=>{const cs=A.csRead();editCfg(c=>{c.customScore=cs;c.scale='custom'});scaleEditing=false;toast('已儲存計分方式');render()},
   export:async()=>{const data=JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1);
-    if(await saveFile(`讀書工作台備份-${today()}.json`,data,'application/json',`studydesk-backup-${today()}.json`)){lsSet('sd-lastexport',today());toast('已匯出備份');render()}},
+    if(await saveFile(`日課備份-${today()}.json`,data,'application/json',`daily-practice-backup-${today()}.json`)){lsSet('sd-lastexport',today());toast('已匯出備份');render()}},
 };
 const C={
   pfield:el=>{P[el.dataset.k]=el.value;if(el.dataset.k==='proj')P.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';savP();if(el.dataset.k!=='task')render()},
@@ -1476,13 +1481,13 @@ function fbAdminHTML(){
 }
 function openShare(){
   if(STANDALONE){$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="box">
-    <h2 id="shT">分享讀書工作台</h2>
+    <h2 id="shT">分享日課</h2>
     <p>把網址傳給朋友，對方打開就有一份<b>自己的</b>工作台，不需要註冊。每個人的紀錄都存在自己的瀏覽器裡，彼此看不到。</p>
     <div class="row"><input id="shUrl" type="text" readonly value="${esc(SHARE_URL)}" style="flex:1"><button class="pri" data-act="copyLink">複製網址</button></div>
     <p class="muted">提醒對方：資料只存在那台電腦的瀏覽器，記得定期到「設定」匯出備份。</p>
     <div class="row sb"><span></span><button data-act="recCancel">關閉</button></div></div></div>`;return}
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="box">
-    <h2 id="shT">分享讀書工作台</h2>
+    <h2 id="shT">分享日課</h2>
     <p>把連結傳給讀書夥伴，對方打開就有一份<b>自己的</b>工作台。每個人的番茄紀錄、日記和「我的節奏」報告都是私人的，彼此看不到。</p>
     <div class="row"><input id="shUrl" type="text" readonly value="${SHARE_URL}" style="flex:1"><button class="pri" data-act="copyLink">複製連結</button></div>
     <div class="next"><b>讓對方能使用的設定（只有擁有者能改）</b>

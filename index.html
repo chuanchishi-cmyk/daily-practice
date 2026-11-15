@@ -237,6 +237,13 @@ button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;g
 .park{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
 .parkit.done .grow{color:var(--muted);text-decoration:line-through}
 .whybox{padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.fields>label{min-width:0}
+input[type=date],input[type=time]{width:100%;min-width:0;max-width:100%}
+.mdone{padding:14px 16px;border:1px solid var(--accent);border-radius:12px;background:var(--sunk)}
+.mdone label.f:has(.stepn){display:block}.mdone label.f:has(.stepn) textarea{display:block;width:100%;margin-top:4px}
+.mdue{margin-bottom:16px;border-left:4px solid var(--accent)}
+.stepn{display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--accent);color:var(--surface);font-size:calc(11px * var(--fs,1));margin-right:6px}
+.direct{margin-top:10px}.direct summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -879,10 +886,13 @@ function widgetBody(w,k){
   if(w==='week'){const s0=weekStart(k),ks=Array.from({length:7},(_,i)=>addDays(s0,i));const rows=ks.map(x=>({key:x,label:'週'+wdName(x),parts:[{c:0,v:(day(x).sessions||[]).reduce((a,y)=>a+(+y.min||0),0),n:fmtMD(x)}]}));return [`本週專注 ${XL('統計','stats','data-m="week"')}`,stackBars(rows,{h:150,marker:k})];}
   return ['',''];
 }
+function meetDueHTML(){if(!isOn('plan'))return '';const due=Object.keys(S.projects||{}).map(id=>({id,p:proj(id)})).filter(x=>meetEnded(x.p));
+  return due.map(({id,p})=>`<section class="card mdue"><div class="row sb"><div><b>和${esc(p.next.who||'指導教授')}的會談結束了</b><div class="muted">${esc(p.name)}・${fmtMD(p.next.date)} ${esc(p.next.time||'')}。趁記憶清楚，花五分鐘記下重點和下一步。</div></div><button class="sec" data-act="goMeet" data-id="${esc(id)}">記錄會談</button></div></section>`).join('')}
 function vToday(){
   const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0),ws=todayWidgets();
   const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
+  ${meetDueHTML()}
   <div class="grid2">
     <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}</section>
     <div class="stack">
@@ -1198,6 +1208,17 @@ function dayActivity(pid,k){
   if((day(k).sessions||[]).some(s=>s.proj===pid))n++;
   return n;
 }
+const MAIL_TYPO={'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','gmail.cm':'gmail.com','hotmial.com':'hotmail.com','hotmail.con':'hotmail.com','yahooo.com':'yahoo.com','yaho.com':'yahoo.com','outlook.con':'outlook.com','ntu.edu.t':'ntu.edu.tw'};
+function mailCheck(e){if(!e)return {ok:true};if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))return {ok:false,msg:'Email 格式看起來不對，請再檢查一次。'};const [u,d]=e.split('@'),fx=MAIL_TYPO[d.toLowerCase()];return fx?{ok:false,sug:u+'@'+fx,msg:`是不是打成了 ${d}？`}:{ok:true}}
+function meetEnd(n){if(!n||!n.date)return null;return new Date(new Date(`${n.date}T${n.time||'10:00'}`).getTime()+(+n.dur||60)*60000)}
+function meetEnded(p){const e=meetEnd(p.next);return !!e&&Date.now()>=e.getTime()}
+function mailBody(p,n){const pr=meetPrepText(p);return `${n.who==='指導教授'?'老師':'您'}好：\n\n想和您約 ${fmtMD(n.date)}（週${wdName(n.date)}）${n.time||''}，大約 ${n.dur||60} 分鐘，以${n.mode||'面談'}的方式討論「${p.name}」的進度。若這個時間不方便，也請告訴我其他可以的時段。\n${pr?'\n'+pr+'\n':''}\n謝謝！`}
+function gcalUrlN(p,n){
+  if(!n.date)return '';
+  const st=new Date(`${n.date}T${n.time||'10:00'}`),en=new Date(st.getTime()+(+n.dur||60)*60000);
+  const f=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||'指導教授'}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p)||'（日課・論文地圖建立）')+(n.email?'&add='+encodeURIComponent(n.email):'')+(n.mode==='面談'&&n.place?'&location='+encodeURIComponent(n.place):'');
+}
 function gcalUrl(p){
   const n=p.next||{};if(!n.date)return '';
   const st=new Date(`${n.date}T${n.time||'10:00'}`),en=new Date(st.getTime()+(+n.dur||60)*60000);
@@ -1309,46 +1330,67 @@ function quotesHTML(p){
   <div class="row sb" style="margin:10px 0 16px"><button class="sec" data-act="quoteAdd">加入書摘</button><input id="qSearch" type="search" data-in="qSearch" value="${esc(quoteQ)}" placeholder="搜尋出處、作者、內容、標籤" style="width:260px"></div>
   <div class="quotes">${list.map(([id,x])=>`<article class="quote"><blockquote>${esc(x.text)}</blockquote>${x.thought?`<p class="qa"><b>想法：</b>${esc(x.thought)}</p>`:''}<div class="row sb"><span class="muted">${esc(x.au)}${x.au&&x.src?'，':''}${esc(x.src)}${x.pg?'，'+esc(x.pg):''}${x.tag?` <span class="pill mut">${esc(x.tag)}</span>`:''}</span><span class="row"><button class="ghost sm" data-act="quoteCopy" data-id="${id}">複製</button><button class="ghost sm" data-act="quoteDel" data-id="${id}" aria-label="刪除">×</button></span></div></article>`).join('')||`<p class="empty">${all.length?'找不到符合的書摘。':'還沒有書摘。整理一則書摘也是一個小成果。'}</p>`}</div>`;
 }
+let mtOpen=false;
+function mtFormHTML(n,guided){
+  const who=n.who||'指導教授',mode=n.mode||'面談',T=who==='指導教授'||who==='口試委員'?'老師':'對方';
+  return `<div class="fields" style="grid-template-columns:1fr 1fr 1fr">
+      <label class="f">日期<input id="mtD" type="date" value="${esc(n.date||today())}"></label>
+      <label class="f">對象<select id="mtW">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option${x===who?' selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="f">形式<select id="mtM">${['面談','線上會議','電話','Email'].map(x=>`<option${x===mode?' selected':''}>${x}</option>`).join('')}</select></label>
+    </div>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">1</span>':''}這次討論了什麼<textarea id="mtP" rows="2" placeholder="例：第二章架構、史料取捨"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">2</span>':''}${T}說了什麼<textarea id="mtS" rows="3" placeholder="建議、意見、推薦的書。趁現在記憶清楚，盡量照原意記下"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">3</span>':''}決定了什麼<textarea id="mtX" rows="2" placeholder="例：第三章改成以時間排序"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">4</span>':''}接下來要做什麼（一行一項，會加入會前清單）<textarea id="mtT" rows="3" placeholder="補讀某某的研究&#10;改寫第二章第一節"></textarea></label>
+    <label class="row" style="margin-top:8px;font-size:calc(13px * var(--fs,1))"><input id="mtTop" type="checkbox" ${guided?'checked':''}> 把第一項放進今天的三件事，趁熱開始</label>
+    <div class="row" style="margin-top:10px"><button class="sec" data-act="mtSave">儲存紀錄${guided?'，接著安排下一步':''}</button>${guided?'':'<button class="ghost sm" data-act="mtToggle">收起</button>'}</div>`;
+}
 function meetHTML(p){
-  const n=p.next||{},ms=(p.meetings||[]).slice().sort((a,b)=>a.date<b.date?1:-1),todos=openTodos(p);
+  const n=p.next||{},ms=(p.meetings||[]).slice().sort((a,b)=>a.date<b.date?1:-1),todos=openTodos(p),ended=meetEnded(p),ct=p.contacts||{};
+  const who=n.who||'指導教授',email=n.email||ct[who]||'';
+  if(ended)return `<section class="mdone"><p class="eyebrow">會談結束了</p><h3 style="margin:0 0 4px">和${esc(who)}的會談（${fmtMD(n.date)} ${esc(n.time||'')}）結束了</h3>
+    <p class="muted" style="margin:0 0 10px">趁記憶還清楚，花五分鐘記下四件事。存好後，會帶你把待辦排進接下來的行程。</p>${mtFormHTML(n,true)}
+    <p class="muted" style="margin:10px 0 0">會談改期或取消了？<button class="ghost sm" data-act="nxClear">清除這次預約</button></p></section>
+    <h3 style="margin-top:20px">過去的會談 <span class="muted">${ms.length} 次</span></h3><div class="meetlog">${meetLogHTML(ms)}</div>`;
   return `<div class="grid2" style="margin:0">
     <div>
-      <h3 style="margin-top:0">安排下次會談</h3>
+      <h3 style="margin-top:0">${p.justMet?'<span class="pill good">下一步</span> 下次什麼時候見？':'安排下次會談'}</h3>
       <div class="fields" style="grid-template-columns:1fr 1fr 1fr">
         <label class="f">日期<input id="nxD" type="date" value="${esc(n.date||'')}"></label>
         <label class="f">時間<input id="nxT" type="time" value="${esc(n.time||'10:00')}"></label>
         <label class="f">長度（分）<input id="nxL" type="number" min="15" step="15" value="${esc(n.dur||60)}"></label>
-        <label class="f">對象<select id="nxW">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option${n.who===x?' selected':''}>${x}</option>`).join('')}</select></label>
+        <label class="f">對象<select id="nxW" data-ch="nxWho">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option${who===x?' selected':''}>${x}</option>`).join('')}</select></label>
         <label class="f">形式<select id="nxM">${['面談','線上會議','電話'].map(x=>`<option${n.mode===x?' selected':''}>${x}</option>`).join('')}</select></label>
-        <label class="f">對方 Email（選填）<input id="nxE" type="email" value="${esc(n.email||'')}" placeholder="填寫會寄出邀請"></label>
+        <label class="f">對方 Email（選填）<input id="nxE" type="email" inputmode="email" autocomplete="email" value="${esc(email)}" placeholder="name@example.com"></label>
       </div>
-      <div class="row" style="margin:8px 0"><label class="row" style="font-size:calc(13px * var(--fs,1))"><input id="nxMeet" type="checkbox" ${n.mode==='線上會議'||n.meetOn?'checked':''}> 建立 Google Meet 連結</label><label class="row" style="font-size:calc(13px * var(--fs,1))"><input id="nxRem" type="checkbox" checked> 提醒：前一天、前一小時</label></div>
-      <div class="row">${STANDALONE?'<button class="sec" data-act="nxOnly">儲存</button>':'<button class="sec" data-act="nxSave">儲存並加入 Google 日曆</button><button class="ghost sm" data-act="nxOnly">只儲存</button>'}</div>
-      <p class="muted" id="gcalMsg" style="margin:8px 0 0">${n.eventLink?`已加入日曆。<a href="${esc(n.eventLink)}" target="_blank" rel="noopener">開啟日曆活動</a>${n.meet?`・<a href="${esc(n.meet)}" target="_blank" rel="noopener">Meet 連結</a>`:''}`:n.date?`也可以<a href="${esc(gcalUrl(p))}" target="_blank" rel="noopener">在 Google 日曆網頁新增</a>（提醒和 Meet 需在網頁上設定）。`:'會前清單會自動寫進日曆活動的說明。'}</p>
+      <p class="muted" id="mailWarn" style="margin:6px 0 0"></p>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+        <button class="sec" data-act="nxGcal">${IC_CAL}到 Google 日曆確認</button>
+        <button data-act="nxMail" data-via="gmail">用 Gmail 寫信</button>
+        <button data-act="nxMail" data-via="app">用郵件 App</button>
+        <button class="ghost sm" data-act="nxOnly">只記下時間</button>
+      </div>
+      <p class="muted" style="margin:6px 0 0">會打開 Google 日曆或郵件，時間、主旨和會前清單都已經填好。收件人和內容在那裡看得到，確認無誤再按「儲存」或「傳送」，就不會寄錯人。要開線上會議，在 Google 日曆裡按「新增 Google Meet 視訊會議」。</p>
+      ${STANDALONE?'':`<details class="direct"><summary class="muted">不想跳出去？直接在這裡加入日曆</summary>
+        <div class="row" style="margin:8px 0"><label class="row" style="font-size:calc(13px * var(--fs,1))"><input id="nxMeet" type="checkbox" ${n.mode==='線上會議'||n.meetOn?'checked':''}> 建立 Google Meet 連結</label><label class="row" style="font-size:calc(13px * var(--fs,1))"><input id="nxRem" type="checkbox" checked> 提醒：前一天、前一小時</label></div>
+        <button class="ghost sm" data-act="nxConfirm">檢查後加入</button><span class="muted"> 送出前會再讓你確認一次收件人。</span></details>`}
+      <p class="muted" id="gcalMsg" style="margin:8px 0 0">${n.eventLink?`已加入日曆。<a href="${esc(n.eventLink)}" target="_blank" rel="noopener">開啟日曆活動</a>${n.meet?`・<a href="${esc(n.meet)}" target="_blank" rel="noopener">Meet 連結</a>`:''}`:n.date?`已記下 ${fmtMD(n.date)} ${esc(n.time||'')} 的會談。會談結束後，這裡會跳出紀錄表。`:''}</p>
       <h3>會前清單 <span class="muted">下次面談前要完成、要問的事</span></h3>
       <div class="list">${todos.map(x=>`<label class="li"><input type="checkbox" data-ch="todoChk" data-m="${x.m?x.m.id:''}" data-id="${x.t.id}"><span class="grow">${esc(x.t.t)}</span>${x.m?`<span class="muted num">${fmtMD(x.m.date)} 會談</span>`:''}<button class="ghost sm" data-act="todoToStep" data-m="${x.m?x.m.id:''}" data-id="${x.t.id}">轉成步驟</button></label>`).join('')||'<p class="empty">沒有未完成的事項。</p>'}</div>
-      <div class="row" style="margin-top:6px"><input id="prepTxt" type="text" placeholder="新增：例如想問老師的問題" style="flex:1"><button class="sm" data-act="prepAdd">加入</button></div>
+      <div class="row" style="margin-top:6px"><input id="prepTxt" type="text" placeholder="例：想問老師的問題、要先寄的章節" style="flex:1"><button class="sm" data-act="prepAdd">加入</button></div>
     </div>
     <div>
-      <h3 style="margin-top:0">會談紀錄表</h3>
-      <div class="fields" style="grid-template-columns:1fr 1fr 1fr">
-        <label class="f">日期<input id="mtD" type="date" value="${today()}"></label>
-        <label class="f">對象<select id="mtW">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option>${x}</option>`).join('')}</select></label>
-        <label class="f">形式<select id="mtM">${['面談','線上會議','電話','Email'].map(x=>`<option>${x}</option>`).join('')}</select></label>
-      </div>
-      <label class="f" style="margin-top:8px">這次討論了什麼<textarea id="mtP" rows="2" placeholder="例：第二章架構、史料取捨"></textarea></label>
-      <label class="f" style="margin-top:8px">老師說了什麼<textarea id="mtS" rows="3" placeholder="建議、意見、推薦的書，盡量照原意記下"></textarea></label>
-      <label class="f" style="margin-top:8px">決定了什麼<textarea id="mtX" rows="2" placeholder="例：第三章改成以時間排序"></textarea></label>
-      <label class="f" style="margin-top:8px">下次面談前要做（一行一項，會加入會前清單）<textarea id="mtT" rows="3" placeholder="補讀某某的研究&#10;改寫第二章第一節"></textarea></label>
-      <div style="margin-top:8px"><button class="sec" data-act="mtSave">儲存紀錄</button></div>
+      <h3 style="margin-top:0">會談紀錄</h3>
+      ${mtOpen?mtFormHTML({},false):`<p class="muted" style="margin:0 0 10px">預約的會談結束後，這裡會自動跳出紀錄表，引導你記下重點、安排下一步。沒有預約的討論（走廊上遇到、Email 往來）也可以補記。</p><button class="ghost sm" data-act="mtToggle">＋ 補記一次會談</button>`}
     </div>
   </div>
   <h3 style="margin-top:20px">過去的會談 <span class="muted">${ms.length} 次</span></h3>
-  <div class="meetlog">${ms.map(m=>`<details class="mrec"${ms[0]===m?' open':''}><summary><span class="num">${fmtMD(m.date)}</span> 與${esc(m.who||'')}・${esc(m.mode||'')}<span class="muted">${(m.todo||[]).filter(t=>!t.done).length?'・'+(m.todo||[]).filter(t=>!t.done).length+' 項待辦':''}</span></summary>
+  <div class="meetlog">${meetLogHTML(ms)}</div>`;
+}
+function meetLogHTML(ms){return ms.map(m=>`<details class="mrec"${ms[0]===m?' open':''}><summary><span class="num">${fmtMD(m.date)}</span> 與${esc(m.who||'')}・${esc(m.mode||'')}<span class="muted">${(m.todo||[]).filter(t=>!t.done).length?'・'+(m.todo||[]).filter(t=>!t.done).length+' 項待辦':''}</span></summary>
     <div class="mbody">${m.points?`<div><b>討論</b><p class="qa">${esc(m.points)}</p></div>`:''}${m.said?`<div><b>老師說了</b><p class="qa">${esc(m.said)}</p></div>`:''}${m.decided?`<div><b>決定</b><p class="qa">${esc(m.decided)}</p></div>`:''}
     ${(m.todo||[]).length?`<div><b>會後待辦</b>${m.todo.map(t=>`<label class="row" style="font-size:calc(13px * var(--fs,1))"><input type="checkbox" data-ch="todoChk" data-m="${m.id}" data-id="${t.id}" ${t.done?'checked':''}> <span style="${t.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.t)}</span></label>`).join('')}</div>`:''}
-    <div><button class="ghost sm" data-act="mtDel" data-id="${m.id}">刪除這次紀錄</button></div></div></details>`).join('')||'<p class="empty">每次見面後花五分鐘填寫，下次見面前就不會忘記老師說過什麼。</p>'}</div>`;
-}
+    <div><button class="ghost sm" data-act="mtDel" data-id="${m.id}">刪除這次紀錄</button></div></div></details>`).join('')||'<p class="empty">每次見面後花五分鐘填寫，下次見面前就不會忘記老師說過什麼。</p>'}
 /* ---------- journal view ---------- */
 let jDay=today();
 /* ---------- prefs view ---------- */
@@ -1760,6 +1802,7 @@ function optBtns(qid,opts,max){const cur=QZ.a[qid];return `<div class="opts${max
 function qBlock(n,qid,q,opts,ex,max){return `<div class="qq" id="q_${qid}"><div class="qt"><span class="num muted">${n}</span> ${esc(q)}</div>${ex?`<div class="ex">${esc(ex)}</div>`:''}${optBtns(qid,opts,max)}</div>`}
 const eqBlock=(n,id,opts)=>qBlock(n,id,EQ2[id].q,opts||EQ2[id].o,EQ2[id].ex,EQ2[id].max);
 function timeSel(n,qid,q,opts,hint){return `<div class="qq" id="q_${qid}"><label class="qt" for="ts_${qid}"><span class="num muted">${n}</span> ${esc(q)}</label>${hint?`<div class="ex">${esc(hint)}</div>`:''}<select id="ts_${qid}" data-ch="qsel" data-q="${qid}"><option value="">選擇時間</option>${opts.map(m=>`<option value="${m}"${+QZ.a[qid]===m?' selected':''}>${hm(m)}${m===opts[opts.length-1]?' 或更晚':''}</option>`).join('')}</select></div>`}
+const IC_CAL='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
 const IC_PLAY='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 const IC_PAUSE='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
 const playLbl=(run,start)=>run?IC_PAUSE+'<span>暫停</span>':IC_PLAY+'<span>'+start+'</span>';
@@ -2297,7 +2340,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -2313,7 +2356,9 @@ Object.assign(IN,{prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]
 /* ---------- plan actions ---------- */
 function findStr(o,re,d=0){if(d>6||o==null)return null;if(typeof o==='string')return re.test(o)?o:null;if(typeof o==='object'){for(const v of Object.values(o)){const r=findStr(v,re,d+1);if(r)return r}}return null}
 function editStep(st,id,fn){editProj(p=>{const s=p.stages.find(x=>x.id===st);const x=s&&s.steps.find(y=>y.id===id);if(x)fn(x,s,p)})}
-function readNext(){return {date:$('#nxD').value,time:$('#nxT').value||'10:00',dur:+$('#nxL').value||60,who:$('#nxW').value,mode:$('#nxM').value,email:$('#nxE').value.trim(),meetOn:$('#nxMeet').checked}}
+function readNext(){const mt=$('#nxMeet');return {date:$('#nxD').value,time:$('#nxT').value||'10:00',dur:+$('#nxL').value||60,who:$('#nxW').value,mode:$('#nxM').value,email:$('#nxE').value.trim(),meetOn:mt?mt.checked:false}}
+function nxCheck(n,needDate){if(needDate&&!n.date){toast('先選日期');return false}const c=mailCheck(n.email),w=$('#mailWarn');if(!c.ok){if(w)w.innerHTML=`<span style="color:var(--warn,#b45309)">${esc(c.msg)}</span>${c.sug?` <button class="sm" data-act="nxFixMail" data-v="${esc(c.sug)}">改成 ${esc(c.sug)}</button>`:''}`;return false}if(w)w.textContent='';return true}
+function nxKeep(n){editProj(p=>{p.next=Object.assign({},p.next&&p.next.date===n.date&&p.next.time===n.time?p.next:{},n);if(n.email){p.contacts=p.contacts||{};p.contacts[n.who]=n.email}delete p.justMet})}
 async function addToGCal(){
   const n=readNext();if(!n.date)return toast('先選日期');
   editProj(p=>{p.next=Object.assign({},p.next&&p.next.date===n.date&&p.next.time===n.time?p.next:{},n)});render();
@@ -2363,13 +2408,31 @@ Object.assign(A,{
   quoteAdd:()=>{const text=$('#qText').value.trim();if(!text)return toast('先貼上摘錄內容');save('quotes',rid(),{proj:curProj,src:$('#qSrc').value.trim(),au:$('#qAu').value.trim(),pg:$('#qPg').value.trim(),tag:$('#qTag').value.trim(),text,thought:$('#qTh').value.trim(),d:today(),at:new Date().toISOString()});toast('已加入書摘');render()},
   quoteDel:el=>{if(!twoStep(el))return;remove('quotes',el.dataset.id);render()},
   quoteCopy:async el=>{const x=S.quotes[el.dataset.id];const t=`${x.text}（${[x.au,x.src,x.pg].filter(Boolean).join('，')}）`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
-  nxSave:addToGCal,
+  nxSave:()=>{closeModal();addToGCal()},
+  nxGcal:()=>{const n=readNext();if(!nxCheck(n,true))return;const url=gcalUrlN(proj(curProj),n);window.open(url,'_blank','noopener');nxKeep(n);render()},
+  nxMail:el=>{const n=readNext();if(!n.email){toast('先填對方的 Email');const e=$('#nxE');e&&e.focus();return}if(!nxCheck(n,false))return;const p=proj(curProj),su=`${p.name}｜會談時間${n.date?'（'+fmtMD(n.date)+'）':''}`,bd=mailBody(p,n.date?n:Object.assign({},n,{date:today()}));
+    const url=el.dataset.via==='gmail'?'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(n.email)+'&su='+encodeURIComponent(su)+'&body='+encodeURIComponent(bd):'mailto:'+encodeURIComponent(n.email)+'?subject='+encodeURIComponent(su)+'&body='+encodeURIComponent(bd);
+    if(el.dataset.via==='gmail')window.open(url,'_blank','noopener');else location.href=url;if(n.date)nxKeep(n)},
+  nxFixMail:el=>{const e=$('#nxE');if(e){e.value=el.dataset.v;$('#mailWarn').textContent='已更正'}},
+  nxConfirm:()=>{const n=readNext();if(!nxCheck(n,true))return;const p=proj(curProj),rem=$('#nxRem').checked;
+    $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="cfT"><div class="box"><h2 id="cfT">確認後加入 Google 日曆</h2>
+      <div class="list"><div class="li"><span class="muted" style="width:64px">活動</span><span class="grow">${esc(p.name)}｜與${esc(n.who)}會談</span></div>
+      <div class="li"><span class="muted" style="width:64px">時間</span><span class="grow">${fmtMD(n.date)}（週${wdName(n.date)}）${esc(n.time)}，${n.dur} 分鐘</span></div>
+      <div class="li"><span class="muted" style="width:64px">邀請</span><span class="grow">${n.email?`<b style="font-size:calc(15px * var(--fs,1))">${esc(n.email)}</b><div class="muted">對方會收到 Google 日曆的邀請信。請確認這個地址正確。</div>`:'不邀請任何人，只加到你自己的日曆'}</span></div>
+      <div class="li"><span class="muted" style="width:64px">其他</span><span class="grow">${n.meetOn?'建立 Meet 連結':'不建立 Meet 連結'}・${rem?'前一天、前一小時提醒':'使用日曆預設提醒'}</span></div></div>
+      <div class="row sb"><button class="ghost" data-act="recCancel">返回修改</button><button class="pri" data-act="nxSave">${n.email?'確認，加入並寄出邀請':'確認，加入日曆'}</button></div></div></div>`},
+  nxClear:()=>{editProj(p=>{p.next=null});toast('已清除這次預約');render()},
+  mtToggle:()=>{mtOpen=!mtOpen;render()},
+  goMeet:el=>{curProj=el.dataset.id;planNew=false;planTab='meet';location.hash='plan';render()},
   nxOnly:()=>{const n=readNext();if(!n.date)return toast('先選日期');editProj(p=>{p.next=Object.assign({},p.next,n)});toast('已儲存');render()},
   prepAdd:()=>{const t=$('#prepTxt').value.trim();if(!t)return;editProj(p=>{p.prep=p.prep||[];p.prep.push({id:rid(),t,done:false})});render()},
   todoToStep:el=>{const p0=proj(curProj),st=curStageOf(curProj);if(!st)return;const list=el.dataset.m?(p0.meetings.find(m=>m.id===el.dataset.m)||{}).todo:p0.prep;const t=(list||[]).find(x=>x.id===el.dataset.id);if(!t)return;
     editProj(p=>{p.stages.find(s=>s.id===st.id).steps.push({id:rid(),t:t.t,done:false,due:''});const l=el.dataset.m?p.meetings.find(m=>m.id===el.dataset.m).todo:p.prep;l.find(x=>x.id===t.id).done=true});toast('已加到「'+st.name+'」');render()},
   mtSave:()=>{const m={id:rid(),date:$('#mtD').value||today(),who:$('#mtW').value,mode:$('#mtM').value,points:$('#mtP').value.trim(),said:$('#mtS').value.trim(),decided:$('#mtX').value.trim(),todo:$('#mtT').value.split('\n').map(s=>s.trim()).filter(Boolean).map(t=>({id:rid(),t,done:false}))};
-    if(!m.points&&!m.said&&!m.decided&&!m.todo.length)return toast('至少填一欄');editProj(p=>{p.meetings=p.meetings||[];p.meetings.push(m);if(p.next&&p.next.date&&p.next.date<=m.date)p.next=null});toast('已儲存會談紀錄');render()},
+    if(!m.points&&!m.said&&!m.decided&&!m.todo.length)return toast('至少填一欄');const toTop=$('#mtTop')&&$('#mtTop').checked&&m.todo[0];
+    editProj(p=>{p.meetings=p.meetings||[];p.meetings.push(m);if(p.next&&p.next.date&&p.next.date<=m.date){p.next={who:p.next.who,mode:p.next.mode,dur:p.next.dur,time:p.next.time,email:p.next.email};p.justMet=true}});
+    if(toTop)editDay(today(),d=>{const t=d.j.top3=d.j.top3||[];let i=[0,1,2].find(i=>!(t[i]&&t[i].t));if(i===undefined)return;t[i]={t:m.todo[0].t,done:false}});
+    mtOpen=false;toast(toTop?'已儲存，第一項已放進今天的三件事':'已儲存會談紀錄');render()},
   mtDel:el=>{if(!twoStep(el))return;editProj(p=>{p.meetings=p.meetings.filter(m=>m.id!==el.dataset.id)});render()}
 });
 Object.assign(C,{

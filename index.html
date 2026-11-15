@@ -208,6 +208,17 @@ nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--
 .callout{background:var(--sunk);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0}
 .guide ul{margin:0;padding-left:18px}
 .likert.v6 button{width:40px}
+.tagpick{display:flex;flex-direction:column;gap:6px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tagc{padding:5px 11px;border-radius:999px;font-size:13px;background:var(--bg);border-color:var(--line);display:inline-flex;align-items:center;gap:5px}
+.tagc::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--tc,var(--muted))}
+.tagc.add::before{display:none}
+.tagc.add{border-style:dashed;color:var(--muted)}
+.tagc.on{background:color-mix(in srgb,var(--tc) 16%,var(--surface));border-color:var(--tc);font-weight:600}
+.tagc .pj{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.widgets{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px;align-items:start}
+.widget.editing{border-style:dashed}
+.wtools{margin-left:auto;display:inline-flex;gap:2px}
 .xlink{margin-left:auto;font-size:12px;font-weight:400;color:var(--focus);text-decoration:none;white-space:nowrap}
 .xlink:hover{text-decoration:underline}
 h3 .xlink{margin-left:8px}
@@ -436,9 +447,9 @@ function toast(t){const el=document.createElement('div');el.className='toast';el
 /* ---------- defaults ---------- */
 const DEF={
   subjects:[
-    {id:'R',name:'閱讀',c:0,unit:'篇'},{id:'L',name:'聽力',c:3,unit:'段'},
-    {id:'S',name:'口說',c:2,unit:'題'},{id:'W',name:'寫作',c:1,unit:'篇'},
-    {id:'T',name:'論文',c:4,unit:'字'}],
+    {id:'R',name:'托福閱讀',c:0,unit:'篇'},{id:'L',name:'托福聽力',c:3,unit:'段'},
+    {id:'S',name:'托福口說',c:2,unit:'題'},{id:'W',name:'托福寫作',c:1,unit:'篇'},
+    {id:'T',name:'論文',c:4,unit:'頁'},{id:'P',name:'專案進度',c:5,unit:''},{id:'M',name:'專注靜心',c:9,unit:'分'}],
   pomo:{work:25,short:5,long:15,every:4},
   counters:[{id:'fix',name:'訂正錯題',goal:5,step:1},{id:'drill',name:'完成練習題',goal:20,step:5},{id:'hit',name:'練習達標次數',goal:3,step:1}],
   exams:[{id:'toefl',name:'托福 TOEFL',date:''}],
@@ -482,7 +493,7 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[];
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);if((m.subjects||[]).map(x=>x.name).join('|')==='閱讀|聽力|口說|寫作|論文')c.subjects=clone(DEF.subjects);const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
 function persistLocal(){lsSet(LKEY,S)}
 const wq={};
@@ -579,7 +590,10 @@ function render(){
 }
 
 /* ---------- subjects / small parts ---------- */
-const subj=id=>cfg().subjects.find(s=>s.id===id)||{id,name:id||'未分類',c:7,unit:''};
+function allTags(){const t=cfg().subjects.map(x=>Object.assign({},x));if(isOn('plan'))Object.keys(S.projects).forEach((pid,i)=>{const pj=proj(pid);t.push({id:'p:'+pid,name:pj.name,c:(6+i)%12,unit:'',proj:pid})});return t}
+const subj=id=>allTags().find(s=>s.id===id)||(S.projects[String(id||'').slice(2)]?{id,name:S.projects[String(id).slice(2)].name,c:6,unit:''}:{id,name:id||'未分類',c:7,unit:''});
+function tagOptions(sel){const t=allTags(),a=t.filter(x=>!x.proj),b=t.filter(x=>x.proj);return a.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')+(b.length?`<optgroup label="研究專案">${b.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}</optgroup>`:'')}
+let tagAdding=false;
 const sdot=id=>`<span class="dot" style="background:var(--c${subj(id).c})"></span>`;
 function subjOptions(sel){return cfg().subjects.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}
 function projOptions(sel){return '<option value="">（不指定）</option>'+Object.entries(S.projects).map(([id,p])=>`<option value="${esc(id)}"${id===sel?' selected':''}>${esc(p.name)}</option>`).join('')}
@@ -588,8 +602,8 @@ const XL=(label,to,extra='')=>(to==='prefs'||to==='today'||isOn(to))?`<a class="
 function todayMindHTML(){
   const ps=(day(today()).j||{}).practice||[],tot=ps.reduce((a,x)=>a+(+x.min||0),0);
   return `<div class="row sb" style="align-items:center"><div class="mclock small" id="mTime">--:--</div><div class="row" style="gap:4px">${[3,5,10,15,20,30].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m}′</button>`).join('')}</div></div>
-  <div class="row" style="margin-top:8px"><select id="mMethodT" data-ch="mMethod" aria-label="練習方法">${METHODS.map(x=>`<option${x===MT.method?' selected':''}>${x}</option>`).join('')}</select><button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
-  <p class="muted" style="margin:8px 0 0">今天已靜心 ${tot} 分鐘。結束時會響鈴，並自動記到覺察日記。</p>`;
+  <div class="row" style="margin-top:8px">${methodSelect('mMethodT')}<button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+  <p class="muted" style="margin:8px 0 0">今天已靜心 ${tot} 分鐘。開始時三聲木魚，結束時一聲頌缽，並自動記到覺察日記。</p>`;
 }
 function examChips(){
   const ex=cfg().exams.filter(e=>e.date);
@@ -612,8 +626,10 @@ function pomoHTML(){
   <div class="pbar"><i id="pomoBar"></i></div>
   <div class="cycles">${Array.from({length:every},(_,i)=>`<i class="${i<done?'on':''}"></i>`).join('')}<span>每 ${every} 個番茄長休一次</span></div>
   <div class="pform">
-    <label class="f">科目<select id="pSub" data-ch="pfield" data-k="sub">${subjOptions(P.sub)}</select></label>
-    ${isOn('plan')?`<label class="f">論文地圖<select id="pProj" data-ch="pfield" data-k="proj">${projOptions(P.proj)}</select></label>`:''}
+    <div class="wide tagpick"><span class="muted" style="font-size:12px">記錄到</span>
+      <div class="tags">${allTags().map(t=>`<button class="tagc${P.sub===t.id?' on':''}" data-act="ptag" data-id="${esc(t.id)}" style="--tc:var(--c${t.c})">${t.proj?'<span class="pj">專案</span>':''}${esc(t.name)}</button>`).join('')}<button class="tagc add" data-act="ptagNew">${tagAdding?'取消':'＋ 自填'}</button></div>
+      ${tagAdding?`<div class="row" style="margin-top:6px"><input id="ptagName" type="text" placeholder="例：日文、健身、備課、讀書會" style="flex:1"><button class="sm sec" data-act="ptagSave">加入</button></div>`:''}
+    </div>
     <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
     ${P.proj&&isOn('plan')?`<label class="f wide">階段<select id="pPhase" data-ch="pfield" data-k="phase">${phaseOptions(P.proj,P.phase)}</select></label>`:''}
   </div>
@@ -698,8 +714,7 @@ function drawRecord(){
       <label class="f">分鐘<input id="rMin" type="number" min="1" max="600" value="${r.min}"></label>
     </div>
     <div class="fields" style="grid-template-columns:1fr 1fr">
-      <label class="f">科目<select id="rSub" data-ch="recf" data-k="sub">${subjOptions(r.sub)}</select></label>
-      <label class="f">論文地圖<select id="rProj" data-ch="recf" data-k="proj">${projOptions(r.proj)}</select></label>
+      <label class="f" style="grid-column:1/-1">記錄到<select id="rSub" data-ch="recf" data-k="sub">${tagOptions(r.sub)}</select></label>
       ${r.proj?`<label class="f" style="grid-column:1/-1">階段<select id="rPhase" data-ch="recf" data-k="phase">${phaseOptions(r.proj,r.phase)}</select></label>`:''}
     </div>
     <label class="f">做了什麼<input id="rTask" type="text" value="${esc(r.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
@@ -748,7 +763,7 @@ function countersHTML(k){
 function sessionsHTML(k,del=true){
   const ss=day(k).sessions||[];
   if(!ss.length)return `<p class="empty">這天還沒有專注紀錄。</p>`;
-  return `<div class="list">${ss.map(s=>{const d=new Date(s.t);const pj=s.proj&&S.projects[s.proj];return `<div class="li">${sdot(s.sub)}<span class="num muted">${pad(d.getHours())}:${pad(d.getMinutes())}</span>
+  return `<div class="list">${ss.map(s=>{const d=new Date(s.t);const pj=s.proj&&S.projects[s.proj]&&!String(s.sub).startsWith('p:')?S.projects[s.proj]:null;return `<div class="li">${sdot(s.sub)}<span class="num muted">${pad(d.getHours())}:${pad(d.getMinutes())}</span>
     <div class="grow"><div>${esc(s.task||subj(s.sub).name)}</div><div class="muted">${esc(subj(s.sub).name)}${pj?'・'+esc(pj.name):''}${s.out?`・產出 ${s.out} ${esc(s.unit||'')}`:''}${s.note?'・'+esc(s.note):''}</div></div>
     <span class="num">${s.min}′</span>${del?`<button class="ghost sm" data-act="delSess" data-k="${k}" data-id="${s.id}" aria-label="刪除這筆">×</button>`:''}</div>`}).join('')}</div>`;
 }
@@ -765,23 +780,44 @@ function nextStepsHTML(){
   return `<div class="list">${ids.map(id=>{const p=proj(id),ns=nextStep(id),nx=p.next&&p.next.date>=today()?p.next:null;
     return `<div class="li"><div class="grow"><div><b>${esc(p.name)}</b>${ns?'・'+esc(ns.st.name):''}</div><div>${ns?'下一步：'+esc(ns.s.t):'<span class="muted">這個階段的步驟都完成了</span>'}</div>${nx?`<div class="muted">下次會談：${fmtMD(nx.date)} ${esc(nx.time||'')}</div>`:''}</div>${ns?`<button class="sm" data-act="todayStep" data-p="${id}" data-st="${ns.st.id}" data-id="${ns.s.id}">開始</button>`:''}</div>`}).join('')}</div>`;
 }
+const WIDGETS={
+  sessions:{n:'今日專注紀錄',d:'今天每一顆番茄的內容'},
+  counters:{n:'計數',d:'訂正錯題、練習題等每日計數'},
+  mind:{n:'靜心',d:'木魚開始、頌缽結束的靜心計時',need:'journal'},
+  due:{n:'待複習錯題',d:'今天該複習的錯題',need:'exam'},
+  next:{n:'研究專案的下一步',d:'每個專案現在能做的一步',need:'plan'},
+  exams:{n:'考試倒數',d:'所有考試和截止日',need:'exam'},
+  mood:{n:'今日心境',d:'一鍵記下心境，與覺察日記同步',need:'journal'},
+  week:{n:'本週專注',d:'這週每天的專注分鐘'}};
+const WIDGET_DEF=['sessions','counters','mind','due','next'];
+let todayEdit=false;
+function todayWidgets(){const c=cfg();return (Array.isArray(c.todayWidgets)?c.todayWidgets:WIDGET_DEF).filter(w=>WIDGETS[w]&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)))}
+function widgetBody(w,k){
+  const ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0);
+  if(w==='sessions')return [`今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span> ${XL('看本週統計','stats','data-m="week"')}`,`${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div>`];
+  if(w==='counters')return [`計數 ${XL('調整計數器','prefs')}`,countersHTML(k)];
+  if(w==='mind')return [`靜心 ${XL('寫下觀察','journal')}`,todayMindHTML()];
+  if(w==='due')return [`待複習錯題 ${XL('考試衝刺','exam')}`,dueHTML()];
+  if(w==='next')return [`研究專案的下一步 ${XL('論文地圖','plan')}`,nextStepsHTML()];
+  if(w==='exams'){const ex=cfg().exams;return [`考試倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有考試日期。</p>'];}
+  if(w==='mood'){const j=day(k).j||{};return [`今日心境 ${XL('覺察日記','journal')}`,`<div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="mood" data-n="${n}" aria-pressed="${j.mood===n}">${n}</button>`).join('')}</div><p class="muted" style="margin:8px 0 0">1 低落，5 明亮。會同步到覺察日記。</p>`];}
+  if(w==='week'){const s0=weekStart(k),ks=Array.from({length:7},(_,i)=>addDays(s0,i));const rows=ks.map(x=>({key:x,label:'週'+wdName(x),parts:[{c:0,v:(day(x).sessions||[]).reduce((a,y)=>a+(+y.min||0),0),n:fmtMD(x)}]}));return [`本週專注 ${XL('統計','stats','data-m="week"')}`,stackBars(rows,{h:150,marker:k})];}
+  return ['',''];
+}
 function vToday(){
-  const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0);
+  const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0),ws=todayWidgets();
+  const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
   <div class="grid2">
     <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}</section>
     <div class="stack">
       <section class="card"><h2>今天最重要的三件事 ${XL('寫今天的覺察日記','journal')}</h2>${top3HTML(k)}</section>
-      <section class="card"><h2>計數 ${XL('調整計數器','prefs')}</h2>${countersHTML(k)}</section>
-      <section class="card"><h2>精力打卡 ${XL('用在「我的節奏」報告','quiz')}</h2>${energyHTML(k)}</section>
-      ${isOn('journal')?`<section class="card"><h2>靜心 ${XL('寫下觀察','journal')}</h2>${todayMindHTML()}</section>`:''}
+      <section class="card"><h2>精力・專注度 ${XL('用在「我的節奏」報告','quiz')}</h2>${energyHTML(k)}</section>
     </div>
   </div>
-  <div class="grid3" style="grid-template-columns:repeat(${1+isOn('exam')+isOn('plan')},minmax(0,1fr))">
-    <section class="card"><h2>今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span> ${XL('看本週統計','stats','data-m="week"')}</h2>${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div></section>
-    ${isOn('exam')?`<section class="card"><h2>待複習錯題 ${XL('考試衝刺','exam')}</h2>${dueHTML()}</section>`:''}
-    ${isOn('plan')?`<section class="card"><h2>研究專案的下一步 ${XL('論文地圖','plan')}</h2>${nextStepsHTML()}</section>`:''}
-  </div>`;
+  <div class="row sb" style="margin:6px 0 10px"><h2 style="margin:0;font-size:14px;color:var(--muted)">我的窗格</h2><button class="${todayEdit?'sec':'ghost'} sm" data-act="todayEditT">${todayEdit?'完成':'編輯窗格'}</button></div>
+  ${todayEdit?`<section class="card" style="margin-bottom:14px"><h2>加入窗格 <span class="muted">按一下加入，在窗格右上角可以調整順序或移除</span></h2>${hidden.length?`<div class="tplgrid">${hidden.map(w=>`<button class="tpl" data-act="wAdd" data-w="${w}"><b>${WIDGETS[w].n}</b><span>${WIDGETS[w].d}</span></button>`).join('')}</div>`:'<p class="empty">所有窗格都已經在首頁了。</p>'}<div style="margin-top:10px"><button class="ghost sm" data-act="wReset">恢復預設</button></div></section>`:''}
+  <div class="widgets">${ws.map((w,i)=>{const [h,body]=widgetBody(w,k);return `<section class="card widget${todayEdit?' editing':''}"><h2>${h}${todayEdit?`<span class="wtools"><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="-1" aria-label="往前"${i===0?' disabled':''}>←</button><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="1" aria-label="往後"${i===ws.length-1?' disabled':''}>→</button><button class="ghost sm" data-act="wDel" data-w="${w}" aria-label="移除">×</button></span>`:''}</h2>${body}</section>`}).join('')}${!ws.length?'<p class="empty">首頁沒有窗格。按「編輯窗格」加入。</p>':''}</div>`;
 }
 
 /* ---------- calendar view ---------- */
@@ -887,19 +923,19 @@ function vStats(){
   const moods=keys.map(k=>day(k).j&&day(k).j.mood).filter(Boolean);
   const avgMood=moods.length?(moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1):'—';
   let streak=0;{let k=today();if(!(day(k).sessions||[]).length)k=addDays(k,-1);while((day(k).sessions||[]).length){streak++;k=addDays(k,-1)}}
-  const subs=c.subjects.map(s=>({n:s.name,c:s.c,v:(A.bySub[s.id]||{m:0}).m,cnt:(A.bySub[s.id]||{n:0}).n})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const subs=allTags().map(s=>({n:s.name,c:s.c,v:(A.bySub[s.id]||{m:0}).m,cnt:(A.bySub[s.id]||{n:0}).n})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const outList=Object.entries(A.outs).map(([k,v])=>{const [sid,u]=k.split('|');return `<span class="chip">${sdot(sid)}${esc(subj(sid).name)} <b>${fmtN(v)}</b> ${esc(u)}</span>`}).join('');
   let main='';
   if(stMode==='day'){
     main=`<div class="gridA"><section class="card"><h2>專注紀錄 ${XL('在月曆上看','calendar',`data-k="${stAnchor}"`)}</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
   }else{
-    const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:c.subjects.map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
+    const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:allTags().map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
     const hourRows=A.hours.map((v,h)=>({label:String(h),parts:[{c:0,v,n:h+' 點'}]})).slice(6,24);
     const cntRows=c.counters.map(x=>{const tot=keys.reduce((a,k)=>a+(+((day(k).counts||{})[x.id])||0),0),hit=keys.filter(k=>x.goal&&(+((day(k).counts||{})[x.id])||0)>=x.goal).length;return `<div class="li"><div class="grow">${esc(x.name)}</div><span class="num">${tot}</span><span class="muted">達標 ${hit}/${keys.length} 天</span></div>`}).join('');
     main=`<section class="card" style="margin-bottom:16px"><h2>每天專注分鐘 <span class="muted">依科目堆疊</span></h2>${stackBars(rows,{every:stMode==='month'?2:1,marker:today()})}
-      <div class="legend" style="margin-top:8px">${c.subjects.map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
+      <div class="legend" style="margin-top:8px">${allTags().filter(s=>keys.some(k=>(day(k).sessions||[]).some(x=>x.sub===s.id))).map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
     <div class="grid3" style="margin-bottom:16px">
-      <section class="card"><h2>科目分配 ${XL('調整科目','prefs')}</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
+      <section class="card"><h2>科目分配 ${XL('調整標籤','prefs')}</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
       <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:160,every:3}):'<p class="empty">沒有紀錄</p>'}</section>
       <section class="card"><h2>計數</h2><div class="list">${cntRows||'<p class="empty">沒有計數器</p>'}</div>${moodInsight(keys)}</section>
     </div>
@@ -1219,9 +1255,9 @@ function vPrefs(){
   const c=cfg();
   return `<header class="ph"><div><p class="eyebrow">設定</p><h1>工作台設定</h1></div></header>
   <div class="grid2">
-    <section class="card"><h2>科目</h2>
+    <section class="card"><h2>記錄標籤 <span class="muted">番茄鐘的分類，統計會依標籤分開計算</span></h2>
       <div class="list">${c.subjects.map((s,i)=>`<div class="li"><select id="sc${i}" data-ch="sub" data-i="${i}" data-f="c" aria-label="顏色" style="width:60px;background:var(--c${s.c});color:var(--surface)">${[0,1,2,3,4,5,6,7].map(n=>`<option value="${n}"${s.c===n?' selected':''}>色${n+1}</option>`).join('')}</select><input id="sn${i}" type="text" data-ch="sub" data-i="${i}" data-f="name" value="${esc(s.name)}" style="flex:1"><input id="su${i}" type="text" data-ch="sub" data-i="${i}" data-f="unit" value="${esc(s.unit)}" placeholder="單位" style="width:70px"><button class="ghost sm" data-act="subDel" data-i="${i}" aria-label="刪除">×</button></div>`).join('')}</div>
-      <div style="margin-top:10px"><button data-act="subAdd">新增科目</button></div>
+      <div style="margin-top:10px"><button data-act="subAdd">新增標籤</button></div>
       <h2 style="margin-top:22px">番茄鐘（分鐘）</h2>
       <div class="row">${[['work','專注'],['short','短休'],['long','長休'],['every','每幾個番茄長休一次']].map(([k,n])=>`<label class="f">${n}<input id="po${k}" type="number" min="1" max="180" data-ch="pomo" data-f="${k}" value="${c.pomo[k]}"></label>`).join('')}</div>
       <h2 style="margin-top:22px">模考計分</h2>
@@ -1309,7 +1345,7 @@ const A={
   mtDel:el=>{if(!twoStep(el))return;editProj(p=>{p.meetings=p.meetings.filter(m=>m.id!==el.dataset.id)});render()},
   jNav:el=>{const d=+el.dataset.d;jDay=d?addDays(jDay,d):today();render()},
   jScore:el=>{const f=el.dataset.f,n=+el.dataset.n;editDay(el.dataset.k,d=>{d.j[f]=d.j[f]===n?null:n});render()},
-  subAdd:()=>{editCfg(c=>c.subjects.push({id:rid(),name:'新科目',c:c.subjects.length%8,unit:''}));render()},
+  subAdd:()=>{editCfg(c=>c.subjects.push({id:rid(),name:'新標籤',c:c.subjects.length%12,unit:''}));render()},
   subDel:el=>{if(!twoStep(el))return;editCfg(c=>c.subjects.splice(+el.dataset.i,1));render()},
   ctrAdd:()=>{editCfg(c=>c.counters.push({id:rid(),name:'新計數器',goal:10,step:1}));render()},
   ctrDel:el=>{if(!twoStep(el))return;editCfg(c=>c.counters.splice(+el.dataset.i,1));render()},
@@ -1326,7 +1362,7 @@ const A={
 };
 const C={
   pfield:el=>{P[el.dataset.k]=el.value;if(el.dataset.k==='proj')P.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';savP();if(el.dataset.k!=='task')render()},
-  recf:el=>{readRecordForm();REC[el.dataset.k]=el.value;if(el.dataset.k==='proj')REC.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';if(el.dataset.k==='sub'||el.dataset.k==='proj'||el.dataset.k==='phase')drawRecord()},
+  recf:el=>{readRecordForm();REC[el.dataset.k]=el.value;if(el.dataset.k==='sub'){const tg=allTags().find(x=>x.id===el.value);REC.proj=tg&&tg.proj?tg.proj:'';REC.phase=REC.proj?(curPhase(S.projects[REC.proj])||{}).id||'':''}if(el.dataset.k==='proj')REC.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';if(el.dataset.k==='sub'||el.dataset.k==='proj'||el.dataset.k==='phase')drawRecord()},
   top3done:el=>{const i=+el.dataset.i;editDay(el.dataset.k,d=>{const t=d.j.top3=d.j.top3||[];t[i]=Object.assign({t:''},t[i],{done:el.checked})});el.closest('.t3').classList.toggle('done',el.checked)},
   exam:el=>{editCfg(c=>{c.exams[+el.dataset.i][el.dataset.f]=el.value});render()},
   proj:el=>{editProj(p=>{p[el.dataset.f]=el.value});render()},
@@ -1371,9 +1407,10 @@ function openShare(){
 
 /* ---------- energy check-in ---------- */
 function energyHTML(k){
-  const en=day(k).en||[];
-  return `<div class="row sb"><span>現在的精力</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="enLog" data-n="${n}" aria-label="精力 ${n} 分">${n}</button>`).join('')}</div></div>
-  <div class="muted" style="margin-top:8px">${en.length?'今天：'+en.map(x=>`${esc(x.t)} <b class="num">${x.e}</b>`).join('・'):'1 很累，5 精神最好。每天記 3–4 次，就能看出你一天中精神最好的時段。'}</div>`;
+  const en=day(k).en||[],fo=day(k).fo||[];
+  const row=(lab,act,list,key,hint)=>`<div class="row sb"><span>${lab}</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="${act}" data-n="${n}" aria-label="${lab} ${n} 分">${n}</button>`).join('')}</div></div>
+  <div class="muted" style="margin:4px 0 10px">${list.length?'今天：'+list.map(x=>`${esc(x.t)} <b class="num">${x[key]}</b>`).join('・'):hint}</div>`;
+  return row('現在的精力','enLog',en,'e','1 很累，5 精神最好。')+row('剛才的專注度','foLog',fo,'v','1 一直分心，5 完全投入。')+`<p class="muted" style="margin:0;font-size:12px">每天記 3–4 次，就能看出精神和專注最好的時段。</p>`;
 }
 
 /* ---------- adaptive quiz v2 ---------- */
@@ -1789,6 +1826,7 @@ function vQuiz(){
 Object.assign(A,{
   share:openShare,
   copyLink:async()=>{const i=$('#shUrl');try{await navigator.clipboard.writeText(SHARE_URL);toast('已複製連結')}catch{i.focus();i.select();toast('請按 Ctrl+C 複製')}},
+  foLog:el=>{const n=new Date();editDay(today(),d=>{d.fo=d.fo||[];d.fo.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),v:+el.dataset.n})});toast('已記錄專注度 '+el.dataset.n+' 分');render()},
   enLog:el=>{const n=new Date();editDay(today(),d=>{d.en=d.en||[];d.en.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),e:+el.dataset.n})});toast('已記錄精力 '+el.dataset.n+' 分');render()},
   recEn:el=>{readRecordForm();const n=+el.dataset.n;REC.en=REC.en===n?null:n;drawRecord()},
   qa:el=>{const q=el.dataset.q,v=el.dataset.v;QZ.a[q]=/^-?\d+(\.\d+)?$/.test(v)?+v:v;savQZ();
@@ -1848,7 +1886,18 @@ const EMO_DEF=[
 function emoList(){const c=cfg();return Array.isArray(c.emoList)?c.emoList:EMO_DEF}
 let emoEdit=false;
 const LV=['—','輕','中','強'];
-const METHODS=['呼吸覺察','身體掃描','慈心','行走靜心','開放覺察','其他'];
+const METHODS0=['呼吸覺察','身體掃描','慈心','行走靜心','開放覺察'];
+function medMethods(){return METHODS0.concat(cfg().medMethods||[])}
+let medAdding=false;
+function methodSelect(id){return `<select id="${id}" data-ch="mMethod" aria-label="練習方法">${medMethods().map(x=>`<option${x===MT.method?' selected':''}>${esc(x)}</option>`).join('')}<option value="__add">＋ 自填方法…</option></select>${medAdding?`<input id="mMethodNew" type="text" placeholder="例：數息、念佛、正念瑜伽" style="width:150px"><button class="sm sec" data-act="medAdd">加入</button>`:''}`}
+function woodfish(n){if(!AC)return;try{for(let i=0;i<n;i++){const t=AC.currentTime+.05+i*1.25;
+  const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(240,t);o.frequency.exponentialRampToValueAtTime(175,t+.16);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.38);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.4);
+  const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.setValueAtTime(520,t);o2.frequency.exponentialRampToValueAtTime(430,t+.08);g2.gain.setValueAtTime(.0001,t);g2.gain.exponentialRampToValueAtTime(.16,t+.004);g2.gain.exponentialRampToValueAtTime(.0001,t+.12);o2.connect(g2);g2.connect(AC.destination);o2.start(t);o2.stop(t+.14);
+  const len=Math.floor(AC.sampleRate*.035),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);for(let j=0;j<len;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/len,4);
+  const ns=AC.createBufferSource(),bp=AC.createBiquadFilter(),gn=AC.createGain();ns.buffer=buf;bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=1.4;gn.gain.value=.22;ns.connect(bp);bp.connect(gn);gn.connect(AC.destination);ns.start(t)}}catch{}}
+function singingBowl(){if(!AC)return;try{const t=AC.currentTime+.05,base=174;
+  [[1,.26,11],[2.71,.1,8],[5.2,.045,5],[8.5,.018,3]].forEach(([r,a,dur])=>{[-.35,.35].forEach(det=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=base*r+det;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(a,t+.03);g.gain.exponentialRampToValueAtTime(a*.5,t+dur*.25);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur+.1)})});
+  const len=Math.floor(AC.sampleRate*.02),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);for(let j=0;j<len;j++)d[j]=(Math.random()*2-1)*(1-j/len);const ns=AC.createBufferSource(),lp=AC.createBiquadFilter(),gn=AC.createGain();ns.buffer=buf;lp.type='lowpass';lp.frequency.value=900;gn.gain.value=.12;ns.connect(lp);lp.connect(gn);gn.connect(AC.destination);ns.start(t)}catch{}}
 const emoName=k=>(emoList().find(e=>e.k===k)||EMO_DEF.find(e=>e.k===k)||{n:k}).n;
 let MT=lsGet('sd-mtimer',null)||{min:10,method:'呼吸覺察',running:false,endAt:0,left:null};
 const savMT=()=>lsSet('sd-mtimer',MT);
@@ -1856,7 +1905,7 @@ function mLeft(){return MT.running?Math.max(0,(MT.endAt-Date.now())/1000):(MT.le
 function bell(n){if(!AC)return;try{for(let i=0;i<n;i++){const t=AC.currentTime+i*2.2;[528,792,1056].forEach((f,j)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18/(j+1),t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+4);o.start(t);o.stop(t+4.1)})}}catch{}}
 function mComplete(){
   const min=Math.round((MT.min*60-(MT.left??0))/60)||MT.min;
-  MT.running=false;MT.left=null;savMT();bell(3);
+  MT.running=false;MT.left=null;savMT();singingBowl();
   editDay(today(),d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:MT.min,method:MT.method,q:null,note:''})});
   toast('靜心 '+MT.min+' 分鐘，已記錄');if(R==='journal'||R==='today')render();
 }
@@ -1891,13 +1940,13 @@ function practiceHTML(k){
   const ps=(day(k).j||{}).practice||[],tot=ps.reduce((a,p)=>a+(+p.min||0),0);
   return `${k===today()?`<div class="mclock-wrap"><div class="mclock" id="mTime">--:--</div>
     <div class="row" style="justify-content:center">${[3,5,10,15,20,30,45,60,90].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m===60?'1 小時':m===90?'1.5 小時':m+' 分'}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:8px"><select id="mMethod" data-ch="mMethod" aria-label="練習方法">${METHODS.map(x=>`<option${x===MT.method?' selected':''}>${x}</option>`).join('')}</select><button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
-    <p class="muted" style="text-align:center;margin:8px 0 0">開始和結束各有鐘聲，結束時自動記錄。</p></div>`:''}
+    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+    <p class="muted" style="text-align:center;margin:8px 0 0">開始時三聲木魚，結束時一聲頌缽，並自動記錄。</p></div>`:''}
   <h3>練習紀錄 <span class="muted">${tot} 分鐘</span></h3>
   <div class="list">${ps.map(p=>`<div class="li" style="align-items:flex-start"><span class="num">${p.min}′</span><div class="grow"><div>${esc(p.method)}</div>
     <div class="row" style="margin-top:4px"><span class="muted">安住程度</span><div class="mood">${[1,2,3,4,5].map(n=>`<button class="sm" data-act="prQ" data-k="${k}" data-id="${p.id}" data-n="${n}" aria-pressed="${p.q===n}">${n}</button>`).join('')}</div></div>
     <input type="text" id="prn${p.id}" data-in="prNote" data-k="${k}" data-id="${p.id}" value="${esc(p.note)}" placeholder="觀察到什麼（念頭、身體、聲音）" style="width:100%;margin-top:6px"></div><button class="ghost sm" data-act="prDel" data-k="${k}" data-id="${p.id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">還沒有練習紀錄。</p>'}</div>
-  <div class="row" style="margin-top:8px"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘"><select id="prM" aria-label="方法">${METHODS.map(x=>`<option>${x}</option>`).join('')}</select><button class="sm" data-act="prAdd" data-k="${k}">補登練習</button></div>`;
+  <div class="row" style="margin-top:8px"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘"><select id="prM" aria-label="方法">${medMethods().map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="sm" data-act="prAdd" data-k="${k}">補登練習</button></div>`;
 }
 function emoMap(k){
   const days=Array.from({length:14},(_,i)=>addDays(k,i-13));
@@ -1947,13 +1996,24 @@ Object.assign(A,{
   moAdd:el=>{const w=$('#moW').value.trim(),e=$('#moE').value;if(!w&&!e)return toast('寫下發生了什麼，或選一個情緒');editDay(el.dataset.k,d=>{d.j.moments=d.j.moments||[];d.j.moments.push({id:rid(),t:$('#moT').value,e,w,b:$('#moB').value.trim(),r:$('#moR').value.trim()});d.j.moments.sort((a,b)=>a.t<b.t?-1:1);if(e){d.j.emo=d.j.emo||{};if(!d.j.emo[e])d.j.emo[e]=1}});render()},
   moDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.moments=(d.j.moments||[]).filter(m=>m.id!==el.dataset.id)});render()},
   mMin:el=>{if(MT.running)return toast('練習進行中，先暫停或重設');MT.min=+el.dataset.m;MT.left=null;savMT();render()},
-  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{if(MT.left==null)bell(1);MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
+  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{if(MT.left==null)woodfish(3);MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
   mReset:()=>{MT.running=false;MT.left=null;savMT();render()},
   prQ:el=>{const n=+el.dataset.n;editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.q=p.q===n?null:n});render()},
   prDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.practice=(d.j.practice||[]).filter(x=>x.id!==el.dataset.id)});render()},
   prAdd:el=>{const m=+$('#prMin').value;if(!m)return;editDay(el.dataset.k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});render()}
 });
-Object.assign(C,{mMethod:el=>{MT.method=el.value;savMT()}});
+Object.assign(A,{
+  todayEditT:()=>{todayEdit=!todayEdit;render()},
+  wAdd:el=>{editCfg(c=>{c.todayWidgets=todayWidgets().concat([el.dataset.w])});render()},
+  wDel:el=>{editCfg(c=>{c.todayWidgets=todayWidgets().filter(x=>x!==el.dataset.w)});render()},
+  wMv:el=>{const l=todayWidgets(),i=l.indexOf(el.dataset.w),j=i+(+el.dataset.d);if(j<0||j>=l.length)return;[l[i],l[j]]=[l[j],l[i]];editCfg(c=>{c.todayWidgets=l});render()},
+  wReset:el=>{if(!twoStep(el))return;editCfg(c=>{delete c.todayWidgets});render()},
+  ptag:el=>{const id=el.dataset.id,tg=allTags().find(x=>x.id===id);P.sub=id;P.proj=tg&&tg.proj?tg.proj:'';P.phase=P.proj?(curPhase(S.projects[P.proj])||{}).id||'':'';savP();render()},
+  ptagNew:()=>{tagAdding=!tagAdding;render();setTimeout(()=>{const i=$('#ptagName');i&&i.focus()},30)},
+  ptagSave:()=>{const n=$('#ptagName').value.trim();if(!n)return toast('先寫名稱');if(cfg().subjects.some(x=>x.name===n))return toast('已經有「'+n+'」');const id=rid();editCfg(c=>{c.subjects.push({id,name:n,c:c.subjects.length%12,unit:''})});P.sub=id;P.proj='';savP();tagAdding=false;toast('已加入「'+n+'」，統計會分開計算');render()},
+  medAdd:()=>{const n=$('#mMethodNew').value.trim();if(!n)return toast('先寫方法名稱');if(!medMethods().includes(n))editCfg(c=>{c.medMethods=(c.medMethods||[]).concat([n])});MT.method=n;savMT();medAdding=false;render()}
+});
+Object.assign(C,{mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},

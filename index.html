@@ -208,6 +208,12 @@ nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--
 .callout{background:var(--sunk);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0}
 .guide ul{margin:0;padding-left:18px}
 .likert.v6 button{width:40px}
+.books3{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px}
+.starter.editing,.emo.editing{position:relative;cursor:default;border:1px dashed var(--line)}
+.starter.editing{display:flex;flex-direction:column;gap:2px;padding:8px 28px 8px 10px;border-radius:10px;background:var(--bg)}
+.starter.editing span{font-size:11.5px;color:var(--muted)}
+.stdel{position:absolute;top:2px;right:2px;padding:2px 7px}
+.emo.editing{padding-right:28px}
 .spick{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px 22px}
 .spick .opt[disabled]{opacity:.35}
 .vgrid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px;align-items:start}
@@ -973,7 +979,9 @@ const TEMPLATES={
   grant:[['構想',1,['確認申請資格與截止日','寫一頁研究構想']],['內容',3,['研究背景與問題','文獻回顧','研究方法與步驟','預期成果與貢獻']],['行政',2,['預算與人力','時程表','個人資料與著作目錄']],['送件',1,['請同事或老師讀','校對','送出申請']]],
   other:[['第一階段',1,['寫下第一個小步驟']]]};
 const WIN_KINDS=[['write','寫一段','寫 150 字，不管好壞'],['quote','整理書摘','抄一則書摘，寫一句想法'],['read','讀一點','讀 10 頁，或一篇的摘要'],['outline','列大綱','列 3 點這段要說的事'],['revise','改一段','只改一段，改完就停'],['find','找資料','查 1 筆書目或史料'],['idea','記想法','寫下一個卡住的問題']];
-const winLabel=k=>(WIN_KINDS.find(w=>w[0]===k)||[k,k==='pomo'?'番茄鐘':'小成果'])[1];
+function starters(){const c=cfg();return Array.isArray(c.starters)?c.starters:WIN_KINDS}
+let starterEdit=false;
+const winLabel=k=>(starters().find(w=>w[0]===k)||WIN_KINDS.find(w=>w[0]===k)||[k,k==='pomo'?'番茄鐘':'小成果'])[1];
 const NOTE_KINDS=['待辦','想法','問題','提醒'];
 let curProj=null,planNew=false,planTab='notes',starter=null,noteFilter='',quoteQ='';
 let curStageMap=lsGet('sd-curstage',{});
@@ -1050,8 +1058,9 @@ function vPlan(){
       <section class="card focus">
         <p class="eyebrow">今天的最小一步</p>
         ${ns?`<div class="row sb"><div class="bigstep">${esc(ns.s.t)}<div class="muted" style="font-size:12px;font-weight:400">${esc(ns.st.name)}</div></div><div class="row"><button class="sec" data-act="stepPomo" data-id="${ns.s.id}" data-st="${ns.st.id}">用番茄鐘開始</button><button data-act="stepDone" data-st="${ns.st.id}" data-id="${ns.s.id}">完成了</button></div></div>`:'<p>這個階段的步驟都完成了。選下一個階段，或新增步驟。</p>'}
-        <h3>沒有動力？選一件 15 分鐘內能完成的事</h3>
-        <div class="starters">${WIN_KINDS.map(([k,n,d])=>`<button class="starter" data-act="starter" data-k="${k}" aria-pressed="${starter===k}"><b>${n}</b><span>${d}</span></button>`).join('')}</div>
+        <div class="row sb"><h3>沒有動力？選一件 15 分鐘內能完成的事</h3><button class="ghost sm" data-act="starterEditT">${starterEdit?'完成':'編輯'}</button></div>
+        <div class="starters">${starters().map(([k,n,d])=>starterEdit?`<div class="starter editing"><b>${esc(n)}</b><span>${esc(d)}</span><button class="ghost sm stdel" data-act="starterDel" data-k="${esc(k)}" aria-label="刪除「${esc(n)}」">×</button></div>`:`<button class="starter" data-act="starter" data-k="${esc(k)}" aria-pressed="${starter===k}"><b>${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
+        ${starterEdit?`<div class="row" style="margin-top:10px"><input id="stNewN" type="text" placeholder="名稱，例：整理註腳" style="width:150px"><input id="stNewD" type="text" placeholder="說明，例：只整理一頁的註腳" style="flex:1"><button class="sm sec" data-act="starterAdd">加入</button><button class="ghost sm" data-act="starterReset">恢復預設</button></div>`:''}
         ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}
       </section>
       ${cur?`<section class="card stagecard">
@@ -1679,15 +1688,19 @@ const BOOKS={
   intent:{zh:'Intentional: How to Finish What You Start',en:'Intentional: How to Finish What You Start',au:'Chris Bailey（克里斯・貝利）',part:'價值',noZh:true,
     intro:'Bailey 認為，完成目標的關鍵不是意志力或最新的效率技巧，而是更有意圖地行動。他結合目標達成、渴望、價值與拖延的研究，以及和佛教僧侶的對話，整理出從價值到每天行動的方法。你的價值輪廓，就是依照書中的 12 個基本價值整理的。',
     notes:['12 個基本價值源自心理學家 Shalom Schwartz 的研究，已在八十多個國家、數十萬人身上驗證。每個人都擁有全部 12 種，只是比重不同。','價值分布在兩條軸上：想維持現狀還是讓事情變得更好；關注自己還是關注他人。相鄰的價值動機相近，相對的價值容易互相拉扯。','每個行動背後都有價值在推動。目標接上你重視的價值，就更容易開始，也更容易完成。','目標可以「編輯」：有些值得堅持，有些值得放下。','書中提到幾個日常做法：有意識的放縱、認識自己的相對價值，以及檢查時間花在哪些價值上。'],
-    use:'報告的價值輪廓、價值拉扯和「卡住時問自己」，都依照書中的 12 個價值和兩條軸整理。作者自己用的是正式的 PVQ-RR 量表；這份測驗是簡易自編版本，適合用來認識自己。'}
+    use:'報告的價值輪廓、價值拉扯和「卡住時問自己」，都依照書中的 12 個價值和兩條軸整理。作者自己用的是正式的 PVQ-RR 量表；這份測驗是簡易自編版本，適合用來認識自己。'},
+  pomo:{zh:'The Pomodoro Technique',en:'The Pomodoro Technique',au:'Francesco Cirillo（法蘭西斯科・西里洛）',part:'專注',noZh:true,
+    intro:'番茄工作法由 Cirillo 在 1980 年代後期、還是大學生時發展出來，名稱來自他用的番茄造型廚房計時器。方法很簡單：把時間切成一段段專注與休息，讓「開始」變容易，也讓投入的時間看得見。',
+    notes:['一個番茄 = 專注 25 分鐘，接著短休 3–5 分鐘；每完成 4 個番茄，休息長一點，約 15–30 分鐘。','一個番茄不能分割。中途被打斷時，先記下來、晚點處理；真的必須中斷，這個番茄就不算，重新開始。','面對外來打擾：先告知對方你正在忙、約好稍後回覆，再準時回頭處理。','記錄每天完成幾個番茄，也用番茄數估計一件事要花多少力氣，估得越來越準。','休息時真正離開工作，讓大腦恢復，下一個番茄才會專注。'],
+    use:'「今日」的番茄鐘、每 4 個番茄長休一次的設定，以及報告建議的番茄長度，都來自這個方法。Cirillo 的標準是 25 分鐘，你可以依照自己一次能專注多久來調整。'}
 };
-const bookLinks=b=>`<a href="https://search.books.com.tw/search/query/key/${encodeURIComponent(b.noZh?b.en.split(':')[0]+' '+b.au.split('（')[0]:b.zh.split('：')[0])}/cat/all" target="_blank" rel="noopener">${b.noZh?'博客來搜尋':'博客來找中文版'}</a><a href="https://www.google.com/search?tbm=bks&q=${encodeURIComponent(b.en+' '+b.au.split('（')[0])}" target="_blank" rel="noopener">查原文書</a>`;
+const bookLinks=b=>`${b.noZh?'':`<a href="https://search.books.com.tw/search/query/key/${encodeURIComponent(b.zh.split('：')[0])}/cat/all" target="_blank" rel="noopener">博客來找中文版</a>`}<a href="https://www.google.com/search?tbm=bks&q=${encodeURIComponent(b.en+' '+b.au.split('（')[0])}" target="_blank" rel="noopener">查原文書</a>`;
 function theoryHTML(){
-  return `<section class="card" style="margin-top:16px" id="theory"><h2>想了解更多 <span class="muted">兩本推薦書</span></h2>
+  return `<section class="card" style="margin-top:16px" id="theory"><h2>想了解更多 <span class="muted">三本推薦書</span></h2>
   <p class="muted">這份報告幫助你認識自己的傾向，不是診斷，也不是標籤。生活改變時，結果也會跟著改變。</p>
-  <div class="grid2" style="margin:0">${Object.values(BOOKS).map(b=>`<article class="book">
+  <div class="books3">${Object.values(BOOKS).map(b=>`<article class="book">
     <span class="pill mut" style="align-self:flex-start">${b.part}</span>
-    <div class="bt">${b.noZh?esc(b.en):'《'+esc(b.zh)+'》'}</div><div class="muted">${esc(b.au)}</div>${b.noZh?'<div class="muted" style="font-size:12px">2026 年 1 月出版，目前沒有查到中文版</div>':`<div class="muted en">${esc(b.en)}</div>`}
+    <div class="bt">${b.noZh?esc(b.en):'《'+esc(b.zh)+'》'}</div><div class="muted">${esc(b.au)}</div>${b.noZh?'<div class="muted" style="font-size:12px">英文版</div>':`<div class="muted en">${esc(b.en)}</div>`}
     <h3>簡介</h3><p>${esc(b.intro)}</p>
     <h3>書摘重點</h3><ul>${b.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>
     <p class="callout"><b>和你的報告有什麼關係：</b>${esc(b.use)}</p>
@@ -1750,22 +1763,33 @@ Object.assign(IN,{qs:el=>{QZ.a['s_'+el.dataset.q]=el.value;savQZ()}});
 
 
 /* ---------- awareness journal ---------- */
-const EMO=[
+const EMO_DEF=[
   {k:'anger',n:'憤怒',d:'煩躁、不耐、想反駁',g:'hard',tip:'先停一下，留意身體哪裡發熱或緊繃，慢慢呼吸三次再回應。'},
-  {k:'crave',n:'貪求',d:'想要更多、執著結果、比較',g:'hard',tip:'看見「想要」這個念頭本身。問自己：此刻真正需要的是什麼？'},
+  {k:'worry',n:'焦慮',d:'擔心未來、緊張',g:'hard',tip:'把擔心寫下來，分成「現在能做的」和「現在做不了的」。'},
+  {k:'fear',n:'害怕',d:'恐懼、不安、怕受傷',g:'hard',tip:'問自己：最壞會發生什麼？現在能做哪一個小準備？'},
+  {k:'stress',n:'壓力',d:'緊繃、事情太多、喘不過氣',g:'hard',tip:'列出所有待辦，只圈出今天一定要做的一件。'},
+  {k:'sad',n:'低落',d:'悲傷、失落、難過',g:'hard',tip:'溫和地承認這份感受，像對待朋友一樣對待自己。'},
+  {k:'lonely',n:'孤單',d:'沒人懂、被排除、想有人陪',g:'hard',tip:'傳一則訊息給一個信任的人，不必解釋太多。'},
+  {k:'guilt',n:'自責',d:'內疚、羞愧、覺得自己不夠好',g:'hard',tip:'把對自己說的話，換成你會對朋友說的版本。'},
+  {k:'envy',n:'嫉妒',d:'比較、羨慕、不甘心',g:'hard',tip:'嫉妒指出你想要的東西。把它寫下來，當成方向，而不是評價。'},
+  {k:'crave',n:'貪求',d:'想要更多、執著結果',g:'hard',tip:'看見「想要」這個念頭本身。問自己：此刻真正需要的是什麼？'},
   {k:'dull',n:'昏沈',d:'倦怠、遲鈍、提不起勁',g:'hard',tip:'張開眼睛、挺直背、開窗或起身走幾步。不需要責怪自己。'},
   {k:'restless',n:'掉舉',d:'浮躁、坐立難安、念頭紛飛',g:'hard',tip:'把注意力帶回呼吸，延長吐氣，或從一數到十。'},
   {k:'doubt',n:'疑慮',d:'猶豫、自我懷疑、拿不定主意',g:'hard',tip:'先做一個很小、確定的下一步，讓行動帶來清楚。'},
-  {k:'worry',n:'焦慮',d:'擔心未來、緊張',g:'hard',tip:'把擔心寫下來，分成「現在能做的」和「現在做不了的」。'},
-  {k:'sad',n:'低落',d:'悲傷、失落、孤單',g:'hard',tip:'溫和地承認這份感受，像對待朋友一樣對待自己。'},
-  {k:'joy',n:'喜悅',d:'開心、滿足、有趣',g:'ease',tip:'停留幾秒，感受喜悅在身體裡是什麼樣子。'},
-  {k:'ease',n:'調暢',d:'身心輕安、順暢、不費力',g:'ease',tip:'記下是什麼條件讓身心順暢，之後可以再創造。'},
+  {k:'joy',n:'喜悅',d:'開心、有趣、輕鬆',g:'ease',tip:'停留幾秒，感受喜悅在身體裡是什麼樣子。'},
   {k:'calm',n:'平靜',d:'安定、清明、專注',g:'ease',tip:'留意這份安定，不必刻意抓住它。'},
-  {k:'grat',n:'感恩',d:'溫暖、被支持、珍惜',g:'ease',tip:'可以寫進晚間的「感恩與好事」。'}
+  {k:'ease',n:'調暢',d:'身心輕安、順暢、不費力',g:'ease',tip:'記下是什麼條件讓身心順暢，之後可以再創造。'},
+  {k:'content',n:'滿足',d:'踏實、足夠、心滿意足',g:'ease',tip:'記下讓你滿足的小事，它常常比想像中簡單。'},
+  {k:'grat',n:'感恩',d:'溫暖、被支持、珍惜',g:'ease',tip:'可以寫進晚間的「感恩與好事」。'},
+  {k:'loved',n:'被愛',d:'被理解、被接納、有連結',g:'ease',tip:'讓對方知道，他的陪伴對你很重要。'},
+  {k:'confident',n:'自信',d:'有把握、相信自己做得到',g:'ease',tip:'記下這份把握從哪裡來，沒信心時回來看。'},
+  {k:'curious',n:'好奇',d:'想知道、有興趣、期待',g:'ease',tip:'順著好奇多問一個問題，它是學習最好的燃料。'}
 ];
+function emoList(){const c=cfg();return Array.isArray(c.emoList)?c.emoList:EMO_DEF}
+let emoEdit=false;
 const LV=['—','輕','中','強'];
 const METHODS=['呼吸覺察','身體掃描','慈心','行走靜心','開放覺察','其他'];
-const emoName=k=>(EMO.find(e=>e.k===k)||{n:k}).n;
+const emoName=k=>(emoList().find(e=>e.k===k)||EMO_DEF.find(e=>e.k===k)||{n:k}).n;
 let MT=lsGet('sd-mtimer',null)||{min:10,method:'呼吸覺察',running:false,endAt:0,left:null};
 const savMT=()=>lsSet('sd-mtimer',MT);
 function mLeft(){return MT.running?Math.max(0,(MT.endAt-Date.now())/1000):(MT.left??MT.min*60)}
@@ -1778,20 +1802,22 @@ function mComplete(){
 }
 function emoGrid(k){
   const j=day(k).j||{},e=j.emo||{};
-  const chip=x=>{const v=+e[x.k]||0;return `<button class="emo ${x.g}${v?' on':''}" data-act="emo" data-k="${k}" data-e="${x.k}" style="--lv:${v}" aria-label="${x.n}，強度 ${LV[v]}"><span class="en">${x.n}</span><span class="ed">${x.d}</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=v?'f':''}"></i>`).join('')}</span></button>`};
+  const EMO=emoList();
+  const chip=x=>{const v=+e[x.k]||0;if(emoEdit)return `<div class="emo ${x.g} editing"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><button class="ghost sm stdel" data-act="emoDel" data-e="${esc(x.k)}" aria-label="從清單移除「${esc(x.n)}」">×</button></div>`;return `<button class="emo ${x.g}${v?' on':''}" data-act="emo" data-k="${k}" data-e="${x.k}" style="--lv:${v}" aria-label="${esc(x.n)}，強度 ${LV[v]}"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=v?'f':''}"></i>`).join('')}</span></button>`};
   const others=(j.emoX||[]).map((o,i)=>`<button class="emo other on" data-act="emoX" data-k="${k}" data-i="${i}" style="--lv:${o.v}" aria-label="${esc(o.n)}，強度 ${LV[o.v]}"><span class="en">${esc(o.n)}</span><span class="ed">自訂</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=o.v?'f':''}"></i>`).join('')}</span></button>`).join('');
   const strong=EMO.filter(x=>(+e[x.k]||0)>=2);
-  return `<p class="muted" style="margin:-4px 0 12px">點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。</p>
+  return `<div class="row sb" style="margin:-4px 0 12px"><p class="muted" style="margin:0">${emoEdit?'按 × 從清單移除；也可以新增常用的情緒。之前的紀錄都會保留。':'點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。'}</p><button class="ghost sm" data-act="emoEditT">${emoEdit?'完成':'編輯清單'}</button></div>
+  ${emoEdit?`<div class="row" style="margin-bottom:12px"><input id="emoAddN" type="text" placeholder="名稱，例：期待" style="width:120px"><input id="emoAddD" type="text" placeholder="說明（選填），例：盼望、興奮" style="flex:1;min-width:140px"><select id="emoAddG"><option value="hard">需要照顧</option><option value="ease">順暢</option></select><button class="sm sec" data-act="emoListAdd">加入清單</button><button class="ghost sm" data-act="emoListReset">恢復預設</button></div>`:''}
   <h3 style="margin-top:0">需要照顧的狀態</h3><div class="emos">${EMO.filter(x=>x.g==='hard').map(chip).join('')}</div>
   <h3>順暢的狀態</h3><div class="emos">${EMO.filter(x=>x.g==='ease').map(chip).join('')}</div>
-  <h3>其他</h3><div class="emos">${others}<div class="row"><input id="emoNew" type="text" placeholder="自己命名，例：期待、委屈" style="width:170px"><button class="sm" data-act="emoAdd" data-k="${k}">加入</button></div></div>
-  ${strong.length?`<div class="tips">${strong.map(x=>`<p><b>${x.n}・${LV[+e[x.k]]}</b>　${esc(x.tip)}</p>`).join('')}</div>`:''}`;
+  ${emoEdit?'':`<h3>今天的其他情緒</h3><div class="emos">${others}<div class="row"><input id="emoNew" type="text" placeholder="自己命名，例：期待、委屈" style="width:170px"><button class="sm" data-act="emoAdd" data-k="${k}">加入</button></div></div>`}
+  ${!emoEdit&&strong.length?`<div class="tips">${strong.map(x=>`<p><b>${x.n}・${LV[+e[x.k]]}</b>　${esc(x.tip)}</p>`).join('')}</div>`:''}`;
 }
 function momentsHTML(k){
   const ms=(day(k).j||{}).moments||[],n=new Date();
   return `<div class="fields" style="grid-template-columns:110px 1fr">
     <label class="f">時間<input id="moT" type="time" value="${pad(n.getHours())}:${pad(n.getMinutes())}"></label>
-    <label class="f">當下的情緒<select id="moE"><option value="">（選一個）</option>${EMO.map(x=>`<option value="${x.k}">${x.n}</option>`).join('')}</select></label>
+    <label class="f">當下的情緒<select id="moE"><option value="">（選一個）</option>${emoList().map(x=>`<option value="${esc(x.k)}">${esc(x.n)}</option>`).join('')}</select></label>
   </div>
   <label class="f" style="margin-top:8px">發生了什麼<input id="moW" type="text" placeholder="只寫事實，例：模考聽力分數比上次低"></label>
   <div class="fields" style="grid-template-columns:1fr 1fr;margin-top:8px">
@@ -1799,7 +1825,7 @@ function momentsHTML(k){
     <label class="f">我怎麼回應<input id="moR" type="text" placeholder="例：停下來呼吸、去散步"></label>
   </div>
   <div style="margin:8px 0 10px"><button class="sec sm" data-act="moAdd" data-k="${k}">記下這個片段</button></div>
-  <div class="list">${ms.map(m=>`<div class="li" style="align-items:flex-start"><span class="num muted">${esc(m.t)}</span><div class="grow">${m.e?`<span class="pill ${(EMO.find(x=>x.k===m.e)||{}).g==='ease'?'good':'warn'}">${emoName(m.e)}</span> `:''}${esc(m.w)}${m.b?`<div class="muted">身體：${esc(m.b)}</div>`:''}${m.r?`<div class="muted">回應：${esc(m.r)}</div>`:''}</div><button class="ghost sm" data-act="moDel" data-k="${k}" data-id="${m.id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">情緒升起的當下，用三十秒記下事件、身體和回應。累積幾次後，常見的模式就會浮現。</p>'}</div>`;
+  <div class="list">${ms.map(m=>`<div class="li" style="align-items:flex-start"><span class="num muted">${esc(m.t)}</span><div class="grow">${m.e?`<span class="pill ${(emoList().concat(EMO_DEF).find(x=>x.k===m.e)||{}).g==='ease'?'good':'warn'}">${emoName(m.e)}</span> `:''}${esc(m.w)}${m.b?`<div class="muted">身體：${esc(m.b)}</div>`:''}${m.r?`<div class="muted">回應：${esc(m.r)}</div>`:''}</div><button class="ghost sm" data-act="moDel" data-k="${k}" data-id="${m.id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">情緒升起的當下，用三十秒記下事件、身體和回應。累積幾次後，常見的模式就會浮現。</p>'}</div>`;
 }
 function practiceHTML(k){
   const ps=(day(k).j||{}).practice||[],tot=ps.reduce((a,p)=>a+(+p.min||0),0);
@@ -1815,7 +1841,7 @@ function practiceHTML(k){
 }
 function emoMap(k){
   const days=Array.from({length:14},(_,i)=>addDays(k,i-13));
-  const rows=EMO.map(x=>{const vals=days.map(d=>+((day(d).j||{}).emo||{})[x.k]||0);if(!vals.some(Boolean))return '';return `<div class="em-n">${x.n}</div>${vals.map((v,i)=>`<div class="em-c ${x.g}" style="--lv:${v}" title="${fmtMD(days[i])} ${x.n} ${LV[v]}"></div>`).join('')}`}).join('');
+  const rows=emoList().map(x=>{const vals=days.map(d=>+((day(d).j||{}).emo||{})[x.k]||0);if(!vals.some(Boolean))return '';return `<div class="em-n">${x.n}</div>${vals.map((v,i)=>`<div class="em-c ${x.g}" style="--lv:${v}" title="${fmtMD(days[i])} ${x.n} ${LV[v]}"></div>`).join('')}`}).join('');
   return rows?`<div class="emap" style="grid-template-columns:44px repeat(14,minmax(0,1fr))"><div></div>${days.map(d=>`<div class="em-d">${parseD(d).getDate()}</div>`).join('')}${rows}</div><p class="muted" style="margin:6px 0 0">顏色越深代表越強。橘色是需要照顧的狀態，綠色是順暢的狀態。</p>`:'<p class="empty">記錄幾天情緒覺察後，這裡會出現兩週的情緒地圖。</p>';
 }
 function vJournal(){
@@ -1868,6 +1894,16 @@ Object.assign(A,{
   prAdd:el=>{const m=+$('#prMin').value;if(!m)return;editDay(el.dataset.k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});render()}
 });
 Object.assign(C,{mMethod:el=>{MT.method=el.value;savMT()}});
+Object.assign(A,{
+  emoEditT:()=>{emoEdit=!emoEdit;render()},
+  emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
+  emoListAdd:()=>{const n=$('#emoAddN').value.trim();if(!n)return toast('先寫情緒的名稱');if(emoList().some(x=>x.n===n))return toast('清單裡已經有「'+n+'」');const g=$('#emoAddG').value,d=$('#emoAddD').value.trim();editCfg(c=>{c.emoList=emoList().concat([{k:'u_'+rid(),n,d:d||'自訂',g,tip:g==='hard'?'先停下來，看見它、叫出它的名字，再決定怎麼回應。':'停留幾秒，記下是什麼帶來這份感受。'}])});render()},
+  emoListReset:el=>{if(!twoStep(el))return;editCfg(c=>{delete c.emoList});render()},
+  starterEditT:()=>{starterEdit=!starterEdit;starter=null;render()},
+  starterDel:el=>{const k=el.dataset.k;editCfg(c=>{c.starters=starters().filter(x=>x[0]!==k)});render()},
+  starterAdd:()=>{const n=$('#stNewN').value.trim(),d=$('#stNewD').value.trim();if(!n)return toast('先寫名稱');editCfg(c=>{c.starters=starters().concat([['u_'+rid(),n,d||'15 分鐘內能完成']])});render()},
+  starterReset:el=>{if(!twoStep(el))return;editCfg(c=>{delete c.starters});render()}
+});
 Object.assign(IN,{prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.note=el.value},true)}});
 
 /* ---------- plan actions ---------- */
@@ -1913,7 +1949,7 @@ Object.assign(A,{
   stepPomo:el=>{const st=proj(curProj).stages.find(s=>s.id===el.dataset.st);const x=st.steps.find(y=>y.id===el.dataset.id);P.proj=curProj;P.phase=st.id;P.task=x.t;if(P.mode!=='work'&&!P.running)P.mode='work';savP();location.hash='today'},
   starter:el=>{starter=starter===el.dataset.k?null:el.dataset.k;render();setTimeout(()=>{const i=$('#winTxt');i&&i.focus()},30)},
   winAdd:()=>{const t=($('#winTxt')||{}).value||'';editProj(p=>{p.wins=p.wins||[];p.wins.push({id:rid(),d:today(),k:starter,t:t.trim()})});toast('記下了。今天也有進展。');starter=null;render()},
-  winPomo:()=>{const w=WIN_KINDS.find(x=>x[0]===starter);P.proj=curProj;P.phase=(curStageOf(curProj)||{}).id||'';P.task=(($('#winTxt')||{}).value||'').trim()||w[2];if(!P.running)P.mode='work';savP();starter=null;location.hash='today'},
+  winPomo:()=>{const w=starters().find(x=>x[0]===starter)||['','',''];P.proj=curProj;P.phase=(curStageOf(curProj)||{}).id||'';P.task=(($('#winTxt')||{}).value||'').trim()||w[2];if(!P.running)P.mode='work';savP();starter=null;location.hash='today'},
   planTab:el=>{planTab=el.dataset.t;render();setTimeout(()=>{const t=$('#planTabs');t&&t.scrollIntoView({block:'start'})},30)},
   nKind:el=>{window.__nk=el.dataset.k;$('#nkSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'))},
   nFilter:el=>{noteFilter=el.dataset.k;render()},

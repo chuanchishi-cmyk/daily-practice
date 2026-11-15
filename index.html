@@ -208,6 +208,10 @@ nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--
 .callout{background:var(--sunk);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0}
 .guide ul{margin:0;padding-left:18px}
 .likert.v6 button{width:40px}
+.xlink{margin-left:auto;font-size:12px;font-weight:400;color:var(--focus);text-decoration:none;white-space:nowrap}
+.xlink:hover{text-decoration:underline}
+h3 .xlink{margin-left:8px}
+.mclock.small{font-size:34px;padding:0;text-align:left}
 .books3{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px}
 .starter.editing,.emo.editing{position:relative;cursor:default;border:1px dashed var(--line)}
 .starter.editing{display:flex;flex-direction:column;gap:2px;padding:8px 28px 8px 10px;border-radius:10px;background:var(--bg)}
@@ -580,6 +584,13 @@ const sdot=id=>`<span class="dot" style="background:var(--c${subj(id).c})"></spa
 function subjOptions(sel){return cfg().subjects.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}
 function projOptions(sel){return '<option value="">（不指定）</option>'+Object.entries(S.projects).map(([id,p])=>`<option value="${esc(id)}"${id===sel?' selected':''}>${esc(p.name)}</option>`).join('')}
 function phaseOptions(pid,sel){const p=S.projects[pid];if(!p)return '<option value="">—</option>';return '<option value="">（不指定）</option>'+stagesOf(p).map(ph=>`<option value="${esc(ph.id)}"${ph.id===sel?' selected':''}>${esc(ph.name)}</option>`).join('')}
+const XL=(label,to,extra='')=>(to==='prefs'||to==='today'||isOn(to))?`<a class="xlink" href="#${to}" data-act="go" data-to="${to}" ${extra}>${label} →</a>`:'';
+function todayMindHTML(){
+  const ps=(day(today()).j||{}).practice||[],tot=ps.reduce((a,x)=>a+(+x.min||0),0);
+  return `<div class="row sb" style="align-items:center"><div class="mclock small" id="mTime">--:--</div><div class="row" style="gap:4px">${[3,5,10,15,20,30].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m}′</button>`).join('')}</div></div>
+  <div class="row" style="margin-top:8px"><select id="mMethodT" data-ch="mMethod" aria-label="練習方法">${METHODS.map(x=>`<option${x===MT.method?' selected':''}>${x}</option>`).join('')}</select><button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+  <p class="muted" style="margin:8px 0 0">今天已靜心 ${tot} 分鐘。結束時會響鈴，並自動記到覺察日記。</p>`;
+}
 function examChips(){
   const ex=cfg().exams.filter(e=>e.date);
   if(!ex.length)return `<a class="chip" href="#exam">設定考試日期</a>`;
@@ -760,15 +771,16 @@ function vToday(){
   <div class="grid2">
     <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}</section>
     <div class="stack">
-      <section class="card"><h2>今天最重要的三件事</h2>${top3HTML(k)}</section>
-      <section class="card"><h2>計數</h2>${countersHTML(k)}</section>
-      <section class="card"><h2>精力打卡 ${isOn('quiz')?'<a class="muted" href="#quiz">用在「我的節奏」報告</a>':''}</h2>${energyHTML(k)}</section>
+      <section class="card"><h2>今天最重要的三件事 ${XL('寫今天的覺察日記','journal')}</h2>${top3HTML(k)}</section>
+      <section class="card"><h2>計數 ${XL('調整計數器','prefs')}</h2>${countersHTML(k)}</section>
+      <section class="card"><h2>精力打卡 ${XL('用在「我的節奏」報告','quiz')}</h2>${energyHTML(k)}</section>
+      ${isOn('journal')?`<section class="card"><h2>靜心 ${XL('寫下觀察','journal')}</h2>${todayMindHTML()}</section>`:''}
     </div>
   </div>
   <div class="grid3" style="grid-template-columns:repeat(${1+isOn('exam')+isOn('plan')},minmax(0,1fr))">
-    <section class="card"><h2>今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span></h2>${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div></section>
-    ${isOn('exam')?`<section class="card"><h2>待複習錯題</h2>${dueHTML()}</section>`:''}
-    ${isOn('plan')?`<section class="card"><h2>研究專案的下一步</h2>${nextStepsHTML()}</section>`:''}
+    <section class="card"><h2>今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span> ${XL('看本週統計','stats','data-m="week"')}</h2>${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div></section>
+    ${isOn('exam')?`<section class="card"><h2>待複習錯題 ${XL('考試衝刺','exam')}</h2>${dueHTML()}</section>`:''}
+    ${isOn('plan')?`<section class="card"><h2>研究專案的下一步 ${XL('論文地圖','plan')}</h2>${nextStepsHTML()}</section>`:''}
   </div>`;
 }
 
@@ -813,7 +825,7 @@ function dayDetail(k){
   ${mk.length?`<div class="chips" style="margin-bottom:10px">${mk.map(x=>`<span class="chip${x.c==='ex'?' hot':''}">${esc(x.n)}</span>`).join('')}</div>`:''}
   ${gcOn()&&GC.key===calM&&(GC.events[k]||[]).length?`<h3 style="margin-top:0">Google 日曆</h3><div class="list" style="margin-bottom:10px">${GC.events[k].map(e=>`<div class="li"><span class="dot" style="background:var(--c3)"></span><span class="num muted">${e.t||'全天'}</span><span class="grow">${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.n)}</a>`:esc(e.n)}</span></div>`).join('')}</div>`:''}
   ${sessionsHTML(k)}
-  <div style="margin:8px 0 4px"><button class="sm" data-act="manual" data-k="${k}">補登這天</button> <a class="btn sm" href="#journal" data-act="toJournal" data-k="${k}">寫這天的日記</a></div>
+  <div style="margin:8px 0 4px"><button class="sm" data-act="manual" data-k="${k}">補登這天</button> <a class="btn sm" href="#journal" data-act="toJournal" data-k="${k}">寫這天的日記</a> ${isOn('stats')?`<a class="btn sm" href="#stats" data-act="go" data-to="stats" data-m="week" data-k="${k}">看這週統計</a>`:''}</div>
   <h3>計數</h3>${c.counters.map(x=>`<div class="row sb"><span>${esc(x.name)}</span><span class="num">${+((d.counts||{})[x.id])||0}${x.goal?' / '+x.goal:''}</span></div>`).join('')||'<p class="empty">—</p>'}
   <h3>覺察日記</h3>
   ${j.intent?`<p class="qa"><b>意向：</b>${esc(j.intent)}</p>`:''}
@@ -879,7 +891,7 @@ function vStats(){
   const outList=Object.entries(A.outs).map(([k,v])=>{const [sid,u]=k.split('|');return `<span class="chip">${sdot(sid)}${esc(subj(sid).name)} <b>${fmtN(v)}</b> ${esc(u)}</span>`}).join('');
   let main='';
   if(stMode==='day'){
-    main=`<div class="gridA"><section class="card"><h2>專注紀錄</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
+    main=`<div class="gridA"><section class="card"><h2>專注紀錄 ${XL('在月曆上看','calendar',`data-k="${stAnchor}"`)}</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
   }else{
     const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:c.subjects.map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
     const hourRows=A.hours.map((v,h)=>({label:String(h),parts:[{c:0,v,n:h+' 點'}]})).slice(6,24);
@@ -887,7 +899,7 @@ function vStats(){
     main=`<section class="card" style="margin-bottom:16px"><h2>每天專注分鐘 <span class="muted">依科目堆疊</span></h2>${stackBars(rows,{every:stMode==='month'?2:1,marker:today()})}
       <div class="legend" style="margin-top:8px">${c.subjects.map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
     <div class="grid3" style="margin-bottom:16px">
-      <section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
+      <section class="card"><h2>科目分配 ${XL('調整科目','prefs')}</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
       <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:160,every:3}):'<p class="empty">沒有紀錄</p>'}</section>
       <section class="card"><h2>計數</h2><div class="list">${cntRows||'<p class="empty">沒有計數器</p>'}</div>${moodInsight(keys)}</section>
     </div>
@@ -909,7 +921,7 @@ function moodInsight(keys){
   const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
   const hi=avg(pairs.filter(p=>p.e>=4).map(p=>p.min)),lo=avg(pairs.filter(p=>p.e&&p.e<=2).map(p=>p.min));
   const mh=avg(pairs.filter(p=>p.m>=4).map(p=>p.min)),ml=avg(pairs.filter(p=>p.m&&p.m<=2).map(p=>p.min));
-  return `<h3>心境、精力與專注</h3><p class="muted">精力 4–5 分的日子平均專注 ${hi??'—'} 分，1–2 分的日子 ${lo??'—'} 分。<br>心境 4–5 分的日子平均 ${mh??'—'} 分，1–2 分的日子 ${ml??'—'} 分。</p>`;
+  return `<h3>心境、精力與專注 ${XL('覺察日記','journal')}</h3><p class="muted">精力 4–5 分的日子平均專注 ${hi??'—'} 分，1–2 分的日子 ${lo??'—'} 分。<br>心境 4–5 分的日子平均 ${mh??'—'} 分，1–2 分的日子 ${ml??'—'} 分。</p>`;
 }
 function weekReview(keys,A,subs){
   const wk=keys[0],rv=S.reviews[wk]||{};
@@ -952,7 +964,7 @@ function vExam(){
       ${tEditing?`<div class="tedit"><label class="f">計時名稱<input id="tName" type="text" value="${esc(p.name)}"></label><span class="muted" style="font-size:12px">每一段結束會響鈴，並自動進入下一段。</span>${p.segs.map((sg,i)=>`<div class="row"><input id="tsn${i}" type="text" value="${esc(sg.n)}" style="flex:1" aria-label="段落名稱"><input id="tsm${i}" type="number" min="0" max="300" value="${Math.floor(sg.s/60)}" aria-label="分"><span class="muted">分</span><input id="tss${i}" type="number" min="0" max="59" value="${sg.s%60}" style="width:64px" aria-label="秒"><span class="muted">秒</span><button class="ghost sm" data-act="tSegDel" data-i="${i}" aria-label="刪除這段"${p.segs.length<2?' disabled':''}>×</button></div>`).join('')}
         <div class="row sb" style="margin-top:8px"><div class="row"><button class="sm" data-act="tSegAdd">新增一段</button>${DEF.timers.some(x=>x.id===p.id)?'<button class="ghost sm" data-act="tDefault">恢復預設時間</button>':''}${c.timers.length>1?'<button class="ghost sm" data-act="tDelP">刪除這個計時</button>':''}</div><button class="sec sm" data-act="tSave">儲存</button></div></div>`:''}
     </section>
-    <section class="card"><h2>考試日期</h2>
+    <section class="card"><h2>考試日期 ${XL('在月曆上看','calendar')}</h2>
       <div class="list">${c.exams.map((e,i)=>{const n=e.date?diffDays(t,e.date):null;return `<div class="li"><div class="grow"><input type="text" id="exn${i}" data-ch="exam" data-i="${i}" data-f="name" value="${esc(e.name)}" style="width:100%"></div><input type="date" id="exd${i}" data-ch="exam" data-i="${i}" data-f="date" value="${esc(e.date)}">${n==null?'<span class="muted" style="min-width:70px;text-align:right">選個日期</span>':`<span class="bigdays num" style="min-width:70px;text-align:right">${n<0?'完':n}<small class="muted" style="font-size:12px;font-family:var(--f-body)"> 天</small></span>`}<button class="ghost sm" data-act="exDel" data-i="${i}" aria-label="刪除">×</button></div>`}).join('')}</div>
       <div style="margin-top:10px"><button data-act="exAdd">新增考試或截止日</button></div>
       <p class="muted">例如正式考試、申請截止日、研究所筆試。日期到了之前，首頁會一直幫你倒數。</p>
@@ -1110,13 +1122,13 @@ function vPlan(){
       </section>
     </div>
     <aside class="stack side">
-      <section class="card"><h2>本週成果</h2>
+      <section class="card"><h2>本週成果 ${XL('統計','stats','data-m="week"')}</h2>
         <div class="wallnums"><div><b class="num">${wkSteps}</b><span>完成步驟</span></div><div><b class="num">${wkWins}</b><span>小成果</span></div><div><b class="num">${wkQuotes}</b><span>書摘</span></div><div><b class="num">${fmtN(wkMin/60)}</b><span>小時</span></div></div>
         <h3>近五週</h3><div class="wall">${days30.map(k=>{const n=dayActivity(curProj,k);return `<i style="--lv:${Math.min(3,n)}" title="${fmtMD(k)}：${n} 項"></i>`}).join('')}</div>
         <p class="muted" style="margin:6px 0 0">有任何進展的日子就會亮起來，再小的一步都算。</p>
         ${(p.wins||[]).length?`<h3>最近的小成果</h3><div class="list">${(p.wins||[]).slice(-5).reverse().map(w=>`<div class="li"><span class="num muted">${fmtMD(w.d)}</span><span class="pill mut">${winLabel(w.k)}</span><span class="grow">${esc(w.t||'')}</span></div>`).join('')}</div>`:''}
       </section>
-      <section class="card"><h2>下次會談</h2>${p.next&&p.next.date?`<div class="bigstep">${fmtMD(p.next.date)}（週${wdName(p.next.date)}）${esc(p.next.time||'')}</div><div class="muted">與${esc(p.next.who||'指導教授')}・${esc(p.next.mode||'面談')}${p.next.eventLink?'・已加入日曆':''}</div>`:'<p class="empty">還沒有排定。</p>'}
+      <section class="card"><h2>下次會談 ${p.next&&p.next.date?XL('月曆','calendar',`data-k="${p.next.date}"`):''}</h2>${p.next&&p.next.date?`<div class="bigstep">${fmtMD(p.next.date)}（週${wdName(p.next.date)}）${esc(p.next.time||'')}</div><div class="muted">與${esc(p.next.who||'指導教授')}・${esc(p.next.mode||'面談')}${p.next.eventLink?'・已加入日曆':''}</div>`:'<p class="empty">還沒有排定。</p>'}
         <p class="muted" style="margin:8px 0 0">會前清單 ${openTodos(p).length} 項未完成</p>
         <button class="sm" style="margin-top:8px" data-act="planTab" data-t="meet">${p.next&&p.next.date?'查看會談':'安排會談'}</button></section>
       <section class="card"><h2>專案設定</h2>
@@ -1256,6 +1268,11 @@ const A={
   calSel:el=>{calSel=el.dataset.k;if(el.dataset.k.slice(0,7)!==calM)calM=el.dataset.k.slice(0,7);render()},
   calNav:el=>{const d=+el.dataset.d;if(!d){calM=today().slice(0,7);calSel=today()}else{const x=parseD(calM+'-01');x.setMonth(x.getMonth()+d);calM=ymd(x).slice(0,7)}render()},
   toJournal:el=>{jDay=el.dataset.k},
+  go:el=>{const to=el.dataset.to,k=el.dataset.k;
+    if(to==='calendar'&&k){calSel=k;calM=k.slice(0,7)}
+    if(to==='stats'){if(el.dataset.m)stMode=el.dataset.m;if(k)stAnchor=k}
+    if(to==='journal'&&k)jDay=k;
+    if(location.hash==='#'+to)render();else location.hash=to;window.scrollTo(0,0)},
   stMode:el=>{stMode=el.dataset.m;render()},
   stNav:el=>{const d=+el.dataset.d;if(!d)stAnchor=today();else if(stMode==='day')stAnchor=addDays(stAnchor,d);else if(stMode==='week')stAnchor=addDays(stAnchor,7*d);else{const x=parseD(stAnchor.slice(0,7)+'-01');x.setMonth(x.getMonth()+d);stAnchor=ymd(x)}render()},
   tPick:el=>{if(T.running)return toast('計時進行中，先暫停或重設');T={pid:el.dataset.id,seg:0,running:false,endAt:0,left:null};savT();render()},
@@ -1703,7 +1720,7 @@ function reportHTML(id,r){
       <h3>一天的精力曲線 <span class="muted">${M.ed.ok?`已納入近 30 天 ${M.ed.n} 筆打卡`:'根據你的回答'}</span></h3>${stackBars(rows,{h:160,unit:'分',marker:M.peak})}
       ${notes.map(n=>`<p class="callout">${n}</p>`).join('')}
       ${M.ed.ok?'':'<p class="muted">在「今日」做精力打卡，累積 8 筆、3 天以上後，這條曲線會加入你的真實數據。</p>'}
-      <h3>建議的一天</h3><div class="tablewrap"><table><tbody>${M.roles.map(x=>`<tr><td class="num">${x.b.r}</td><td>${x.b.n}</td><td><span class="pill ${x.r[1]}">${x.r[0]}</span></td><td style="white-space:normal">${esc(x.r[2])}</td></tr>`).join('')}</tbody></table></div>
+      <h3>建議的一天 ${XL('到今日開始','today')}</h3><div class="tablewrap"><table><tbody>${M.roles.map(x=>`<tr><td class="num">${x.b.r}</td><td>${x.b.n}</td><td><span class="pill ${x.r[1]}">${x.r[0]}</span></td><td style="white-space:normal">${esc(x.r[2])}</td></tr>`).join('')}</tbody></table></div>
       <h3>專注長度</h3><p>你一次大約能專心 ${E.span>=50?'45 分鐘以上':E.span+' 分鐘左右'}。建議番茄設為專注 ${ps.w} 分、休息 ${ps.s} 分${cur.work===ps.w?'（目前已是這個設定）':`，目前設定是 ${cur.work} 分`}。</p>
       ${cur.work!==ps.w?`<button class="sec sm" data-act="qzPomo" data-w="${ps.w}" data-s="${ps.s}">套用建議的番茄長度</button>`:''}
       <h3>恢復方式</h3><p>${RECOVER[E.recover]||''}</p>
@@ -1841,7 +1858,7 @@ function mComplete(){
   const min=Math.round((MT.min*60-(MT.left??0))/60)||MT.min;
   MT.running=false;MT.left=null;savMT();bell(3);
   editDay(today(),d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:MT.min,method:MT.method,q:null,note:''})});
-  toast('靜心 '+MT.min+' 分鐘，已記錄');if(R==='journal')render();
+  toast('靜心 '+MT.min+' 分鐘，已記錄');if(R==='journal'||R==='today')render();
 }
 function emoGrid(k){
   const j=day(k).j||{},e=j.emo||{};
@@ -1899,7 +1916,7 @@ function vJournal(){
       <section class="card"><h2>早晨・今日意向</h2>
         <label class="f">今天想帶著什麼樣的心情或態度<input type="text" id="in${k}" data-in="j" data-k="${k}" data-f="intent" value="${esc(j.intent)}" placeholder="例：不急，一次做好一件事"></label>
         <h3>今天最想照顧的三件事</h3>${top3HTML(k)}</section>
-      <section class="card"><h2>身心狀態</h2>
+      <section class="card"><h2>身心狀態 ${XL('這天的專注紀錄','calendar',`data-k="${k}"`)}</h2>
         <div class="row" style="gap:26px;align-items:flex-start">${sc('mood','心境','低落','明亮')}${sc('energy','精力','疲憊','充沛')}${sc('calm','安定','紛亂','安定')}
           <div><h3 style="margin-top:0">睡眠（小時）</h3><input type="number" id="sl${k}" min="0" max="16" step="0.5" data-in="j" data-k="${k}" data-f="sleep" value="${j.sleep??''}"></div></div>
         <label class="f" style="margin-top:12px">身體掃描：從頭到腳，哪裡緊繃、哪裡放鬆<input type="text" id="bd${k}" data-in="j" data-k="${k}" data-f="body" value="${esc(j.body)}" placeholder="例：肩頸緊、腹部放鬆、眼睛疲勞"></label>

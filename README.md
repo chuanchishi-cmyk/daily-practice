@@ -8,8 +8,8 @@
 
 ## 網址
 
-https://chuanchishi-cmyk.github.io/study-desk/
+https://chuanchishi-cmyk.github.io/daily-practice/
 
 ## 問題回報
 
-請到 [Issues](https://github.com/chuanchishi-cmyk/study-desk/issues) 留言。
+請到 [Issues](https://github.com/chuanchishi-cmyk/daily-practice/issues) 留言。

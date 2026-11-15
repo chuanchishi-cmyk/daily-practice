@@ -1645,7 +1645,8 @@ const ORIENT=[
   {id:'or1',q:'整體來說，你比較希望生活維持現狀，還是變得更好、更不一樣？',o:[['非常希望維持現狀',-2],['偏向維持',-1],['差不多',0],['偏向改變',1],['非常希望改變',2]]},
   {id:'or2',q:'做決定時，你比較常先想到自己的目標，還是先想到別人的需要？',o:[['幾乎都先想自己',-2],['偏向自己',-1],['差不多',0],['偏向別人',1],['幾乎都先想別人',2]]}
 ];
-const FU_OPTS=[['抽象題比較準','A'],['情境題比較準','S'],['它不是我追求的目標，但沒有它我不敢行動','base'],['我想要，但有顧慮擋著','want'],['要看情況','ctx']];
+const FU_OPTS=[['是，我真的在乎，會主動為它努力','hi'],['不太是，我很少為了它行動','lo'],['不是我的目標，但少了它我會不安、不敢開始','base'],['我想要，但有顧慮擋著','want'],['要看是什麼事','ctx']];
+const FU_EX={SD:'讀書計畫想自己排，被規定每一步會很不舒服',ST:'同一種讀法做久了會膩，想換新方法或新地方',HE:'讀完書一定要吃點好吃的、好好放鬆一下',AC:'分數、成果、被肯定，會讓你更有動力',PO:'分組時想當負責人，希望自己說了算',FA:'不想在同學面前答錯，不想讓人覺得你不行',SE:'先確定有保底方案，才敢做決定',TR:'過年過節的習俗、家裡的規矩，你會想照著做',CO:'做決定前會先想爸媽、老師會不會反對',HU:'考好了也不太想張揚，覺得沒什麼了不起',UN:'看到不公平的事會想站出來，關心社會議題',BE:'朋友找你幫忙，就算很忙也會先幫'};
 const TENSIONS=[
   {a:['AC','ST'],b:['SE'],n:'成就、刺激 vs. 安全',show:'想挑戰，又怕失敗',warn:'遲遲不送出、不開始',fix:'同時準備挑戰版和保底版'},
   {a:['SD'],b:['SE','CO'],n:'自主 vs. 安全、順從',show:'想要保障，又不想被綁死',warn:'對穩定的選擇感到窒息',fix:'在穩定的框架內爭取自由，例如彈性時段'},
@@ -1678,7 +1679,7 @@ function buildPairs(){
 }
 function computeValues(a,fu){
   const v=valScores(a),fin={},layerOf={};
-  DK.forEach(k=>{fin[k]=v.C[k];const ans=a['fu_'+k];if(fu.includes(k)&&ans){if(ans==='A')fin[k]=v.A[k];else if(ans==='S')fin[k]=v.S[k];else if(ans==='base'){fin[k]=Math.max(v.C[k],.6);layerOf[k]='base'}else if(ans==='want')layerOf[k]='want';else if(ans==='ctx')layerOf[k]='ctx'}});
+  DK.forEach(k=>{fin[k]=v.C[k];const ans=a['fu_'+k];if(fu.includes(k)&&ans){if(ans==='A')fin[k]=v.A[k];else if(ans==='S')fin[k]=v.S[k];else if(ans==='hi')fin[k]=Math.max(v.A[k],v.S[k]);else if(ans==='lo')fin[k]=Math.min(v.A[k],v.S[k]);else if(ans==='base'){fin[k]=Math.max(v.C[k],.6);layerOf[k]='base'}else if(ans==='want')layerOf[k]='want';else if(ans==='ctx')layerOf[k]='ctx'}});
   const rest=DK.filter(k=>!layerOf[k]).sort((x,y)=>fin[y]-fin[x]);
   rest.forEach((k,i)=>{layerOf[k]=i<2?'core':i<5?'support':i>=rest.length-3?'low':'mid'});
   const order=DK.slice().sort((x,y)=>fin[y]-fin[x]);
@@ -1704,13 +1705,13 @@ function valueReport(r){
   const tens=TENSIONS.filter(t=>t.a.some(imp)&&t.b.some(imp)).slice(0,4);
   const core=byL('core');
   const askRows=[...new Set([...core,...byL('support'),...byL('base'),...byL('want'),...(V.layerOf.FA!=='low'?['FA']:[]),'HE'])].slice(0,6);
-  const fuNote=k=>V.fu.includes(k)?({A:'追問：抽象題較準',S:'追問：情境題較準',base:'追問：重新定義為前提',want:'追問：想要但有顧慮',ctx:'追問：看情況'}[V.ans[k]]||''):'';
+  const fuNote=k=>V.fu.includes(k)?({A:'追問：抽象題較準',S:'追問：情境題較準',hi:'追問：確認在乎',lo:'追問：確認不太在乎',base:'追問：重新定義為前提',want:'追問：想要但有顧慮',ctx:'追問：看情況'}[V.ans[k]]||''):'';
   const qx=V.ox>=0?'偏向改變':'偏向維持',qy=V.oy>=0?'偏向關注他人':'偏向關注自己';
   return `<section class="card" style="margin-bottom:16px"><h2>價值輪廓 <span class="muted">Bailey《Intentional》的 12 個基本價值</span></h2>
     <p>${core.map(k=>'「'+DRV[k].n+'」').join('和')}是你的引擎${byL('base').length?'，'+byL('base').map(k=>'「'+DRV[k].n+'」').join('、')+'是你敢行動的地基':''}${byL('want').length?'，'+byL('want').map(k=>'「'+DRV[k].n+'」').join('、')+'是被顧慮擋住的渴望':''}。</p>
-    <div class="vgrid"><div class="tablewrap"><table class="vtable"><thead><tr><th>層級</th><th>價值</th><th>對你的意義</th><th class="num">抽象／情境排名</th></tr></thead><tbody>
+    <div class="vgrid"><div class="tablewrap"><table class="vtable"><thead><tr><th>層級</th><th>價值</th><th>對你的意義</th><th class="num" title="前：「這句話像不像我」的排名；後：「生活情境裡會怎麼選」的排名">排名 <span class="muted">像我／情境</span></th></tr></thead><tbody>
     ${LAYERS.flatMap(([L,ln])=>byL(L).map(k=>`<tr><td><span class="pill ${L==='core'?'bad':L==='support'?'warn':L==='low'||L==='mid'?'mut':'good'}">${ln}</span></td><td><b>${DRV[k].n}</b></td><td style="white-space:normal">${esc(DRV[k].def)}${V.why[k]?`<div class="muted">你說：${esc(V.why[k])}</div>`:''}</td><td class="num">${V.rA[k]} / ${V.rS[k]}${fuNote(k)?`<div class="muted" style="font-size:calc(11px * var(--fs,1))">${fuNote(k)}</div>`:''}</td></tr>`)).join('')}
-    </tbody></table></div>
+    </tbody></table><p class="muted" style="margin:6px 0 0">排名欄：前面的數字來自「這句話有多像我」的題目，後面的數字來自「生活情境裡你會怎麼選」的題目。兩者差很多的價值，就是追問過的那幾個。</p></div>
     <div><h3 style="margin-top:0">你的方向</h3>${orientSVG(V)}<p class="muted">整體${qx}、${qy}。Bailey 指出，價值分布在兩條軸上：想維持現狀還是讓事情變得更好；關注自己還是關注他人。</p></div></div>
   </section>
   ${tens.length?`<section class="card" style="margin-bottom:16px"><h2>價值拉扯 <span class="muted">內耗常從這裡來</span></h2><p class="muted">相對位置的價值容易互相拉扯。認出警訊，就能提早用對應的做法。</p>
@@ -1777,9 +1778,9 @@ function quizScreen(){
       return `<div class="qq" id="q_sb${i}"><div class="qt"><span class="num muted">${i+1}</span> ${esc(sc.q)}</div>${pick('sb','最像我')}<div id="q_sw${i}">${pick('sw','最不像我')}</div></div>`}).join('');
   }else if(st===6){
     const fu=QZ.pairs||[];const v=valScores(QZ.a);let n=0;
-    body=`<h2>追問</h2>`+(fu.length?`<p class="muted">有 ${fu.length} 個價值，你在抽象題和生活情境的答案不太一樣。選出比較接近你的說法，並簡單說明原因，報告會更準。</p>`+fu.map(k=>{const hiA=v.rA[k]<v.rS[k];
-      return `<div class="qq" id="q_fu_${k}"><div class="qt"><span class="num muted">${++n}</span> 「${DRV[k].n}」：${esc(DRV[k].def)}</div><div class="ex">抽象題排第 ${v.rA[k]} 名，生活情境排第 ${v.rS[k]} 名。${hiA?'你覺得自己重視它，但做選擇時比較少選它。':'你做選擇時常選它，但描述時覺得不太像你。'}</div>${optBtns('fu_'+k,FU_OPTS)}
-      <label class="f" style="margin-top:8px">為什麼？（選填，寫一句就好）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="例：我想挑戰，但要先有保底才敢"></label></div>`}).join(''):`<p class="muted">你的抽象題和生活情境答案很一致，不需要追問。</p>`)+
+    body=`<h2>追問</h2>`+(fu.length?`<p class="muted">你前面的回答裡，有 ${fu.length} 個價值的答案前後不太一致。這很常見：我們心裡想的和實際做的，常常不完全一樣。請直接選出最接近你的說法。</p>`+fu.map(k=>{const hiA=v.rA[k]<v.rS[k];
+      return `<div class="qq" id="q_fu_${k}"><div class="qt"><span class="num muted">${++n}</span> 「${DRV[k].n}」對你來說是哪一種？</div><div class="ex">${esc(DRV[k].def)}。<br>像是：${esc(FU_EX[k]||'')}。</div>${optBtns('fu_'+k,FU_OPTS)}
+      <label class="f" style="margin-top:8px">補充一句（選填）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="例：考試前特別在意，平常還好"></label></div>`}).join(''):`<p class="muted">你前後的回答很一致，不需要追問。</p>`)+
       `<div class="qq"><label class="qt" for="sa_oth"><span class="num muted">${++n}</span> 除了這 12 個價值，還有什麼力量在推動你？寫下它，並說明原因。<span class="muted">（選填）</span></label><div class="ex">例：「家人的期待，因為我想讓他們放心。」</div><textarea id="sa_oth" data-in="qs" data-q="oth" rows="2">${esc(QZ.a.s_oth)}</textarea></div>`;
   }else if(st===7){
     body=`<h2>簡答 <span class="muted">選填，但寫得越具體，報告越貼近你</span></h2>`+SHORT.map(([id,q],i)=>`<div class="qq"><label class="qt" for="sa_${id}"><span class="num muted">${i+1}</span> ${esc(q)}</label><textarea id="sa_${id}" data-in="qs" data-q="${id}" rows="2">${esc(QZ.a['s_'+id])}</textarea></div>`).join('');

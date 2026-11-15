@@ -232,6 +232,11 @@ button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;g
 @media (hover:none),(pointer:coarse),(max-width:820px){.kbhint{display:none}}
 .opt[data-v="?"]{border-style:dashed;color:var(--muted)}
 .opt[data-v="?"][aria-pressed="true"]{color:var(--surface)}
+.pausebox{margin:12px 0 0;padding:10px 12px;border:1px dashed var(--accent);border-radius:10px;background:var(--sunk)}
+.resume{margin:10px 0 0;text-align:center;font-size:calc(13px * var(--fs,1))}
+.park{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.parkit.done .grow{color:var(--muted);text-decoration:line-through}
+.whybox{padding:10px 12px;border-radius:10px;background:var(--sunk)}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -684,16 +689,28 @@ function pomoHTML(){
     <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
     ${P.proj&&isOn('plan')?`<label class="f wide">階段<select id="pPhase" data-ch="pfield" data-k="phase">${phaseOptions(P.proj,P.phase)}</select></label>`:''}
   </div>
+  ${pPaused()?`<div class="pausebox"><label class="f">暫停中・手邊做到哪裡？<input id="pPause" type="text" data-ch="pfield" data-k="pauseNote" value="${esc(P.pauseNote||'')}" placeholder="例：第二節寫到第三段，下一句要補引文"></label><p class="muted" style="margin:4px 0 0">寫一句就好。回來時看這行，就能馬上接上。</p></div>`:''}
+  ${P.running&&P.pauseNote?`<p class="resume"><span class="muted">上次停在：</span>${esc(P.pauseNote)}</p>`:''}
   <div class="ctrl">
     <button class="pri" data-act="ptoggle" id="pToggle" aria-label="${P.running?'暫停':'開始'}">${playLbl(P.running,'開始')}</button>
     <button data-act="preset">重設</button>
     ${P.mode==='work'?'<button data-act="pfinish">提前結束並記錄</button>':'<button data-act="pskip">跳過休息</button>'}
   </div>
-  <p class="muted kbhint" style="text-align:center;margin:12px 0 0">空白鍵：開始／暫停</p>`;
+  <p class="muted kbhint" style="text-align:center;margin:12px 0 0">空白鍵：開始／暫停</p>
+  ${parkHTML()}`;
+}
+function pPaused(){return P.mode==='work'&&!P.running&&P.left!=null&&!!P.startedAt}
+function parkHTML(){
+  const k=today(),it=((day(k).j||{}).park)||[],open=it.filter(x=>!x.done).length;
+  return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">雜念停車場</b><span class="muted">${it.length?`${open} 則待處理`:''}</span></div>
+    <p class="muted" style="margin:2px 0 8px">專心時冒出雜念或想做的事，先停在這裡。寫下來，腦袋就不必一直記著它；番茄結束後再處理。</p>
+    <div class="row"><input id="parkIn" type="text" placeholder="例：回老師的信、查那篇文章的出處、買牙膏" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">先放著</button></div>
+    ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
+  </div>`;
 }
 function pStart(){unlockAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
 function pPause(){P.left=pLeft();P.running=false;savP()}
-function pReset(){P.running=false;P.left=null;P.startedAt=null;savP()}
+function pReset(){P.running=false;P.left=null;P.startedAt=null;P.pauseNote='';savP()}
 function pSetMode(m){pReset();P.mode=m;savP()}
 function pComplete(early){
   const planned=modeSec('work');
@@ -706,7 +723,8 @@ function pComplete(early){
     const next=P.cycles%cfg().pomo.every===0?'long':'short';
     P.mode=next;P.left=null;P.startedAt=null;savP();
     if(!early)beep(3);
-    openRecord({min:early?Math.max(1,elapsed):Math.round(planned/60),t:started,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task});
+    const pn=P.pauseNote||'';P.pauseNote='';savP();
+    openRecord({min:early?Math.max(1,elapsed):Math.round(planned/60),t:started,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task,early:!!early,note:pn});
   }else{
     P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)beep(2);toast('休息結束，準備下一個番茄');
   }
@@ -760,7 +778,7 @@ function drawRecord(){
   const r=REC,d=new Date(r.t);const u=subj(r.sub).unit;
   const ph=null,pjr=r.proj&&S.projects[r.proj]?proj(r.proj):null;
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="recT"><div class="box">
-    <h2 id="recT">${r.manual?'補登一筆專注紀錄':'完成一個番茄！記下這段做了什麼'}</h2>
+    <h2 id="recT">${r.manual?'補登一筆專注紀錄':r.early?'提前結束：記下這段做了什麼':'完成一個番茄！記下這段做了什麼'}</h2>
     <div class="fields" style="grid-template-columns:1fr 1fr 1fr">
       <label class="f">日期<input id="rDate" type="date" value="${ymd(d)}"></label>
       <label class="f">開始時間<input id="rTime" type="time" value="${pad(d.getHours())}:${pad(d.getMinutes())}"></label>
@@ -777,19 +795,23 @@ function drawRecord(){
       ${pjr?`<label class="row" style="margin-top:18px;font-size:calc(12px * var(--fs,1))"><input id="rAddPhase" type="checkbox" checked> 記為「${esc(pjr.name)}」的小成果</label>`:''}
     </div>
     <div class="row"><span class="muted" style="font-size:calc(12px * var(--fs,1))">這段時間的精力</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="recEn" data-n="${n}" aria-pressed="${r.en===n}">${n}</button>`).join('')}</div></div>
-    <label class="f">筆記（卡在哪、下次從哪開始）<textarea id="rNote" rows="2">${esc(r.note)}</textarea></label>
+    ${r.early?`<div class="whybox"><label class="f">提前結束的原因<input id="rWhy" type="text" value="${esc(r.why||'')}" placeholder="例：被訊息打斷、這段比預期早完成"></label>
+      <div class="opts" style="margin-top:6px">${['被打斷','提早完成','太累了','卡住了','時間到了要出門'].map(t=>`<button class="opt sm" data-act="recWhy" data-v="${t}">${t}</button>`).join('')}</div>
+      <p class="muted" style="margin:4px 0 0">記下原因，累積幾次就能看出自己常在哪裡中斷，下次提早準備。</p></div>`:''}
+    <label class="f">筆記（卡在哪、下次從哪開始）<textarea id="rNote" rows="2" placeholder="例：第三章第二節寫到一半，下次先補完那段引文">${esc(r.note)}</textarea></label>
     <div class="row sb"><button class="ghost" data-act="recCancel">不記錄</button><button class="pri" data-act="recSave">儲存</button></div>
   </div></div>`;
   setTimeout(()=>{const f=$('#rOut');if(f&&!r.manual)f.focus();else{const t=$('#rTask');t&&t.focus()}},30);
 }
 function readRecordForm(){
+  {const w=$('#rWhy');if(w)REC.why=w.value}
   REC.task=$('#rTask').value;REC.out=$('#rOut').value;REC.note=$('#rNote').value;REC.min=$('#rMin').value;
   const dt=$('#rDate').value,tm=$('#rTime').value||'00:00';if(dt){REC.t=new Date(dt+'T'+tm).toISOString()}
 }
 function saveRecord(){
   readRecordForm();
   const r=REC,k=ymd(new Date(r.t)),out=parseFloat(r.out)||0,unit=$('#rUnit').value.trim();
-  const s={id:rid(),t:r.t,min:Math.max(1,Math.round(+r.min||1)),sub:r.sub,proj:r.proj||'',phase:r.phase||'',task:r.task.trim(),out,unit,note:r.note.trim()};
+  const s={id:rid(),t:r.t,min:Math.max(1,Math.round(+r.min||1)),sub:r.sub,proj:r.proj||'',phase:r.phase||'',task:r.task.trim(),out,unit,note:r.note.trim()};if(r.early&&(r.why||'').trim())s.why=r.why.trim();
   editDay(k,d=>{d.sessions.push(s);d.sessions.sort((a,b)=>a.t<b.t?-1:1);if(r.en){const e=new Date(new Date(r.t).getTime()+s.min*60000);d.en=d.en||[];d.en.push({t:pad(e.getHours())+':'+pad(e.getMinutes()),e:r.en})}});
   const add=$('#rAddPhase');
   if(add&&add.checked&&S.projects[r.proj]){
@@ -817,7 +839,7 @@ function sessionsHTML(k,del=true){
   const ss=day(k).sessions||[];
   if(!ss.length)return `<p class="empty">這天還沒有專注紀錄。</p>`;
   return `<div class="list">${ss.map(s=>{const d=new Date(s.t);const pj=s.proj&&S.projects[s.proj]&&!String(s.sub).startsWith('p:')?S.projects[s.proj]:null;return `<div class="li">${sdot(s.sub)}<span class="num muted">${pad(d.getHours())}:${pad(d.getMinutes())}</span>
-    <div class="grow"><div>${esc(s.task||subj(s.sub).name)}</div><div class="muted">${s.task?esc(subj(s.sub).name):''}${pj?'・'+esc(pj.name):''}${s.out?`・產出 ${s.out} ${esc(s.unit||'')}`:''}${s.note?'・'+esc(s.note):''}</div></div>
+    <div class="grow"><div>${esc(s.task||subj(s.sub).name)}</div><div class="muted">${s.task?esc(subj(s.sub).name):''}${pj?'・'+esc(pj.name):''}${s.out?`・產出 ${s.out} ${esc(s.unit||'')}`:''}${s.note?'・'+esc(s.note):''}${s.why?'・提前結束：'+esc(s.why):''}</div></div>
     <span class="num">${s.min}′</span>${del?`<button class="ghost sm" data-act="delSess" data-k="${k}" data-id="${s.id}" aria-label="刪除這筆">×</button>`:''}</div>`}).join('')}</div>`;
 }
 function dueList(){const t=today();return Object.entries(S.mistakes).filter(([,m])=>m.due&&m.due<=t).sort((a,b)=>a[1].due<b[1].due?-1:1)}
@@ -916,6 +938,7 @@ function dayDetail(k){
   ${sessionsHTML(k)}
   <div style="margin:8px 0 4px"><button class="sm" data-act="manual" data-k="${k}">補登這天</button> <a class="btn sm" href="#journal" data-act="toJournal" data-k="${k}">寫這天的日記</a> ${isOn('stats')?`<a class="btn sm" href="#stats" data-act="go" data-to="stats" data-m="week" data-k="${k}">看這週統計</a>`:''}</div>
   <h3>計數</h3>${c.counters.map(x=>`<div class="row sb"><span>${esc(x.name)}</span><span class="num">${+((d.counts||{})[x.id])||0}${x.goal?' / '+x.goal:''}</span></div>`).join('')||'<p class="empty">—</p>'}
+  ${(j.park||[]).length?`<h3>雜念停車場</h3><div class="list">${j.park.map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="num muted">${esc(x.t)}</span><span class="grow${x.done?' muted':''}">${esc(x.text)}</span></div>`).join('')}</div>`:''}
   <h3>三件事</h3>${(j.top3||[]).filter(x=>x&&x.t).length?`<div class="list">${(j.top3||[]).filter(x=>x&&x.t).map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="grow${x.done?' muted':''}">${esc(x.t)}</span></div>`).join('')}</div>`:'<p class="empty">這天沒有寫三件事。</p>'}
   ${(j.moments||[]).length?`<h3>覺察片段</h3><div class="list">${j.moments.map(m=>`<div class="li" style="align-items:flex-start"><span class="num muted">${esc(m.t||'')}</span><div class="grow">${m.e?`<span class="chip">${esc(emoName(m.e))}</span> `:''}${esc(m.w||'')}${m.b||m.r?`<div class="muted">${m.b?'身體：'+esc(m.b):''}${m.b&&m.r?'・':''}${m.r?'回應：'+esc(m.r):''}</div>`:''}</div></div>`).join('')}</div>`:''}
   <h3>覺察日記</h3>
@@ -1378,13 +1401,16 @@ const armed=new WeakSet();
 function twoStep(el){if(armed.has(el))return true;armed.add(el);const o=el.textContent;el.textContent='確定刪除？';el.classList.remove('ghost');setTimeout(()=>{armed.delete(el);if(el.isConnected){el.textContent=o;el.classList.add('ghost')}},3000);return false}
 const A={
   pmode:el=>{pSetMode(el.dataset.m);render()},
-  ptoggle:()=>{P.running?pPause():pStart();render()},
+  ptoggle:()=>{const was=P.running;was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
+  parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false})});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
+  parkDel:el=>{editDay(today(),d=>{d.j.park=(d.j.park||[]).filter(x=>x.id!==el.dataset.id)});render()},
   preset:()=>{pReset();render()},
   pfinish:()=>{if(P.mode!=='work')return;const el=(modeSec('work')-pLeft())/60;if(el<1&&!P.running&&!P.startedAt){openRecord({min:cfg().pomo.work,manual:true,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task});return}pComplete(true)},
   pskip:()=>{P.mode='work';pReset();render()},
   todayStep:el=>{const st=proj(el.dataset.p).stages.find(s=>s.id===el.dataset.st);const x=st.steps.find(y=>y.id===el.dataset.id);P.proj=el.dataset.p;P.phase=st.id;P.task=x.t;if(!P.running)P.mode='work';savP();render();window.scrollTo(0,0)},
   manual:el=>{const k=el.dataset.k||today();const d=k===today()?new Date(Date.now()-cfg().pomo.work*60000):new Date(k+'T09:00');openRecord({manual:true,min:cfg().pomo.work,t:d.toISOString(),sub:P.sub,proj:P.proj,phase:P.phase})},
   recSave:saveRecord,
+  recWhy:el=>{const w=$('#rWhy');if(w){w.value=el.dataset.v;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'))}},
   recCancel:closeModal,
   delSess:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.sessions=d.sessions.filter(s=>s.id!==el.dataset.id)});render()},
   cnt:el=>{const id=el.dataset.id,x=cfg().counters.find(c=>c.id===id)||{step:1};editDay(el.dataset.k,d=>{d.counts[id]=Math.max(0,(+d.counts[id]||0)+(+el.dataset.d)*(+x.step||1))});render()},
@@ -1452,7 +1478,8 @@ const A={
     if(await saveFile(`日課備份-${today()}.json`,data,'application/json',`daily-practice-backup-${today()}.json`)){lsSet('sd-lastexport',today());toast('已匯出備份');render()}},
 };
 const C={
-  pfield:el=>{P[el.dataset.k]=el.value;if(el.dataset.k==='proj')P.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';savP();if(el.dataset.k!=='task')render()},
+  parkDone:el=>{editDay(today(),d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.done=el.checked});render()},
+  pfield:el=>{P[el.dataset.k]=el.value;if(el.dataset.k==='proj')P.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';savP();if(el.dataset.k!=='task'&&el.dataset.k!=='pauseNote')render()},
   recf:el=>{readRecordForm();REC[el.dataset.k]=el.value;if(el.dataset.k==='sub'){const tg=allTags().find(x=>x.id===el.value);REC.proj=tg&&tg.proj?tg.proj:'';REC.phase=REC.proj?(curPhase(S.projects[REC.proj])||{}).id||'':''}if(el.dataset.k==='proj')REC.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';if(el.dataset.k==='sub'||el.dataset.k==='proj'||el.dataset.k==='phase')drawRecord()},
   top3done:el=>{const i=+el.dataset.i;editDay(el.dataset.k,d=>{const t=d.j.top3=d.j.top3||[];t[i]=Object.assign({t:''},t[i],{done:el.checked})});el.closest('.t3').classList.toggle('done',el.checked)},
   exam:el=>{editCfg(c=>{c.exams[+el.dataset.i][el.dataset.f]=el.value});render()},
@@ -2513,6 +2540,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ch]');if(el&&C[el.dataset.ch])C[el.dataset.ch](el,e)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
 document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.id==='parkIn'&&!e.isComposing){e.preventDefault();A.parkAdd();return}
   if(e.target.closest('input,textarea,select,[contenteditable]'))return;
   if($('#modal').innerHTML){if(e.key==='Escape')closeModal();return}
   if(e.key===' '&&R==='today'){e.preventDefault();P.running?pPause():pStart();render()}

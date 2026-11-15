@@ -1646,6 +1646,7 @@ const ORIENT=[
   {id:'or2',q:'做決定時，你比較常先想到自己的目標，還是先想到別人的需要？',o:[['幾乎都先想自己',-2],['偏向自己',-1],['差不多',0],['偏向別人',1],['幾乎都先想別人',2]]}
 ];
 const FU_OPTS=[['是，我真的在乎，會主動為它努力','hi'],['不太是，我很少為了它行動','lo'],['不是我的目標，但少了它我會不安、不敢開始','base'],['我想要，但有顧慮擋著','want'],['要看是什麼事','ctx']];
+const FU_PH={SD:'例：讀書方法想自己決定，但報告格式照規定也還好',ST:'例：同一本書讀太久會膩，換個咖啡廳就又有動力',HE:'例：讀完一段一定要吃個點心，不然撐不下去',AC:'例：看到分數進步最有動力，但不需要贏過別人',PO:'例：不想當組長，只希望自己的意見被聽見',FA:'例：上台報告前很怕講錯，平常倒還好',SE:'例：要先有備案，才敢換跑道或做大決定',TR:'例：過年一定回家，其他習俗不太在意',CO:'例：選科系時很在意爸媽的意見，其他事自己決定',HU:'例：被稱讚會不好意思，覺得是運氣好',UN:'例：會關心社會新聞，但很少實際參與',BE:'例：朋友需要時一定幫，陌生人就比較少'};
 const FU_EX={SD:'讀書計畫想自己排，被規定每一步會很不舒服',ST:'同一種讀法做久了會膩，想換新方法或新地方',HE:'讀完書一定要吃點好吃的、好好放鬆一下',AC:'分數、成果、被肯定，會讓你更有動力',PO:'分組時想當負責人，希望自己說了算',FA:'不想在同學面前答錯，不想讓人覺得你不行',SE:'先確定有保底方案，才敢做決定',TR:'過年過節的習俗、家裡的規矩，你會想照著做',CO:'做決定前會先想爸媽、老師會不會反對',HU:'考好了也不太想張揚，覺得沒什麼了不起',UN:'看到不公平的事會想站出來，關心社會議題',BE:'朋友找你幫忙，就算很忙也會先幫'};
 const TENSIONS=[
   {a:['AC','ST'],b:['SE'],n:'成就、刺激 vs. 安全',show:'想挑戰，又怕失敗',warn:'遲遲不送出、不開始',fix:'同時準備挑戰版和保底版'},
@@ -1735,8 +1736,32 @@ function timeSel(n,qid,q,opts,hint){return `<div class="qq" id="q_${qid}"><label
 const IC_PLAY='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 const IC_PAUSE='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
 const playLbl=(run,start)=>run?IC_PAUSE+'<span>暫停</span>':IC_PLAY+'<span>'+start+'</span>';
+const CP_NEXT={1:['精力曲線','約 3 分鐘'],2:['價值','約 6 分鐘'],6:['簡答','約 2 分鐘，選填']};
+function rolesTable(M){return `<div class="tablewrap"><table><tbody>${M.roles.map(x=>`<tr><td class="num">${x.b.r}</td><td>${x.b.n}</td><td><span class="pill ${x.r[1]}">${x.r[0]}</span></td><td style="white-space:normal">${esc(x.r[2])}</td></tr>`).join('')}</tbody></table></div>`}
+function interimHTML(cp){
+  const a=QZ.a,E=buildE(a);let h='';
+  if(cp===1){const sl=sleepCalc(E),T0=TYPE5[sl.type];
+    h=`<p class="eyebrow">第一段完成</p><h2>你的生理時鐘：${T0.n}</h2><p>${sl.free?`${E.reg==='n'?'理想狀態下':'休假日'}你大約 ${hm(sl.free.on)} 睡著、${hm(sl.free.off)} 起床，睡眠中點在 <b>${hm(sl.msf*60)}</b>。`:''}${T0.d}</p>
+    ${sl.sj>=1?`<p class="callout">平日和休假日的睡眠中點差了約 ${fmtN(sl.sj)} 小時（社會時差）。試著讓休假日的起床時間不要比平日晚超過一小時。</p>`:''}
+    ${E.alarm===2?'<p class="callout">平日常按掉鬧鐘繼續睡，代表起床時間比你的身體時鐘早。可以試著提早半小時上床。</p>':''}
+    <p class="muted">下一段會找出你一天中的高峰和低谷，並排出建議的一天。</p>`}
+  else if(cp===2){const M=energyModel(E);
+    h=`<p class="eyebrow">第二段完成</p><h2>你的精力曲線</h2>${rhythmHTML(M)}<p class="muted">高峰時段可信度：${M.conf}${M.conf==='低'?'。之後在「今日」做幾天精力打卡，報告會自動校正':''}。</p><h3>建議的一天</h3>${rolesTable(M)}
+    <p class="muted" style="margin-top:10px">下一段是價值：找出最能推動你的力量，以及卡住時可以怎麼做。</p>`}
+  else if(cp===6){const V=computeValues(a,QZ.pairs||[]),by=L=>DK.filter(k=>V.layerOf[k]===L).sort((x,y)=>V.pct[y]-V.pct[x]);
+    const core=by('core'),sup=by('support'),base=by('base'),want=by('want');
+    h=`<p class="eyebrow">第三段完成</p><h2>你的價值輪廓</h2>
+    <p>最能推動你的是${core.map(k=>'「'+DRV[k].n+'」').join('和')}${sup.length?'，其次是'+sup.map(k=>'「'+DRV[k].n+'」').join('、'):''}。</p>
+    <div class="grid2">${core.map(k=>`<div class="callout"><b>${DRV[k].n}</b>：${esc(DRV[k].desc)}</div>`).join('')}</div>
+    ${base.length?`<p>「${base.map(k=>DRV[k].n).join('、')}」是你敢行動的地基：不是目標，但少了它你會不安。</p>`:''}
+    ${want.length?`<p>「${want.map(k=>DRV[k].n).join('、')}」是被顧慮擋住的渴望。</p>`:''}
+    <p class="muted">最後一段是幾題簡答（選填），完成後會把三段整合成一份總報告，包括價值拉扯、卡住時的對策和使用指南。</p>`}
+  const nx=CP_NEXT[cp];
+  return `<section class="card quiz">${h}<div class="row sb" style="margin-top:18px"><button class="ghost" data-act="qzCpBack">回去修改答案</button><div class="row"><button data-act="qzPause">先到這裡，之後再繼續</button><button class="pri" data-act="qzCont">繼續：${nx[0]}（${nx[1]}）</button></div></div></section>`;
+}
 function quizScreen(){
   const st=QZ.step;
+  if(QZ.cp&&QZ.cp===st)return interimHTML(st);
   const prog=`<div class="qprog">${STEPS.map((s,i)=>`<span class="${i===st?'on':i<st?'past':''}">${s}</span>`).join('')}</div>`;
   let body='',nav='';
   if(st===0){
@@ -1780,7 +1805,7 @@ function quizScreen(){
     const fu=QZ.pairs||[];const v=valScores(QZ.a);let n=0;
     body=`<h2>追問</h2>`+(fu.length?`<p class="muted">你前面的回答裡，有 ${fu.length} 個價值的答案前後不太一致。這很常見：我們心裡想的和實際做的，常常不完全一樣。請直接選出最接近你的說法。</p>`+fu.map(k=>{const hiA=v.rA[k]<v.rS[k];
       return `<div class="qq" id="q_fu_${k}"><div class="qt"><span class="num muted">${++n}</span> 「${DRV[k].n}」對你來說是哪一種？</div><div class="ex">${esc(DRV[k].def)}。<br>像是：${esc(FU_EX[k]||'')}。</div>${optBtns('fu_'+k,FU_OPTS)}
-      <label class="f" style="margin-top:8px">補充一句（選填）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="例：考試前特別在意，平常還好"></label></div>`}).join(''):`<p class="muted">你前後的回答很一致，不需要追問。</p>`)+
+      <label class="f" style="margin-top:8px">補充一句（選填）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="${esc(FU_PH[k]||'寫一句你自己的情況')}"></label></div>`}).join(''):`<p class="muted">你前後的回答很一致，不需要追問。</p>`)+
       `<div class="qq"><label class="qt" for="sa_oth"><span class="num muted">${++n}</span> 除了這 12 個價值，還有什麼力量在推動你？寫下它，並說明原因。<span class="muted">（選填）</span></label><div class="ex">例：「家人的期待，因為我想讓他們放心。」</div><textarea id="sa_oth" data-in="qs" data-q="oth" rows="2">${esc(QZ.a.s_oth)}</textarea></div>`;
   }else if(st===7){
     body=`<h2>簡答 <span class="muted">選填，但寫得越具體，報告越貼近你</span></h2>`+SHORT.map(([id,q],i)=>`<div class="qq"><label class="qt" for="sa_${id}"><span class="num muted">${i+1}</span> ${esc(q)}</label><textarea id="sa_${id}" data-in="qs" data-q="${id}" rows="2">${esc(QZ.a['s_'+id])}</textarea></div>`).join('');
@@ -1843,23 +1868,44 @@ function energyModel(E){
   const rated=pool.reduce((a,b)=>(+E['al_'+b.k]||1)>(+E['al_'+a.k]||1)?b:a).k;
   const agree=PK.filter(arr=>arr.includes(peak)).length,nPK=PK.length,multi=PK.filter(a=>a.length>1).length;
   const conf=ed.ok?'高':(nPK>=2&&agree===nPK&&!multi)?'高':(unsure>=2||(nPK>=2&&agree===0))?'低':'中';
+  // Daniel Pink, When: most people move through peak -> trough -> recovery; late types roughly recovery -> trough -> peak.
+  const late=sl.type==='l1'||sl.type==='l2';
+  const inB=(b,m)=>{m=((m%1440)+1440)%1440;const st=b.h*60,en=st+b.len*60;return (m>=st&&m<en)||(m+1440>=st&&m+1440<en)};
+  const wakeB=win?BL.find(b=>!asleep(b)&&inB(b,win.off)):null,bedB=win?BL.find(b=>!asleep(b)&&inB(b,win.on-60)):null;
+  const free=pool.filter(b=>b.k!==peak&&b!==wakeB&&b!==bedB);
+  let trough=null;
+  if(E.dip===2){const pm=free.filter(b=>b.k==='b3'||b.k==='b4');if(pm.length)trough=pm.reduce((a,b)=>sc[b.k]<sc[a.k]?b:a).k}
+  if(!trough&&free.length){const pr=b=>sc[b.k]-(b.k==='b3'||b.k==='b4'?.6:0);trough=free.reduce((a,b)=>pr(b)<pr(a)?b:a).k}
+  const idx=k=>BL.findIndex(b=>b.k===k);
+  let rec=idea&&idea!==trough&&free.some(b=>b.k===idea)?idea:null;
+  if(!rec&&trough){const cand=free.filter(b=>b.k!==trough&&(late?idx(b.k)<idx(trough):idx(b.k)>idx(trough)));if(cand.length)rec=(late?cand[cand.length-1]:cand[0]).k}
   const roles=BL.map(b=>{let r;
-    if(asleep(b))r=['睡眠','mut','睡覺，或放鬆準備入睡'];
-    else if(b.k===peak)r=['高峰','bad','深度工作：最需要思考、分析、寫作的事'];
-    else if(b.k===idea)r=['靈感','good','發想與規劃：腦力激盪、構思、整理想法'];
-    else if(b.k===low)r=['低潮','mut','例行事務：回訊息、整理資料、行政、輕量複習'];
-    else if(E.dip===2&&(b.k==='b3'||b.k==='b4'))r=['低潮','mut','午後低潮：例行事務、走動，或小睡 15 分鐘'];
-    else if(sc[b.k]>=3.5)r=['次高','warn','練習與學習：做練習題、閱讀、學新東西'];
-    else if(sc[b.k]<=2.3)r=['低潮','mut','例行事務，或安排休息、運動'];
-    else r=['一般','good','中等難度的事：溝通、開會、修改'];
+    if(asleep(b))r=['睡眠','mut','睡眠時間。固定的入睡和起床時間，是精力曲線穩定的基礎'];
+    else if(b.k===peak)r=['高峰','bad','分析型工作：寫論文、解難題、讀艱深的文獻。關掉通知，留給最重要的一件事'];
+    else if(b===wakeB)r=['暖機','mut','剛起床，頭腦還在暖機：照照日光、吃早餐，做輕量的事（看行程、背單字、整理桌面）'];
+    else if(b===bedB)r=['收心','mut','收尾時段：輕量複習、寫日記、規劃明天。睡前一小時少看螢幕，比較好入睡'];
+    else if(b.k===trough)r=['低谷','mut','行政與例行事務：回訊息、整理資料、排版。先休息 10–20 分鐘再開始，散步或小睡都好'];
+    else if(b.k===rec)r=['回升','good','創意型工作：發想、構思論點、寫草稿、和人討論。這時頭腦比較放鬆，容易冒出新點子'];
+    else if(sc[b.k]>=3.5)r=['次高','warn','練習與學習：做練習題、閱讀、整理筆記'];
+    else r=['一般','good','中等難度的事：修改文稿、開會、處理信件'];
     return {b,r}});
-  return {sl,ed,sc,peak,low,idea,roles,agree,nPK,rated,unsure,prior,conf};
+  const order=[peak,trough,rec].filter(Boolean);
+  return {sl,ed,sc,peak,low:trough||low,idea:rec||idea,trough,rec,late,roles,agree,nPK,rated,unsure,prior,conf};
+}
+function rhythmHTML(M){
+  const seq=(M.late?[M.rec,M.trough,M.peak]:[M.peak,M.trough,M.rec]).filter(Boolean),nm={[M.peak]:'高峰',[M.trough]:'低谷',[M.rec]:'回升'};
+  if(seq.length<2)return '';
+  return `<p><b>你的一天：</b>${seq.map(k=>`${nm[k]}（${blName(k)}）`).join(' → ')}。</p>
+  <p class="muted">依 Pink《When》：多數人一天會經過高峰、低谷、回升三段${M.late?'，夜型的順序大致相反，回升在前、高峰在晚上':''}。高峰做分析型工作，低谷做例行事務，回升期做需要靈感的事。低谷前的短暫休息最有效：離開座位、到戶外走走、和人聊幾句，都比滑手機更能恢復。</p>`;
 }
 function pomoSuggest(span){return span<=15?{w:15,s:3}:span<=20?{w:20,s:5}:span<=30?{w:25,s:5}:{w:45,s:10}}
-function computeResult(){
-  const a=QZ.a;
+function buildE(a){
   const E={reg:a.reg,fSleep:a.fSleep,fWake:a.fWake,wSleep:a.wSleep,wWake:a.wWake,iSleep:a.iSleep,iWake:a.iWake,alarm:a.alarm,morning:a.morning,pkExam:a.pkExam,focusBest:a.focusBest,pkFlow:a.pkFlow,ideaBest:a.ideaBest,worst:a.worst,dip:+a.dip||0,span:+a.span||25,recover:asArr(a.recover).length?asArr(a.recover):['move']};
   BL.forEach(b=>E['al_'+b.k]=+a['al_'+b.k]||1);
+  return E;
+}
+function computeResult(){
+  const a=QZ.a,E=buildE(a);
   const vals=computeValues(a,QZ.pairs||[]);
   const short={};SHORT.forEach(([id])=>short[id]=(a['s_'+id]||'').trim());
   return {v:3,date:today(),at:new Date().toISOString(),energy:E,vals,top:vals.order,drv:vals.pct,other:(a.s_oth||'').trim(),short,ai:''};
@@ -1902,6 +1948,7 @@ function reportHTML(id,r){
       <h3 style="margin-top:0">生理時鐘</h3><p>${sleepLine}${T0.d}</p>
       <p class="muted">為什麼看睡眠中點？不被鬧鐘叫醒的日子，睡眠時段的中間點最能反映你身體的時鐘。這個方法來自時間生物學家 Roenneberg 的研究。</p>
       <h3>一天的精力曲線 <span class="muted">${M.ed.ok?`已納入近 30 天 ${M.ed.n} 筆打卡`:'根據你的回答'}</span></h3>${stackBars(rows,{h:160,unit:'分',marker:M.peak})}
+      ${rhythmHTML(M)}
       ${notes.map(n=>`<p class="callout">${n}</p>`).join('')}
       ${M.ed.ok?'':'<p class="muted">在「今日」做精力打卡，累積 8 筆、3 天以上後，這條曲線會加入你的真實數據。</p>'}
       <h3>建議的一天 ${XL('到今日開始','today')}</h3><div class="tablewrap"><table><tbody>${M.roles.map(x=>`<tr><td class="num">${x.b.r}</td><td>${x.b.n}</td><td><span class="pill ${x.r[1]}">${x.r[0]}</span></td><td style="white-space:normal">${esc(x.r[2])}</td></tr>`).join('')}</tbody></table></div>
@@ -1993,8 +2040,12 @@ Object.assign(A,{
     const bk=el.closest('.qq');const nx=bk&&bk.nextElementSibling;if(nx&&nx.classList.contains('qq')&&!nx.querySelector('[aria-pressed="true"]')){const r=nx.getBoundingClientRect();if(r.bottom>innerHeight)nx.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}},
   qzNext:()=>{const m=missing();if(m.length){toast(`還有 ${m.length} 題沒回答`);const e=$('#q_'+m[0]);e&&e.scrollIntoView({block:'center'});return}
     if(QZ.step===5)QZ.pairs=buildPairs();
+    if(CP_NEXT[QZ.step]&&QZ.cp!==QZ.step){QZ.cp=QZ.step;savQZ();render();window.scrollTo(0,0);return}
     if(QZ.step===7){const r=computeResult();const id=rid();save('quiz',id,r);qzView=id;QZ={v:3,step:0,a:{},pairs:null};savQZ();render();window.scrollTo(0,0);toast('報告完成');return}
     QZ.step++;savQZ();render();window.scrollTo(0,0)},
+  qzCont:()=>{QZ.cp=null;QZ.step++;savQZ();render();window.scrollTo(0,0)},
+  qzCpBack:()=>{QZ.cp=null;savQZ();render();window.scrollTo(0,0)},
+  qzPause:()=>{savQZ();location.hash='today';toast('進度已保存，回到「我的節奏」就能接著做')},
   qzBack:()=>{QZ.step=Math.max(0,QZ.step-1);savQZ();render();window.scrollTo(0,0)},
   qzQuit:()=>{QZ.step=0;savQZ();render()},
   qzRestart:()=>{QZ={v:3,step:1,a:{},pairs:null};savQZ();render();window.scrollTo(0,0)},

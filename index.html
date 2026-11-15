@@ -230,6 +230,8 @@ nav.rail .fbbtn{margin:6px 6px 0;color:var(--muted);font-size:calc(12px * var(--
 .ic{width:1.3em;height:1.3em;vertical-align:-.25em;flex:none}
 button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;gap:6px}
 @media (hover:none),(pointer:coarse),(max-width:820px){.kbhint{display:none}}
+.opt[data-v="?"]{border-style:dashed;color:var(--muted)}
+.opt[data-v="?"][aria-pressed="true"]{color:var(--surface)}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1758,10 +1760,11 @@ function quizScreen(){
     let n=0;
     body=`<h2>精力曲線</h2><p class="muted">平常的日子裡，每個時段你的頭腦有多清醒？1 = 很昏沉，5 = 非常清醒。睡覺的時段選 1。</p>
     <div class="grid-al">${BL.map(b=>{const id='al_'+b.k;return `<div class="qq al" id="q_${id}"><div class="qt"><b>${b.n}</b> <span class="num muted">${b.r}</span></div><div class="likert al">${[1,2,3,4,5].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div></div>`}).join('')}</div>
-    <h3>用三個情境確認你的高峰</h3><p class="muted" style="margin-top:0">上面是你對自己的整體感覺；下面三個具體情境，用來檢查高峰時段是否一致。</p>`;
-    const blOpts=BL.map(b=>[`${b.n} ${b.r}`,b.k]);
-    body+=['pkExam','focusBest','pkFlow'].map(id=>eqBlock(++n,id,blOpts)).join('')
-      +`<h3>靈感與低潮</h3>`+eqBlock(++n,'ideaBest',blOpts)+eqBlock(++n,'worst',blOpts)
+    <h3>用三個情境確認你的高峰</h3><p class="muted" style="margin-top:0">上面是你對自己的整體感覺；下面三個具體情境，用來檢查高峰時段是否一致。</p>
+    <p class="callout" style="margin:0 0 6px">拿不準的時候：選兩個時段，每個時段的份量各算一半；真的想不起來就選「不確定」，這題不列入計算，改用你的睡眠時間和精力打卡來推估。</p>`;
+    const blOpts=BL.map(b=>[`${b.n} ${b.r}`,b.k]),blU=blOpts.concat([['不確定','?']]);
+    body+=['pkExam','focusBest','pkFlow'].map(id=>eqBlock(++n,id,blU)).join('')
+      +`<h3>靈感與低潮</h3>`+eqBlock(++n,'ideaBest',blU)+eqBlock(++n,'worst',blU)
       +`<h3>專注與恢復</h3>`+['dip','span','recover'].map(id=>eqBlock(++n,id)).join('');
   }else if(st===3||st===4){
     const i=st-3;let n=0;
@@ -1824,15 +1827,21 @@ function energyModel(E){
   const sl=sleepCalc(E),ed=energyData();
   const win=sl.work||sl.free;
   const asleep=b=>{if(!win)return false;let mid=(b.h+b.len/2)*60;if(mid<win.on)mid+=1440;return mid>win.on+30&&mid<win.off-30};
-  const PK=['pkExam','focusBest','pkFlow'].map(id=>asArr(E[id])).filter(x=>x.length),W=asArr(E.worst);
-  const sc={};BL.forEach(b=>{let v=+E['al_'+b.k]||1;PK.forEach(arr=>{if(arr.includes(b.k))v+=(PK.length>1?1:1.5)/arr.length});if(W.includes(b.k))v-=1.5/Math.max(1,W.length*.75);if(ed.ok&&ed.avg[b.k]!=null)v+=(ed.avg[b.k]-3)*0.8;sc[b.k]=Math.max(0,Math.min(6.5,v))});
+  const known=x=>asArr(x).filter(k=>k!=='?');
+  const PK=['pkExam','focusBest','pkFlow'].map(id=>known(E[id])).filter(x=>x.length),W=known(E.worst);
+  const unsure=['pkExam','focusBest','pkFlow'].filter(id=>asArr(E[id]).includes('?')).length;
+  // prior from body clock: alertness usually peaks about 2-4 h after natural waking (free days)
+  const wakeH=sl.free?Math.floor((sl.free.off%1440)/60):null,prior=wakeH!=null?blOfHour((wakeH+3)%24):null;
+  const priorW=prior?(.4+.5*unsure+(PK.length?0:.6)):0;
+  const sc={};BL.forEach(b=>{let v=+E['al_'+b.k]||1;if(b.k===prior)v+=priorW;PK.forEach(arr=>{if(arr.includes(b.k))v+=(PK.length>1?1:1.5)/arr.length});if(W.includes(b.k))v-=1.5/Math.max(1,W.length*.75);if(ed.ok&&ed.avg[b.k]!=null)v+=(ed.avg[b.k]-3)*0.8;sc[b.k]=Math.max(0,Math.min(6.5,v))});
   const awake=BL.filter(b=>!asleep(b));
   const pool=awake.length?awake:BL;
   const peak=pool.reduce((a,b)=>sc[b.k]>sc[a.k]?b:a).k;
   const low=pool.filter(b=>b.k!==peak).reduce((a,b)=>sc[b.k]<sc[a.k]?b:a,pool.find(b=>b.k!==peak)||pool[0]).k;
-  const idea=asArr(E.ideaBest).find(k=>k!==peak&&pool.some(b=>b.k===k))||null;
+  const idea=known(E.ideaBest).find(k=>k!==peak&&pool.some(b=>b.k===k))||null;
   const rated=pool.reduce((a,b)=>(+E['al_'+b.k]||1)>(+E['al_'+a.k]||1)?b:a).k;
-  const agree=PK.filter(arr=>arr.includes(peak)).length,nPK=PK.length;
+  const agree=PK.filter(arr=>arr.includes(peak)).length,nPK=PK.length,multi=PK.filter(a=>a.length>1).length;
+  const conf=ed.ok?'高':(nPK>=2&&agree===nPK&&!multi)?'高':(unsure>=2||(nPK>=2&&agree===0))?'低':'中';
   const roles=BL.map(b=>{let r;
     if(asleep(b))r=['睡眠','mut','睡覺，或放鬆準備入睡'];
     else if(b.k===peak)r=['高峰','bad','深度工作：最需要思考、分析、寫作的事'];
@@ -1843,7 +1852,7 @@ function energyModel(E){
     else if(sc[b.k]<=2.3)r=['低潮','mut','例行事務，或安排休息、運動'];
     else r=['一般','good','中等難度的事：溝通、開會、修改'];
     return {b,r}});
-  return {sl,ed,sc,peak,low,idea,roles,agree,nPK,rated};
+  return {sl,ed,sc,peak,low,idea,roles,agree,nPK,rated,unsure,prior,conf};
 }
 function pomoSuggest(span){return span<=15?{w:15,s:3}:span<=20?{w:20,s:5}:span<=30?{w:25,s:5}:{w:45,s:10}}
 function computeResult(){
@@ -1875,6 +1884,8 @@ function reportHTML(id,r){
   const notes=[];
   if(sl.sj>=1)notes.push(`上班上課日和休假日的睡眠中點差了約 ${fmtN(sl.sj)} 小時。這叫「社會時差」，身體像是每週都在跨時區飛行。試著把差距縮小到一小時內，例如休假日不要比平日晚起太多。`);
   if(sl.free&&sl.work&&sl.free.dur-sl.work.dur>=90)notes.push(`休假日比平日多睡約 ${fmtN((sl.free.dur-sl.work.dur)/60)} 小時，平日可能睡眠不足。`);
+  notes.push(`高峰時段的可信度：<b>${M.conf}</b>。${M.conf==='高'?'自評、情境'+(M.ed.ok?'和你的精力打卡':'')+'彼此吻合。':M.conf==='中'?'大方向可信，細節可以用精力打卡微調。':'資訊還不夠一致，先當作參考。'}`);
+  if(M.unsure>=2)notes.push(`三個情境中有 ${M.unsure} 題你選了「不確定」，所以高峰主要依自評和睡眠時間推估${M.prior?`（你自然醒後約三小時，也就是 <b>${blName(M.prior)}</b>，通常是頭腦最清楚的時候）`:''}。接下來 7 天，在「今日」每天做 3 次精力打卡（上午、下午、晚上各一次），報告會自動用真實數據校正。`);
   if(M.nPK>=2){if(M.agree===M.nPK)notes.push(`三個情境都指向 <b>${blName(M.peak)}</b>，和你的自評一致，這個高峰很可靠。`);else if(M.agree===0)notes.push(`你的自評和具體情境指向不同時段（自評最清醒是 <b>${blName(M.rated)}</b>）。結果以綜合分數為準；接下來一兩週在「今日」做精力打卡，曲線會更準。`);else notes.push(`三個情境中有 ${M.agree} 個指向 <b>${blName(M.peak)}</b>。大致可信，可以先照這個安排，再用精力打卡微調。`)}
   if(E.alarm===2)notes.push('平日常按掉鬧鐘繼續睡，代表起床時間比你的生理時鐘早。可以試著提早半小時上床，或把最難的事移到較晚的時段。');
   if(E.dip===2&&M.peak!=='b3'&&M.peak!=='b4')notes.push('你幾乎每天午後都會低潮。13–15 點不要排需要深度思考的事，改做例行事務，或先小睡 15 分鐘。');
@@ -1973,7 +1984,7 @@ Object.assign(A,{
   enLog:el=>{const n=new Date();editDay(today(),d=>{d.en=d.en||[];d.en.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),e:+el.dataset.n})});toast('已記錄精力 '+el.dataset.n+' 分');render()},
   recEn:el=>{readRecordForm();const n=+el.dataset.n;REC.en=REC.en===n?null:n;drawRecord()},
   qa:el=>{const q=el.dataset.q,v=el.dataset.v,val=/^-?\d+(\.\d+)?$/.test(v)?+v:v;
-    if(el.dataset.max){const max=+el.dataset.max;let arr=asArr(QZ.a[q]).filter(x=>String(x)!==String(val));if(arr.length===asArr(QZ.a[q]).length){if(arr.length>=max)return toast(`這題最多選 ${max} 個，先取消一個再選`);arr.push(val)}QZ.a[q]=arr;savQZ();
+    if(el.dataset.max){const max=+el.dataset.max;if(val==='?'||asArr(QZ.a[q]).includes('?'))QZ.a[q]=asArr(QZ.a[q]).includes(val)?[val]:[];if(val==='?'){QZ.a[q]=asArr(QZ.a[q]).includes('?')?[]:['?'];savQZ();el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',QZ.a[q].includes(b.dataset.v)?'true':'false'));return}let arr=asArr(QZ.a[q]).filter(x=>String(x)!==String(val));if(arr.length===asArr(QZ.a[q]).length){if(arr.length>=max)return toast(`這題最多選 ${max} 個，先取消一個再選`);arr.push(val)}QZ.a[q]=arr;savQZ();
       el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',arr.map(String).includes(b.dataset.v)?'true':'false'));return}
     QZ.a[q]=val;savQZ();
     el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));

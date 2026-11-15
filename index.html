@@ -436,7 +436,7 @@ const DEF={
     {id:'S',name:'口說',c:2,unit:'題'},{id:'W',name:'寫作',c:1,unit:'篇'},
     {id:'T',name:'論文',c:4,unit:'字'}],
   pomo:{work:25,short:5,long:15,every:4},
-  counters:[{id:'vocab',name:'英文單字',goal:30,step:5},{id:'shadow',name:'跟讀句數',goal:20,step:1},{id:'quotes',name:'整理書摘',goal:3,step:1}],
+  counters:[{id:'fix',name:'訂正錯題',goal:5,step:1},{id:'drill',name:'完成練習題',goal:20,step:5},{id:'hit',name:'練習達標次數',goal:3,step:1}],
   exams:[{id:'toefl',name:'托福 TOEFL',date:''}],
   timers:[
     {id:'n1',name:'閱讀',segs:[{n:'閱讀',s:1800}]},
@@ -450,6 +450,27 @@ const DEF={
 const CAUSES=['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'];
 const SRS=[1,3,7,14,30];
 const SECS=[['r','閱讀','R'],['l','聽力','L'],['s','口說','S'],['w','寫作','W']];
+const CUSTOM_DEF={secs:[{id:'c1',n:'第一部分'},{id:'c2',n:'第二部分'}],max:100,step:1,total:'sum'};
+function scoreSpec(scale){
+  const c=cfg();
+  if(scale==='custom'){const cs=Object.assign(clone(CUSTOM_DEF),c.customScore||{});const T={sum:'加總',avg:'平均',none:'不計總分'}[cs.total]||'加總';
+    return {secs:cs.secs.map((x,i)=>[x.id,x.n,null,i%12]),max:+cs.max||100,step:+cs.step||1,total:cs.total,label:`自訂：每項 0–${+cs.max||100}，${T==='不計總分'?'不計總分':'總分為各項'+T}`}}
+  if(scale==='band')return {secs:SECS.map(([k,n,sid])=>[k,n,sid]),max:6,step:.5,total:'avg5',label:'1–6 級分制'};
+  return {secs:SECS.map(([k,n,sid])=>[k,n,sid]),max:30,step:1,total:'sum',label:'每科 0–30，總分 120'};
+}
+const secColor=x=>x[2]?subj(x[2]).c:x[3];
+function scoreTotal(m,sp){const v=sp.secs.map(([k])=>m[k]).filter(x=>x!==''&&x!=null).map(Number);if(!v.length||sp.total==='none')return '—';const sum=v.reduce((a,b)=>a+b,0);if(sp.total==='avg5')return (Math.round(sum/v.length*2)/2).toFixed(1);if(sp.total==='avg')return fmtN(sum/v.length);return fmtN(sum)}
+let scaleEditing=false;
+function scaleEditorHTML(){
+  const cs=Object.assign(clone(CUSTOM_DEF),cfg().customScore||{});
+  return `<div class="tedit"><span class="muted" style="font-size:12px">設定要記錄的項目、每項滿分和總分的算法。</span>
+    ${cs.secs.map((x,i)=>`<div class="row"><input type="text" id="csn${i}" value="${esc(x.n)}" style="flex:1" aria-label="項目名稱"><button class="ghost sm" data-act="csDel" data-i="${i}" aria-label="刪除這個項目"${cs.secs.length<2?' disabled':''}>×</button></div>`).join('')}
+    <div><button class="sm" data-act="csAdd">新增項目</button></div>
+    <div class="row"><label class="f">每項滿分<input type="number" id="csMax" min="1" value="${esc(cs.max)}"></label>
+      <label class="f">分數單位<select id="csStep">${[['1','整數'],['0.5','0.5 分'],['0.1','0.1 分']].map(([v,n])=>`<option value="${v}"${String(cs.step)===v?' selected':''}>${n}</option>`).join('')}</select></label>
+      <label class="f">總分<select id="csTot">${[['sum','加總'],['avg','平均'],['none','不計總分']].map(([v,n])=>`<option value="${v}"${cs.total===v?' selected':''}>${n}</option>`).join('')}</select></label></div>
+    <div class="row sb"><span class="muted" style="font-size:12px">已記錄的分數會保留；刪除的項目不再顯示。</span><button class="sec sm" data-act="csSave">儲存計分方式</button></div></div>`;
+}
 
 /* ---------- store ---------- */
 const COLLS=['meta','days','mocks','mistakes','projects','reviews','quiz','quotes','pnotes','pages'];
@@ -457,7 +478,7 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[];
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
 function persistLocal(){lsSet(LKEY,S)}
 const wq={};
@@ -820,7 +841,7 @@ function stackBars(rows,{h=200,unit='分',every=1,marker=null}={}){
   return `<div class="chartwrap">${s}</svg></div>`;
 }
 function lineChart(series,{h=220,ymax=30,labels=[]}={}){
-  const W=640,pl=34,pr=12,pb=24,pt=10,ih=h-pb-pt,iw=W-pl-pr,n=labels.length;
+  const W=640,pl=34,pr=26,pb=24,pt=10,ih=h-pb-pt,iw=W-pl-pr,n=labels.length;
   const X=i=>pl+(n<=1?iw/2:iw*i/(n-1)),Y=v=>pt+ih-ih*v/ymax;
   let s=`<svg class="chart" viewBox="0 0 ${W} ${h}" role="img" aria-label="分數趨勢">`;
   for(let i=0;i<=4;i++){const v=ymax*i/4;s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl-6}" y="${Y(v)+3.5}" text-anchor="end">${fmtN(v)}</text>`}
@@ -911,10 +932,10 @@ function encLine(p){if(T.running)return '專心作答中，每段結束都會響
 function vExam(){
   const c=cfg(),p=tPreset();
   const mocks=Object.entries(S.mocks).sort((a,b)=>a[1].date<b[1].date?-1:1);
-  const scale=c.scale,ymax=scale==='band'?6:30;
+  const scale=c.scale,sp=scoreSpec(scale),ymax=sp.max;
   const ms=mocks.filter(([,m])=>(m.scale||'30')===scale);
-  const series=SECS.map(([k,n,sid])=>({c:subj(sid).c,vals:ms.map(([,m])=>m[k]===''||m[k]==null?null:+m[k])}));
-  const total=m=>{const v=SECS.map(([k])=>m[k]).filter(x=>x!==''&&x!=null).map(Number);if(!v.length)return '—';return (m.scale||'30')==='band'?(Math.round(v.reduce((a,b)=>a+b,0)/v.length*2)/2).toFixed(1):v.reduce((a,b)=>a+b,0)};
+  const series=sp.secs.map(x=>({c:secColor(x),vals:ms.map(([,m])=>m[x[0]]===''||m[x[0]]==null?null:+m[x[0]])}));
+  const total=m=>scoreTotal(m,sp);
   const mlist=Object.entries(S.mistakes);
   const t=today();
   const shown=mlist.filter(([,m])=>mkFilter==='due'?m.due&&m.due<=t:mkFilter==='master'?!m.due:true).sort((a,b)=>(a[1].due||'9')<(b[1].due||'9')?-1:1);
@@ -937,15 +958,16 @@ function vExam(){
       <p class="muted">例如正式考試、申請截止日、研究所筆試。日期到了之前，首頁會一直幫你倒數。</p>
     </section>
   </div>
-  <section class="card" style="margin-bottom:16px"><h2>模考紀錄 <span class="muted">${scale==='band'?'1–6 級分制':'每科 0–30，總分 120'}</span></h2>
+  <section class="card" style="margin-bottom:16px"><div class="row sb" style="margin-bottom:12px"><h2 style="margin:0">模考紀錄 <span class="muted">${esc(sp.label)}</span></h2><div class="row"><div class="seg">${[['30','0–30'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${scale===v}">${n}</button>`).join('')}</div>${scale==='custom'?`<button class="ghost sm" data-act="csEditT">${scaleEditing?'收起':'調整計分方式'}</button>`:''}</div></div>
+    ${scale==='custom'&&scaleEditing?`<div style="margin-bottom:14px">${scaleEditorHTML()}</div>`:''}
     <div class="row" style="margin-bottom:12px">
       <label class="f">日期<input id="mkD" type="date" value="${t}"></label>
-      ${SECS.map(([k,n])=>`<label class="f">${n}<input id="mk_${k}" type="number" min="0" max="${ymax}" step="${scale==='band'?0.5:1}" placeholder="—"></label>`).join('')}
+      ${sp.secs.map(([k,n])=>`<label class="f">${esc(n)}<input id="mk_${k}" type="number" min="0" max="${ymax}" step="${sp.step}" placeholder="—"></label>`).join('')}
       <label class="f" style="flex:1;min-width:160px">備註<input id="mkN" type="text" placeholder="例：TPO 60、官方模考"></label>
       <button class="sec" data-act="mockAdd" style="margin-top:18px">新增</button>
     </div>
-    ${ms.length?`<div class="gridA"><div>${lineChart(series,{ymax,labels:ms.map(([,m])=>fmtMD(m.date))})}<div class="legend">${SECS.map(([k,n,sid])=>`<span><i class="dot" style="background:var(--c${subj(sid).c})"></i>${n}</span>`).join('')}</div></div>
-    <div class="tablewrap"><table><thead><tr><th>日期</th>${SECS.map(([,n])=>`<th class="num">${n}</th>`).join('')}<th class="num">總</th><th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${SECS.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}<td class="num"><b>${total(m)}</b></td><td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:'<p class="empty">還沒有模考紀錄。每次模考後填入分數，這裡會畫出四科的趨勢。</p>'}
+    ${ms.length?`<div class="gridA"><div>${lineChart(series,{ymax,labels:ms.map(([,m])=>fmtMD(m.date))})}<div class="legend">${sp.secs.map(x=>`<span><i class="dot" style="background:var(--c${secColor(x)})"></i>${esc(x[1])}</span>`).join('')}</div></div>
+    <div class="tablewrap"><table><thead><tr><th>日期</th>${sp.secs.map(([,n])=>`<th class="num">${esc(n)}</th>`).join('')}${sp.total==='none'?'':'<th class="num">總</th>'}<th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${sp.secs.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}${sp.total==='none'?'':`<td class="num"><b>${total(m)}</b></td>`}<td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:`<p class="empty">還沒有${scale==='custom'?'這種計分方式的':''}模考紀錄。每次模考後填入分數，這裡會畫出各項的趨勢。</p>`}
   </section>
   <section class="card" id="mistakes"><h2>錯題本 <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
     <div class="fields" style="margin-bottom:10px">
@@ -1176,8 +1198,9 @@ function vPrefs(){
       <h2 style="margin-top:22px">番茄鐘（分鐘）</h2>
       <div class="row">${[['work','專注'],['short','短休'],['long','長休'],['every','每幾個番茄長休一次']].map(([k,n])=>`<label class="f">${n}<input id="po${k}" type="number" min="1" max="180" data-ch="pomo" data-f="${k}" value="${c.pomo[k]}"></label>`).join('')}</div>
       <h2 style="margin-top:22px">模考計分</h2>
-      <div class="seg">${[['30','每科 0–30（總分 120）'],['band','1–6 級分']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${c.scale===v}">${n}</button>`).join('')}</div>
-      <p class="muted">依照你使用的模考成績單選擇就好，之後隨時可以切換。</p>
+      <div class="seg">${[['30','每科 0–30（總分 120）'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${c.scale===v}">${n}</button>`).join('')}</div>
+      ${c.scale==='custom'?scaleEditorHTML():''}
+      <p class="muted">依照你使用的模考成績單選擇就好，之後隨時可以切換。準備托福以外的考試，可以選「自訂」，自己設定項目、滿分和總分算法。</p>
     </section>
     <section class="card"><h2>計數器</h2>
       <div class="list">${c.counters.map((x,i)=>`<div class="li"><input id="cn${i}" type="text" data-ch="ctr" data-i="${i}" data-f="name" value="${esc(x.name)}" style="flex:1"><label class="f">目標<input id="cg${i}" type="number" min="0" data-ch="ctr" data-i="${i}" data-f="goal" value="${x.goal}"></label><label class="f">每次<input id="cs${i}" type="number" min="1" data-ch="ctr" data-i="${i}" data-f="step" value="${x.step}"></label><button class="ghost sm" data-act="ctrDel" data-i="${i}" aria-label="刪除">×</button></div>`).join('')}</div>
@@ -1235,7 +1258,7 @@ const A={
   tDefault:()=>{const d=DEF.timers.find(x=>x.id===T.pid);editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t&&d)t.segs=clone(d.segs);else if(!d){c.timers=clone(DEF.timers);T.pid='n1'}c.tv=2});T.seg=0;T.left=null;savT();toast(d?'已恢復預設時間':'已恢復全部預設');render()},
   exAdd:()=>{editCfg(c=>c.exams.push({id:rid(),name:'新的考試',date:''}));render()},
   exDel:el=>{if(!twoStep(el))return;editCfg(c=>c.exams.splice(+el.dataset.i,1));render()},
-  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:cfg().scale,note:$('#mkN').value.trim()};let any=false;SECS.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
+  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:cfg().scale,note:$('#mkN').value.trim()};let any=false;scoreSpec(cfg().scale).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
   msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:$('#msS').value,q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
   msF:el=>{mkFilter=el.dataset.m;render()},
@@ -1260,7 +1283,12 @@ const A={
   ctrDel:el=>{if(!twoStep(el))return;editCfg(c=>c.counters.splice(+el.dataset.i,1));render()},
   tmrAdd:()=>{editCfg(c=>c.timers.push({id:rid(),name:'新預設',segs:[{n:'計時',s:600}]}));render()},
   tmrDel:el=>{if(!twoStep(el))return;editCfg(c=>c.timers.splice(+el.dataset.i,1));render()},
-  scale:el=>{editCfg(c=>{c.scale=el.dataset.v});render()},
+  scale:el=>{editCfg(c=>{c.scale=el.dataset.v});if(el.dataset.v==='custom'&&!cfg().customScore)scaleEditing=true;render()},
+  csEditT:()=>{scaleEditing=!scaleEditing;render()},
+  csRead:()=>{const cs=Object.assign(clone(CUSTOM_DEF),cfg().customScore||{});cs.secs=cs.secs.map((x,i)=>({id:x.id,n:(($('#csn'+i)||{}).value||x.n).trim()||x.n}));const mx=$('#csMax');if(mx)cs.max=Math.max(1,+mx.value||100);const st=$('#csStep');if(st)cs.step=+st.value||1;const tt=$('#csTot');if(tt)cs.total=tt.value;return cs},
+  csAdd:()=>{const cs=A.csRead();cs.secs.push({id:'c'+rid(),n:'新項目'});editCfg(c=>{c.customScore=cs});render()},
+  csDel:el=>{const cs=A.csRead();cs.secs.splice(+el.dataset.i,1);editCfg(c=>{c.customScore=cs});render()},
+  csSave:()=>{const cs=A.csRead();editCfg(c=>{c.customScore=cs;c.scale='custom'});scaleEditing=false;toast('已儲存計分方式');render()},
   export:async()=>{const data=JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1);
     if(await saveFile(`讀書工作台備份-${today()}.json`,data,'application/json',`studydesk-backup-${today()}.json`)){lsSet('sd-lastexport',today());toast('已匯出備份');render()}},
 };

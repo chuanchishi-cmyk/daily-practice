@@ -462,10 +462,8 @@ function toast(t){const el=document.createElement('div');el.className='toast';el
 /* ---------- defaults ---------- */
 const DEF={
   subjects:[
-    {id:'R',name:'托福閱讀',c:0,unit:'篇'},{id:'L',name:'托福聽力',c:3,unit:'段'},
-    {id:'S',name:'托福口說',c:2,unit:'題'},{id:'W',name:'托福寫作',c:1,unit:'篇'},
-    {id:'T',name:'論文',c:4,unit:'頁'},{id:'P',name:'專案進度',c:5,unit:''},{id:'M',name:'專注靜心',c:9,unit:'分'},
-    {id:'E',name:'運動',c:8,unit:'分'},{id:'B',name:'閱讀',c:10,unit:'頁'}],
+    {id:'T',name:'論文',c:4,unit:'頁'},{id:'P',name:'專案進度',c:5,unit:''},{id:'B',name:'閱讀',c:10,unit:'頁'},
+    {id:'M',name:'專注靜心',c:9,unit:'分'},{id:'E',name:'運動',c:8,unit:'分'}],
   pomo:{work:25,short:5,long:15,every:4},
   counters:[{id:'fix',name:'訂正錯題',goal:5,step:1},{id:'drill',name:'完成練習題',goal:20,step:5},{id:'hit',name:'練習達標次數',goal:3,step:1}],
   exams:[{id:'toefl',name:'托福 TOEFL',date:''}],
@@ -489,7 +487,7 @@ function scoreSpec(scale){
   if(scale==='band')return {secs:SECS.map(([k,n,sid])=>[k,n,sid]),max:6,step:.5,total:'avg5',label:'1–6 級分制'};
   return {secs:SECS.map(([k,n,sid])=>[k,n,sid]),max:30,step:1,total:'sum',label:'每科 0–30，總分 120'};
 }
-const secColor=x=>x[2]?subj(x[2]).c:x[3];
+const secColor=x=>x[2]?({R:0,L:3,S:2,W:1}[x[2]]??0):x[3];
 function scoreTotal(m,sp){const v=sp.secs.map(([k])=>m[k]).filter(x=>x!==''&&x!=null).map(Number);if(!v.length||sp.total==='none')return '—';const sum=v.reduce((a,b)=>a+b,0);if(sp.total==='avg5')return (Math.round(sum/v.length*2)/2).toFixed(1);if(sp.total==='avg')return fmtN(sum/v.length);return fmtN(sum)}
 let scaleEditing=false;
 function scaleEditorHTML(){
@@ -509,7 +507,7 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[];
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
 function persistLocal(){lsSet(LKEY,S)}
 const wq={};
@@ -607,7 +605,8 @@ function render(){
 
 /* ---------- subjects / small parts ---------- */
 function allTags(){const t=cfg().subjects.map(x=>Object.assign({},x));if(isOn('plan'))Object.keys(S.projects).forEach((pid,i)=>{const pj=proj(pid);t.push({id:'p:'+pid,name:pj.name,c:(6+i)%12,unit:'',proj:pid})});return t}
-const subj=id=>allTags().find(s=>s.id===id)||(cfg().subjectsArchived||[]).find(s=>s.id===id)||(S.projects[String(id||'').slice(2)]?{id,name:S.projects[String(id).slice(2)].name,c:6,unit:''}:{id,name:id||'未分類',c:7,unit:''});
+const LEGACY_TAGS=[{id:'R',name:'托福閱讀',c:0},{id:'L',name:'托福聽力',c:3},{id:'S',name:'托福口說',c:2},{id:'W',name:'托福寫作',c:1}];
+const subj=id=>allTags().find(s=>s.id===id)||(cfg().subjectsArchived||[]).find(s=>s.id===id)||LEGACY_TAGS.find(s=>s.id===id)||(S.projects[String(id||'').slice(2)]?{id,name:S.projects[String(id).slice(2)].name,c:6,unit:''}:{id,name:id||'未分類',c:7,unit:''});
 function tagOptions(sel){const t=allTags(),a=t.filter(x=>!x.proj),b=t.filter(x=>x.proj);return a.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')+(b.length?`<optgroup label="研究專案">${b.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}</optgroup>`:'')}
 let tagAdding=false,tagEdit=false;
 const sdot=id=>`<span class="dot" style="background:var(--c${subj(id).c})"></span>`;
@@ -628,12 +627,13 @@ function examChips(){
 }
 
 /* ---------- pomodoro ---------- */
-let P=lsGet('sd-pomo',null)||{mode:'work',running:false,endAt:0,left:null,startedAt:null,sub:'R',proj:'',phase:'',task:'',cycles:0,cday:today()};
+let P=lsGet('sd-pomo',null)||{mode:'work',running:false,endAt:0,left:null,startedAt:null,sub:'T',proj:'',phase:'',task:'',cycles:0,cday:today()};
 if(P.cday!==today()){P.cycles=0;P.cday=today()}
 const savP=()=>lsSet('sd-pomo',P);
 function modeSec(m){const p=cfg().pomo;return Math.round((m==='work'?p.work:m==='short'?p.short:p.long)*60)}
 function pLeft(){return P.running?Math.max(0,(P.endAt-Date.now())/1000):(P.left??modeSec(P.mode))}
 function pomoHTML(){
+  {const tg=allTags();if(tg.length&&!tg.some(t=>t.id===P.sub)){P.sub=tg[0].id;P.proj=tg[0].proj||'';savP()}}
   const c=cfg(),every=c.pomo.every,done=P.cycles%every;
   return `<div class="row sb modes"><div class="seg" role="group" aria-label="模式">
     ${[['work','專注'],['short','短休'],['long','長休']].map(([m,n])=>`<button data-act="pmode" data-m="${m}" aria-pressed="${P.mode===m}">${n}</button>`).join('')}
@@ -933,6 +933,7 @@ function aggregate(keys){
   keys.forEach(k=>(day(k).sessions||[]).forEach(s=>{const m=+s.min||0;mins+=m;n++;const b=bySub[s.sub]||(bySub[s.sub]={m:0,n:0});b.m+=m;b.n++;hours[new Date(s.t).getHours()]+=m;if(s.out){const key=s.sub+'|'+(s.unit||'');outs[key]=(outs[key]||0)+s.out}}));
   return {bySub,hours,outs,mins,n};
 }
+function statTags(keys){const t=allTags(),have=new Set(t.map(x=>x.id));keys.forEach(k=>(day(k).sessions||[]).forEach(x=>{if(x.sub&&!have.has(x.sub)){have.add(x.sub);const g=subj(x.sub);t.push({id:x.sub,name:g.name,c:g.c})}}));return t}
 function vStats(){
   const keys=rangeOf(),A=aggregate(keys),c=cfg();
   const title=stMode==='day'?fmtLong(stAnchor):stMode==='week'?`${fmtMD(keys[0])} – ${fmtMD(keys[6])} 這一週`:`${stAnchor.slice(0,4)} 年 ${+stAnchor.slice(5,7)} 月`;
@@ -940,17 +941,17 @@ function vStats(){
   const moods=keys.map(k=>day(k).j&&day(k).j.mood).filter(Boolean);
   const avgMood=moods.length?(moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1):'—';
   let streak=0;{let k=today();if(!(day(k).sessions||[]).length)k=addDays(k,-1);while((day(k).sessions||[]).length){streak++;k=addDays(k,-1)}}
-  const subs=allTags().map(s=>({n:s.name,c:s.c,v:(A.bySub[s.id]||{m:0}).m,cnt:(A.bySub[s.id]||{n:0}).n})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const subs=statTags(keys).map(s=>({n:s.name,c:s.c,v:(A.bySub[s.id]||{m:0}).m,cnt:(A.bySub[s.id]||{n:0}).n})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const outList=Object.entries(A.outs).map(([k,v])=>{const [sid,u]=k.split('|');return `<span class="chip">${sdot(sid)}${esc(subj(sid).name)} <b>${fmtN(v)}</b> ${esc(u)}</span>`}).join('');
   let main='';
   if(stMode==='day'){
     main=`${isOn('mind')?mindStats([stAnchor]):''}<div class="gridA"><section class="card"><h2>專注紀錄 ${XL('在月曆上看','calendar',`data-k="${stAnchor}"`)}</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
   }else{
-    const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:allTags().map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
+    const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:statTags(keys).map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
     const hourRows=A.hours.map((v,h)=>({label:String(h),parts:[{c:0,v,n:h+' 點'}]})).slice(6,24);
     const cntRows=c.counters.map(x=>{const tot=keys.reduce((a,k)=>a+(+((day(k).counts||{})[x.id])||0),0),hit=keys.filter(k=>x.goal&&(+((day(k).counts||{})[x.id])||0)>=x.goal).length;return `<div class="li"><div class="grow">${esc(x.name)}</div><span class="num">${tot}</span><span class="muted">達標 ${hit}/${keys.length} 天</span></div>`}).join('');
     main=`<section class="card" style="margin-bottom:16px"><h2>每天專注分鐘 <span class="muted">依科目堆疊</span></h2>${stackBars(rows,{h:180,minW:900,every:stMode==='month'?2:1,marker:today()})}
-      <div class="legend" style="margin-top:8px">${allTags().filter(s=>keys.some(k=>(day(k).sessions||[]).some(x=>x.sub===s.id))).map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
+      <div class="legend" style="margin-top:8px">${statTags(keys).filter(s=>keys.some(k=>(day(k).sessions||[]).some(x=>x.sub===s.id))).map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
     <div class="grid3" style="margin-bottom:16px">
       <section class="card"><h2>科目分配 ${XL('調整標籤','prefs')}</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
       <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:170,every:3,per:16,minW:300}):'<p class="empty">沒有紀錄</p>'}</section>

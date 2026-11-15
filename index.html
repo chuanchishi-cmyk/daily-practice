@@ -227,6 +227,9 @@ nav.rail .fbbtn{margin:6px 6px 0;color:var(--muted);font-size:calc(12px * var(--
 .fbitem.done .qa{color:var(--muted);text-decoration:line-through}
 .mrec2{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;margin-top:6px}
 .mrec2 h3{margin:8px 0 6px}
+.ic{width:1.3em;height:1.3em;vertical-align:-.25em;flex:none}
+button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;gap:6px}
+@media (hover:none),(pointer:coarse),(max-width:820px){.kbhint{display:none}}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -646,7 +649,7 @@ const XL=(label,to,extra='')=>(to==='prefs'||to==='today'||isOn(to))?`<a class="
 function todayMindHTML(){
   const ps=(day(today()).j||{}).practice||[],tot=ps.reduce((a,x)=>a+(+x.min||0),0);
   return `<div class="row sb" style="align-items:center"><div class="mclock small" id="mTime">--:--</div><div class="row" style="gap:4px">${[3,5,10,15,20,30].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m}′</button>`).join('')}</div></div>
-  <div class="row" style="margin-top:8px">${methodSelect('mMethodT')}<button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+  <div class="row" style="margin-top:8px">${methodSelect('mMethodT')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
   <p class="muted" style="margin:8px 0 0">${tot?`今天已靜心 ${tot} 分鐘，很好。`:'不必求長，今天坐一下就很好。'}選好時間，按下開始，慢慢回到呼吸。</p>`;
 }
 function examChips(){
@@ -680,11 +683,11 @@ function pomoHTML(){
     ${P.proj&&isOn('plan')?`<label class="f wide">階段<select id="pPhase" data-ch="pfield" data-k="phase">${phaseOptions(P.proj,P.phase)}</select></label>`:''}
   </div>
   <div class="ctrl">
-    <button class="pri" data-act="ptoggle" id="pToggle">${P.running?'暫停':'開始'}</button>
+    <button class="pri" data-act="ptoggle" id="pToggle" aria-label="${P.running?'暫停':'開始'}">${playLbl(P.running,'開始')}</button>
     <button data-act="preset">重設</button>
     ${P.mode==='work'?'<button data-act="pfinish">提前結束並記錄</button>':'<button data-act="pskip">跳過休息</button>'}
   </div>
-  <p class="muted" style="text-align:center;margin:12px 0 0">空白鍵：開始／暫停</p>`;
+  <p class="muted kbhint" style="text-align:center;margin:12px 0 0">空白鍵：開始／暫停</p>`;
 }
 function pStart(){unlockAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
 function pPause(){P.left=pLeft();P.running=false;savP()}
@@ -1547,10 +1550,12 @@ const EQ2={
   morning:{q:'起床後，大約多久頭腦才完全清醒？',o:[['15 分鐘以內',0],['半小時左右',1],['一小時左右',2],['超過一小時',3]]},
   dip:{q:'午餐後到下午三點，你通常的狀態是？',o:[['幾乎每天都會很睏或分心',2],['有時候會',1],['很少受影響',0]]},
   span:{q:'沒有手機干擾時，你一次能專心做一件事多久？',o:[['15 分鐘以內',15],['15–25 分鐘',20],['25–45 分鐘',30],['45 分鐘以上',50]]},
-  recover:{q:'休息時，什麼最能讓你恢復精神？',o:[['起來走動或伸展','move'],['閉眼小睡 10–20 分鐘','nap'],['吃點東西、喝水','food'],['和人聊天','talk'],['聽音樂、放空','music']]},
-  focusBest:{q:'需要高度專注、動腦分析的事（例：寫報告、解難題、讀艱深的資料），你通常在哪個時段做得最好？'},
-  ideaBest:{q:'靈感和點子最常在哪個時段冒出來？（例：洗澡、散步、睡前突然想到）'},
-  worst:{q:'哪個時段你最容易分心、出錯，或什麼都做不下去？'}
+  recover:{q:'休息時，什麼最能讓你恢復精神？',ex:'可複選',max:5,o:[['起來走動或伸展','move'],['閉眼小睡 10–20 分鐘','nap'],['吃點東西、喝水','food'],['和人聊天','talk'],['聽音樂、放空','music']]},
+  pkExam:{max:2,q:'情境一：明天有一場很重要的考試，時間可以自己挑。你會選在哪個時段考？',ex:'可選 1–2 個'},
+  focusBest:{max:2,q:'情境二：要寫一段需要專心思考的報告或論文，不趕時間、可以自由安排。你最常在哪個時段寫得最順？',ex:'可選 1–2 個'},
+  pkFlow:{max:2,q:'情境三：回想最近一次完全投入、忘了時間的經驗（讀書、寫作、解題都算）。那大約是什麼時段？',ex:'可選 1–2 個；想不起來就選最接近的'},
+  ideaBest:{max:7,q:'靈感和點子最常在哪個時段冒出來？（例：洗澡、散步、睡前突然想到）',ex:'可複選'},
+  worst:{max:7,q:'哪些時段你最容易分心、出錯，或什麼都做不下去？',ex:'可複選'}
 };
 const DRV={
   SD:{n:'自主',en:'Self-direction',c:0,def:'選擇並培養自己的想法、觀點和行動',ax:'open',
@@ -1654,7 +1659,7 @@ let qzView=null;
 const savQZ=()=>lsSet('sd-quiz',QZ);
 const STEPS=['開始','作息','精力曲線','價值 1','價值 2','生活情境','追問','簡答'];
 function step1Ids(){return QZ.a.reg==='n'?['reg','iSleep','iWake','morning']:['reg','fSleep','fWake','wSleep','wWake','alarm','morning']}
-function step2Ids(){return BL.map(b=>'al_'+b.k).concat(['focusBest','ideaBest','worst','dip','span','recover'])}
+function step2Ids(){return BL.map(b=>'al_'+b.k).concat(['pkExam','focusBest','pkFlow','ideaBest','worst','dip','span','recover'])}
 function valScores(a){
   const A={},S={},cnt={};DK.forEach(k=>{A[k]=0;S[k]=0;cnt[k]=0});
   DK.forEach(k=>{const v=[0,1].map(i=>+a['va'+k+i]||0).filter(Boolean);A[k]=v.length?((v.reduce((x,y)=>x+y,0)/v.length)-1)/5:0});
@@ -1719,9 +1724,14 @@ function valueReport(r){
     ${byL('want').length?`<p class="callout">「${byL('want').map(k=>DRV[k].n).join('、')}」被顧慮擋住了。給自己安排一個推手：找同伴一起、先做小規模的試探。</p>`:''}
   </section>`;
 }
-function optBtns(qid,opts){return `<div class="opts">${opts.map(([t,v])=>`<button class="opt" data-act="qa" data-q="${qid}" data-v="${esc(v)}" aria-pressed="${String(QZ.a[qid])===String(v)}">${esc(t)}</button>`).join('')}</div>`}
-function qBlock(n,qid,q,opts,ex){return `<div class="qq" id="q_${qid}"><div class="qt"><span class="num muted">${n}</span> ${esc(q)}</div>${ex?`<div class="ex">${esc(ex)}</div>`:''}${optBtns(qid,opts)}</div>`}
+const asArr=x=>Array.isArray(x)?x:(x===undefined||x===null||x===''?[]:[x]);
+function optBtns(qid,opts,max){const cur=QZ.a[qid];return `<div class="opts${max?' multi':''}">${opts.map(([t,v])=>`<button class="opt" data-act="qa" data-q="${qid}" data-v="${esc(v)}"${max?` data-max="${max}"`:''} aria-pressed="${max?asArr(cur).map(String).includes(String(v)):String(cur)===String(v)}">${esc(t)}</button>`).join('')}</div>`}
+function qBlock(n,qid,q,opts,ex,max){return `<div class="qq" id="q_${qid}"><div class="qt"><span class="num muted">${n}</span> ${esc(q)}</div>${ex?`<div class="ex">${esc(ex)}</div>`:''}${optBtns(qid,opts,max)}</div>`}
+const eqBlock=(n,id,opts)=>qBlock(n,id,EQ2[id].q,opts||EQ2[id].o,EQ2[id].ex,EQ2[id].max);
 function timeSel(n,qid,q,opts,hint){return `<div class="qq" id="q_${qid}"><label class="qt" for="ts_${qid}"><span class="num muted">${n}</span> ${esc(q)}</label>${hint?`<div class="ex">${esc(hint)}</div>`:''}<select id="ts_${qid}" data-ch="qsel" data-q="${qid}"><option value="">選擇時間</option>${opts.map(m=>`<option value="${m}"${+QZ.a[qid]===m?' selected':''}>${hm(m)}${m===opts[opts.length-1]?' 或更晚':''}</option>`).join('')}</select></div>`}
+const IC_PLAY='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
+const IC_PAUSE='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
+const playLbl=(run,start)=>run?IC_PAUSE+'<span>暫停</span>':IC_PLAY+'<span>'+start+'</span>';
 function quizScreen(){
   const st=QZ.step;
   const prog=`<div class="qprog">${STEPS.map((s,i)=>`<span class="${i===st?'on':i<st?'past':''}">${s}</span>`).join('')}</div>`;
@@ -1748,10 +1758,11 @@ function quizScreen(){
     let n=0;
     body=`<h2>精力曲線</h2><p class="muted">平常的日子裡，每個時段你的頭腦有多清醒？1 = 很昏沉，5 = 非常清醒。睡覺的時段選 1。</p>
     <div class="grid-al">${BL.map(b=>{const id='al_'+b.k;return `<div class="qq al" id="q_${id}"><div class="qt"><b>${b.n}</b> <span class="num muted">${b.r}</span></div><div class="likert al">${[1,2,3,4,5].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div></div>`}).join('')}</div>
-    <h3>用三個情境確認</h3>`;
+    <h3>用三個情境確認你的高峰</h3><p class="muted" style="margin-top:0">上面是你對自己的整體感覺；下面三個具體情境，用來檢查高峰時段是否一致。</p>`;
     const blOpts=BL.map(b=>[`${b.n} ${b.r}`,b.k]);
-    body+=qBlock(++n,'focusBest',EQ2.focusBest.q,blOpts)+qBlock(++n,'ideaBest',EQ2.ideaBest.q,blOpts)+qBlock(++n,'worst',EQ2.worst.q,blOpts)
-      +`<h3>專注與恢復</h3>`+['dip','span','recover'].map(id=>qBlock(++n,id,EQ2[id].q,EQ2[id].o)).join('');
+    body+=['pkExam','focusBest','pkFlow'].map(id=>eqBlock(++n,id,blOpts)).join('')
+      +`<h3>靈感與低潮</h3>`+eqBlock(++n,'ideaBest',blOpts)+eqBlock(++n,'worst',blOpts)
+      +`<h3>專注與恢復</h3>`+['dip','span','recover'].map(id=>eqBlock(++n,id)).join('');
   }else if(st===3||st===4){
     const i=st-3;let n=0;
     const lik=id=>`<div class="likert v6">${[1,2,3,4,5,6].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div>`;
@@ -1781,7 +1792,7 @@ function missing(){
   if(st===4)ids=DK.map(k=>'va'+k+'1');
   if(st===5)ids=SCEN.flatMap((_,i)=>['sb'+i,'sw'+i]);
   if(st===6)ids=(QZ.pairs||[]).map(k=>'fu_'+k);
-  const miss=ids.filter(id=>QZ.a[id]===undefined||QZ.a[id]==='');
+  const miss=ids.filter(id=>QZ.a[id]===undefined||QZ.a[id]===''||(Array.isArray(QZ.a[id])&&!QZ.a[id].length));
   return miss;
 }
 const blOfHour=h=>h>=6&&h<9?'b1':h>=9&&h<12?'b2':h>=12&&h<14?'b3':h>=14&&h<17?'b4':h>=17&&h<20?'b5':h>=20&&h<23?'b6':(h>=23||h<2)?'b7':null;
@@ -1813,12 +1824,15 @@ function energyModel(E){
   const sl=sleepCalc(E),ed=energyData();
   const win=sl.work||sl.free;
   const asleep=b=>{if(!win)return false;let mid=(b.h+b.len/2)*60;if(mid<win.on)mid+=1440;return mid>win.on+30&&mid<win.off-30};
-  const sc={};BL.forEach(b=>{let v=+E['al_'+b.k]||1;if(E.focusBest===b.k)v+=1.5;if(E.worst===b.k)v-=1.5;if(ed.ok&&ed.avg[b.k]!=null)v+=(ed.avg[b.k]-3)*0.8;sc[b.k]=Math.max(0,Math.min(6.5,v))});
+  const PK=['pkExam','focusBest','pkFlow'].map(id=>asArr(E[id])).filter(x=>x.length),W=asArr(E.worst);
+  const sc={};BL.forEach(b=>{let v=+E['al_'+b.k]||1;PK.forEach(arr=>{if(arr.includes(b.k))v+=(PK.length>1?1:1.5)/arr.length});if(W.includes(b.k))v-=1.5/Math.max(1,W.length*.75);if(ed.ok&&ed.avg[b.k]!=null)v+=(ed.avg[b.k]-3)*0.8;sc[b.k]=Math.max(0,Math.min(6.5,v))});
   const awake=BL.filter(b=>!asleep(b));
   const pool=awake.length?awake:BL;
   const peak=pool.reduce((a,b)=>sc[b.k]>sc[a.k]?b:a).k;
   const low=pool.filter(b=>b.k!==peak).reduce((a,b)=>sc[b.k]<sc[a.k]?b:a,pool.find(b=>b.k!==peak)||pool[0]).k;
-  const idea=E.ideaBest&&E.ideaBest!==peak&&pool.some(b=>b.k===E.ideaBest)?E.ideaBest:null;
+  const idea=asArr(E.ideaBest).find(k=>k!==peak&&pool.some(b=>b.k===k))||null;
+  const rated=pool.reduce((a,b)=>(+E['al_'+b.k]||1)>(+E['al_'+a.k]||1)?b:a).k;
+  const agree=PK.filter(arr=>arr.includes(peak)).length,nPK=PK.length;
   const roles=BL.map(b=>{let r;
     if(asleep(b))r=['睡眠','mut','睡覺，或放鬆準備入睡'];
     else if(b.k===peak)r=['高峰','bad','深度工作：最需要思考、分析、寫作的事'];
@@ -1829,12 +1843,12 @@ function energyModel(E){
     else if(sc[b.k]<=2.3)r=['低潮','mut','例行事務，或安排休息、運動'];
     else r=['一般','good','中等難度的事：溝通、開會、修改'];
     return {b,r}});
-  return {sl,ed,sc,peak,low,idea,roles};
+  return {sl,ed,sc,peak,low,idea,roles,agree,nPK,rated};
 }
 function pomoSuggest(span){return span<=15?{w:15,s:3}:span<=20?{w:20,s:5}:span<=30?{w:25,s:5}:{w:45,s:10}}
 function computeResult(){
   const a=QZ.a;
-  const E={reg:a.reg,fSleep:a.fSleep,fWake:a.fWake,wSleep:a.wSleep,wWake:a.wWake,iSleep:a.iSleep,iWake:a.iWake,alarm:a.alarm,morning:a.morning,focusBest:a.focusBest,ideaBest:a.ideaBest,worst:a.worst,dip:+a.dip||0,span:+a.span||25,recover:a.recover||'move'};
+  const E={reg:a.reg,fSleep:a.fSleep,fWake:a.fWake,wSleep:a.wSleep,wWake:a.wWake,iSleep:a.iSleep,iWake:a.iWake,alarm:a.alarm,morning:a.morning,pkExam:a.pkExam,focusBest:a.focusBest,pkFlow:a.pkFlow,ideaBest:a.ideaBest,worst:a.worst,dip:+a.dip||0,span:+a.span||25,recover:asArr(a.recover).length?asArr(a.recover):['move']};
   BL.forEach(b=>E['al_'+b.k]=+a['al_'+b.k]||1);
   const vals=computeValues(a,QZ.pairs||[]);
   const short={};SHORT.forEach(([id])=>short[id]=(a['s_'+id]||'').trim());
@@ -1861,6 +1875,7 @@ function reportHTML(id,r){
   const notes=[];
   if(sl.sj>=1)notes.push(`上班上課日和休假日的睡眠中點差了約 ${fmtN(sl.sj)} 小時。這叫「社會時差」，身體像是每週都在跨時區飛行。試著把差距縮小到一小時內，例如休假日不要比平日晚起太多。`);
   if(sl.free&&sl.work&&sl.free.dur-sl.work.dur>=90)notes.push(`休假日比平日多睡約 ${fmtN((sl.free.dur-sl.work.dur)/60)} 小時，平日可能睡眠不足。`);
+  if(M.nPK>=2){if(M.agree===M.nPK)notes.push(`三個情境都指向 <b>${blName(M.peak)}</b>，和你的自評一致，這個高峰很可靠。`);else if(M.agree===0)notes.push(`你的自評和具體情境指向不同時段（自評最清醒是 <b>${blName(M.rated)}</b>）。結果以綜合分數為準；接下來一兩週在「今日」做精力打卡，曲線會更準。`);else notes.push(`三個情境中有 ${M.agree} 個指向 <b>${blName(M.peak)}</b>。大致可信，可以先照這個安排，再用精力打卡微調。`)}
   if(E.alarm===2)notes.push('平日常按掉鬧鐘繼續睡，代表起床時間比你的生理時鐘早。可以試著提早半小時上床，或把最難的事移到較晚的時段。');
   if(E.dip===2&&M.peak!=='b3'&&M.peak!=='b4')notes.push('你幾乎每天午後都會低潮。13–15 點不要排需要深度思考的事，改做例行事務，或先小睡 15 分鐘。');
   if(M.ed.ok&&M.ed.studyTop&&M.ed.studyTop!==M.peak)notes.push(`你最常專注工作的時段是 <b>${blName(M.ed.studyTop)}</b>，但精力高峰在 <b>${blName(M.peak)}</b>。試著把最難的任務移到高峰。`);
@@ -1880,7 +1895,7 @@ function reportHTML(id,r){
       <h3>建議的一天 ${XL('到今日開始','today')}</h3><div class="tablewrap"><table><tbody>${M.roles.map(x=>`<tr><td class="num">${x.b.r}</td><td>${x.b.n}</td><td><span class="pill ${x.r[1]}">${x.r[0]}</span></td><td style="white-space:normal">${esc(x.r[2])}</td></tr>`).join('')}</tbody></table></div>
       <h3>專注長度</h3><p>你一次大約能專心 ${E.span>=50?'45 分鐘以上':E.span+' 分鐘左右'}。建議番茄設為專注 ${ps.w} 分、休息 ${ps.s} 分${cur.work===ps.w?'（目前已是這個設定）':`，目前設定是 ${cur.work} 分`}。</p>
       ${cur.work!==ps.w?`<button class="sec sm" data-act="qzPomo" data-w="${ps.w}" data-s="${ps.s}">套用建議的番茄長度</button>`:''}
-      <h3>恢復方式</h3><p>${RECOVER[E.recover]||''}</p>
+      <h3>恢復方式</h3>${asArr(E.recover).map(k=>RECOVER[k]?`<p style="margin:0 0 6px">・${RECOVER[k]}</p>`:'').join('')}
     </section>
     <section class="card"><h2>你的簡答</h2>${SHORT.filter(([k])=>r.short[k]).map(([k,q])=>`<p class="qa"><span class="muted">${esc(q)}</span><br>${esc(r.short[k])}</p>`).join('')||'<p class="empty">這次沒有填寫簡答。</p>'}
       ${r.other?`<h3>你補充的推動力</h3><p class="qa">${esc(r.other)}</p>`:''}
@@ -1957,7 +1972,10 @@ Object.assign(A,{
   foLog:el=>{const n=new Date();editDay(today(),d=>{d.fo=d.fo||[];d.fo.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),v:+el.dataset.n})});toast('已記錄專注度 '+el.dataset.n+' 分');render()},
   enLog:el=>{const n=new Date();editDay(today(),d=>{d.en=d.en||[];d.en.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),e:+el.dataset.n})});toast('已記錄精力 '+el.dataset.n+' 分');render()},
   recEn:el=>{readRecordForm();const n=+el.dataset.n;REC.en=REC.en===n?null:n;drawRecord()},
-  qa:el=>{const q=el.dataset.q,v=el.dataset.v;QZ.a[q]=/^-?\d+(\.\d+)?$/.test(v)?+v:v;savQZ();
+  qa:el=>{const q=el.dataset.q,v=el.dataset.v,val=/^-?\d+(\.\d+)?$/.test(v)?+v:v;
+    if(el.dataset.max){const max=+el.dataset.max;let arr=asArr(QZ.a[q]).filter(x=>String(x)!==String(val));if(arr.length===asArr(QZ.a[q]).length){if(arr.length>=max)return toast(`這題最多選 ${max} 個，先取消一個再選`);arr.push(val)}QZ.a[q]=arr;savQZ();
+      el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',arr.map(String).includes(b.dataset.v)?'true':'false'));return}
+    QZ.a[q]=val;savQZ();
     el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));
     if(q==='reg'||/^s[bw]\d/.test(q)){const y=window.scrollY;render();window.scrollTo(0,y);return}
     const bk=el.closest('.qq');const nx=bk&&bk.nextElementSibling;if(nx&&nx.classList.contains('qq')&&!nx.querySelector('[aria-pressed="true"]')){const r=nx.getBoundingClientRect();if(r.bottom>innerHeight)nx.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}},
@@ -2075,7 +2093,7 @@ function practiceHTML(k){
   const ps=(day(k).j||{}).practice||[],tot=ps.reduce((a,p)=>a+(+p.min||0),0);
   return `${k===today()?`<div class="mclock-wrap"><div class="mclock" id="mTime">--:--</div>
     <div class="row" style="justify-content:center">${[3,5,10,15,20,30,45,60,90].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m===60?'1 小時':m===90?'1.5 小時':m+' 分'}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
     <p class="muted" style="text-align:center;margin:8px 0 0">找一個舒服的姿勢，選好時間就開始。鐘聲響起時，輕輕回到呼吸；結束後會自動記下這次練習。</p></div>`:''}
   <h3>練習紀錄 <span class="muted">${tot} 分鐘</span></h3>
   <div class="list">${ps.map(p=>`<div class="li" style="align-items:flex-start"><span class="num">${p.min}′</span><div class="grow"><div>${esc(p.method)}</div>
@@ -2087,7 +2105,7 @@ function lastPractice(){const ds=Object.keys(S.days).filter(d=>((day(d).j||{}).p
 function mindTimerHTML(){
   return `<div class="mclock-wrap" style="border:0;padding-bottom:0"><div class="mclock" id="mTime">--:--</div>
     <div class="row" style="justify-content:center">${[3,5,10,15,20,30,45,60,90].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m===60?'1 小時':m===90?'1.5 小時':m+' 分'}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${MT.running?'暫停':'開始（響鈴）'}</button><button data-act="mReset">重設</button></div>
+    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
     <p class="muted" style="text-align:center;margin:8px 0 0">找一個舒服的姿勢，選好時間就開始。鐘聲響起時，輕輕回到呼吸；結束後會自動記下這次練習。</p></div>`;
 }
 function methodTally(){const o={};Object.keys(S.days).forEach(d=>((day(d).j||{}).practice||[]).forEach(x=>{const m=x.method||'其他';o[m]=o[m]||{n:0,min:0};o[m].n++;o[m].min+=+x.min||0}));return Object.entries(o).sort((a,b)=>b[1].n-a[1].n)}

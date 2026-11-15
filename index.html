@@ -1337,7 +1337,7 @@ function vPrefs(){
     </section>
   </div>
   <section class="card" style="margin-bottom:16px"><h2>要顯示哪些頁面</h2><p class="muted">用不到的頁面可以先藏起來，資料都會保留，之後再打開就回來了。</p>
-    <div class="vis">${Object.entries(OPTIONAL).map(([r,d])=>`<button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button>`).join('')}</div>
+    <div class="vis">${Object.entries(OPTIONAL).sort((x,y)=>NAV.findIndex(n=>n[0]===x[0])-NAV.findIndex(n=>n[0]===y[0])).map(([r,d])=>`<button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div></section>
   ${fbAdminHTML()}
   <section class="card" style="margin-bottom:16px"><h2>分享給讀書夥伴</h2><p class="muted">每個人打開都是自己的私人工作台，彼此看不到紀錄。</p><button class="pri" data-act="share">複製連結・分享設定</button></section>
@@ -2261,7 +2261,7 @@ Object.assign(IN,{
 });
 
 /* ---------- navigation & visibility ---------- */
-const NAV=[['today','今日'],['calendar','月曆'],['stats','統計'],['exam','考試衝刺'],['plan','論文地圖'],['journal','覺察日記'],['mind','靜心'],['quiz','我的節奏']];
+const NAV=[['today','今日'],['plan','論文地圖'],['exam','考試衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
 const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'考試衝刺：測驗計時、考試倒數、模考、錯題本',plan:'論文地圖：研究專案、書摘、會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
 function navItems(){return NAV.filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}

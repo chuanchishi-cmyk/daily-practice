@@ -141,7 +141,8 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 /* charts */
 .chartwrap{overflow-x:auto}
-svg.chart{width:100%;height:auto;display:block}
+svg.chart{width:100%;height:auto;display:block;max-height:320px}
+svg.chart.wide{min-width:620px}
 svg .grid{stroke:var(--line);stroke-width:1}
 svg .ax{fill:var(--muted);font-size:10px;font-family:var(--f-mono)}
 svg .lbl{fill:var(--ink);font-size:11px;font-family:var(--f-body)}
@@ -892,11 +893,11 @@ function dayDetail(k){
 /* ---------- charts ---------- */
 function niceMax(v){if(v<=0)return 4;const raw=v/4,p=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/p;const s=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return s*p*4}
 function fmtN(v){return Math.round(v*10)/10}
-function stackBars(rows,{h=200,unit='分',every=1,marker=null}={}){
-  const W=Math.max(rows.length*30,320),pl=38,pb=22,pt=10,ih=h-pb-pt;
-  const max=niceMax(Math.max(1,...rows.map(r=>r.parts.reduce((a,p)=>a+p.v,0))));
+function stackBars(rows,{h=200,unit='分',every=1,marker=null,minW=320,minMax=null,per=30}={}){
+  const W=Math.max(rows.length*per,minW),pl=38,pb=22,pt=10,ih=h-pb-pt;
+  const max=niceMax(Math.max(minMax==null?(unit==='分'?30:4):minMax,...rows.map(r=>r.parts.reduce((a,p)=>a+p.v,0))));
   const bw=(W-pl)/rows.length;
-  let s=`<svg class="chart" viewBox="0 0 ${W} ${h}" role="img" aria-label="長條圖">`;
+  let s=`<svg class="chart${minW>=700?' wide':''}" viewBox="0 0 ${W} ${h}" role="img" aria-label="長條圖">`;
   for(let i=0;i<=4;i++){const v=max*i/4,y=pt+ih-ih*i/4;s+=`<line class="grid" x1="${pl}" x2="${W}" y1="${y}" y2="${y}"/><text class="ax" x="${pl-6}" y="${y+3.5}" text-anchor="end">${fmtN(v)}</text>`}
   rows.forEach((r,i)=>{let y=pt+ih;const x=pl+i*bw+bw*.18,w=bw*.64;
     if(marker&&r.key===marker)s+=`<rect x="${pl+i*bw}" y="${pt}" width="${bw}" height="${ih}" fill="var(--sunk)"/>`;
@@ -948,11 +949,11 @@ function vStats(){
     const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:allTags().map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
     const hourRows=A.hours.map((v,h)=>({label:String(h),parts:[{c:0,v,n:h+' 點'}]})).slice(6,24);
     const cntRows=c.counters.map(x=>{const tot=keys.reduce((a,k)=>a+(+((day(k).counts||{})[x.id])||0),0),hit=keys.filter(k=>x.goal&&(+((day(k).counts||{})[x.id])||0)>=x.goal).length;return `<div class="li"><div class="grow">${esc(x.name)}</div><span class="num">${tot}</span><span class="muted">達標 ${hit}/${keys.length} 天</span></div>`}).join('');
-    main=`<section class="card" style="margin-bottom:16px"><h2>每天專注分鐘 <span class="muted">依科目堆疊</span></h2>${stackBars(rows,{every:stMode==='month'?2:1,marker:today()})}
+    main=`<section class="card" style="margin-bottom:16px"><h2>每天專注分鐘 <span class="muted">依科目堆疊</span></h2>${stackBars(rows,{h:180,minW:900,every:stMode==='month'?2:1,marker:today()})}
       <div class="legend" style="margin-top:8px">${allTags().filter(s=>keys.some(k=>(day(k).sessions||[]).some(x=>x.sub===s.id))).map(s=>`<span><i class="dot" style="background:var(--c${s.c})"></i>${esc(s.name)}</span>`).join('')}</div></section>
     <div class="grid3" style="margin-bottom:16px">
       <section class="card"><h2>科目分配 ${XL('調整標籤','prefs')}</h2>${subs.length?hbars(subs,i=>`${fmtMin(i.v)}・${i.cnt} 個`):'<p class="empty">沒有紀錄</p>'}${outList?`<h3>產出</h3><div class="chips">${outList}</div>`:''}</section>
-      <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:160,every:3}):'<p class="empty">沒有紀錄</p>'}</section>
+      <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:170,every:3,per:16,minW:300}):'<p class="empty">沒有紀錄</p>'}</section>
       <section class="card"><h2>計數</h2><div class="list">${cntRows||'<p class="empty">沒有計數器</p>'}</div>${moodInsight(keys)}</section>
     </div>
     ${isOn('mind')?mindStats(keys):''}
@@ -979,7 +980,7 @@ function mindStats(keys){
   const notes=all.filter(x=>x.note).slice(-5).reverse();
   return `<section class="card" style="margin-bottom:16px">${head}
     <div class="grid3" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)">
-      <div><h3 style="margin-top:0">每天靜心分鐘</h3>${stackBars(rows,{h:150,unit:'分',every:stMode==='month'?3:1,marker:today()})}</div>
+      <div><h3 style="margin-top:0">每天靜心分鐘</h3>${stackBars(rows,{h:150,unit:'分',minW:480,every:stMode==='month'?3:1,marker:today()})}</div>
       <div><h3 style="margin-top:0">方法</h3>${hbars(Object.entries(byM).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,v],i)=>({n,v,c:[9,0,5,3,2][i]})),x=>x.v+' 分')}
         ${Object.keys(byD).length?`<h3>常見干擾</h3><div class="chips">${Object.entries(byD).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<span class="chip">${esc(t)} <b>${n}</b></span>`).join('')}</div>`:''}</div>
       <div><h3 style="margin-top:0">最近的觀察</h3>${notes.length?notes.map(x=>`<p class="qa" style="margin:0 0 8px"><span class="muted">${fmtMD(x.d)}</span> ${esc(x.note)}</p>`).join(''):'<p class="empty">還沒有寫觀察筆記。</p>'}</div>

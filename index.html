@@ -209,6 +209,8 @@ nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--
 .callout{background:var(--sunk);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0}
 .guide ul{margin:0;padding-left:18px}
 .likert.v6 button{width:40px}
+nav.rail .fbbtn{margin:6px 6px 0;color:var(--muted);font-size:12px}
+.fbitem.done .qa{color:var(--muted);text-decoration:line-through}
 .mrec2{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;margin-top:6px}
 .mrec2 h3{margin:8px 0 6px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
@@ -397,6 +399,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   nav.rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;overflow-x:auto;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));border-right:0;border-bottom:1px solid var(--line);z-index:5}
   .brand,.rail .foot,nav.rail a .k{display:none}
   nav.rail .sharebtn{margin:0;white-space:nowrap}
+  nav.rail .fbbtn{margin:0;white-space:nowrap}
   nav.rail a{white-space:nowrap}
   main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .grid2,.grid3{grid-template-columns:1fr}
@@ -426,6 +429,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
     <div class="brand">讀書工作台<small>讀書・研究・生活</small></div>
     <div id="navLinks" class="navlinks"></div>
     <button class="sharebtn" data-act="share">複製連結・分享</button>
+    <button class="ghost sm fbbtn" data-act="fbOpen">問題回報</button>
     <div class="mini" id="miniClock"></div>
     <div class="foot" id="storeNote">連線中…</div>
   </nav>
@@ -504,7 +508,7 @@ function scaleEditorHTML(){
 /* ---------- store ---------- */
 const COLLS=['meta','days','mocks','mistakes','projects','reviews','quiz','quotes','pnotes','pages'];
 const S={};COLLS.forEach(c=>S[c]={});
-let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[];
+let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[],DBX=null,UIDX=null,IS_OWNER=false,FB={},fbUnsub=null;
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
 function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
@@ -560,7 +564,7 @@ async function init(){
   let db=null,user=null,uid=null;
   try{if(window.claude&&claude.use){[db,user]=await Promise.all([claude.use('db'),claude.use('user')]);claude.use('downloads').then(d=>{dlNS=d}).catch(()=>{})}}catch{}
   try{if(user)uid=await user.id()}catch{}
-  if(db&&uid){
+  if(db&&uid){DBX=db;UIDX=uid;try{IS_OWNER=await user.isOwner()}catch{}
     let w=null;try{w=await user.can('data.write')}catch{}
     if(w===false)return goLocal('viewonly');
     backend='db';base=db.doc(`data/users/${uid}/app`);
@@ -1315,6 +1319,7 @@ function vPrefs(){
   <section class="card" style="margin-bottom:16px"><h2>要顯示哪些頁面</h2><p class="muted">用不到的頁面可以先藏起來，資料都會保留，之後再打開就回來了。</p>
     <div class="vis">${Object.entries(OPTIONAL).map(([r,d])=>`<button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div></section>
+  ${fbAdminHTML()}
   <section class="card" style="margin-bottom:16px"><h2>分享給讀書夥伴</h2><p class="muted">每個人打開都是自己的私人工作台，彼此看不到紀錄。</p><button class="pri" data-act="share">複製連結・分享設定</button></section>
   <section class="card"><h2>備份</h2>
     <p class="muted">${backend==='db'?'資料存在你的私人雲端空間，分享這個頁面給別人，他們也看不到你的紀錄。建議每月匯出一次備份。':'資料存在這個瀏覽器裡。建議每週匯出一次備份；換電腦時，在新電腦按「匯入」就能接著用。'}${lsGet('sd-lastexport','')?' 上次備份：'+fmtMD(lsGet('sd-lastexport','')):''}</p>
@@ -1426,6 +1431,40 @@ const IN={
 };
 /* ---------- share ---------- */
 const SHARE_URL=STANDALONE?location.href.split('#')[0]:'https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe';
+const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'考試衝刺',plan:'論文地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
+function fbPageName(){return R.startsWith('page-')?'我的頁面':(PAGE_NAMES[R]||R)}
+function openFeedback(){
+  $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fbT"><div class="box">
+    <h2 id="fbT">問題回報</h2>
+    <p class="muted" style="margin:0">遇到問題、或有想加入的功能，都歡迎告訴我們。會一併附上你目前所在的頁面（${esc(fbPageName())}），不會附上你的紀錄內容。</p>
+    <div class="seg" id="fbCat">${['問題','建議','其他'].map((x,i)=>`<button data-act="fbCat" data-v="${x}" aria-pressed="${i===0}">${x}</button>`).join('')}</div>
+    <label class="f">問題描述<textarea id="fbText" rows="5" placeholder="發生了什麼？在哪一頁、做了什麼操作？例：在論文地圖新增步驟後，畫面沒有更新。"></textarea></label>
+    <label class="f">聯絡方式（選填）<input id="fbContact" type="text" placeholder="想收到回覆的話，留下 Email 或稱呼"></label>
+    <p class="muted" id="fbMsg" style="margin:0"></p>
+    <div class="row sb"><button class="ghost" data-act="recCancel">取消</button><button class="pri" data-act="fbSend">送出</button></div>
+  </div></div>`;
+  setTimeout(()=>{const t=$('#fbText');t&&t.focus()},30);
+}
+function fbIssueUrl(cat,text,contact){return 'https://github.com/chuanchishi-cmyk/study-desk/issues/new?title='+encodeURIComponent('['+cat+'] '+text.slice(0,40))+'&body='+encodeURIComponent(text+'\n\n頁面：'+fbPageName()+(contact?'\n聯絡：'+contact:''))}
+async function sendFeedback(){
+  const text=$('#fbText').value.trim(),contact=$('#fbContact').value.trim(),cat=($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題',msg=$('#fbMsg');
+  if(!text)return toast('先寫下問題描述');
+  const item={id:rid(),at:new Date().toISOString(),cat,text,contact,page:fbPageName(),done:false};
+  if(DBX&&UIDX&&!STANDALONE){
+    try{const ref=DBX.doc('feedback/'+UIDX);const cur=await ref.get();const items=(cur.exists&&cur.data().items)||[];await ref.set({items:items.concat([item]).slice(-200),updated:item.at});closeModal();toast('已送出，謝謝你的回饋！');return}
+    catch(e){}
+  }
+  msg.innerHTML=`這裡無法直接送出。你可以<a href="${esc(fbIssueUrl(cat,text,contact))}" target="_blank" rel="noopener">到 GitHub 回報這個問題</a>（需要 GitHub 帳號），或<button class="sm" data-act="fbCopy">複製內容</button>後寄給分享這個頁面的人。`;
+}
+function fbAdminHTML(){
+  if(!IS_OWNER||!DBX||STANDALONE)return '';
+  if(!fbUnsub){fbUnsub=DBX.collection('feedback').onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{o[d.id]=d.data()});FB=o;if(R==='prefs')softRender()},()=>{})}
+  const users=Object.keys(FB);const all=users.flatMap((u,i)=>((FB[u]||{}).items||[]).map(x=>Object.assign({u,ui:i+1},x))).sort((a,b)=>a.at<b.at?1:-1);
+  const open=all.filter(x=>!x.done).length;
+  return `<section class="card" style="margin-bottom:16px"><h2>問題回報 <span class="muted">只有你看得到・${open} 則未處理・共 ${all.length} 則</span></h2>
+    ${all.length?`<div class="list">${all.map(x=>`<div class="li fbitem${x.done?' done':''}" style="align-items:flex-start"><span class="pill ${x.cat==='問題'?'warn':x.cat==='建議'?'good':'mut'}">${esc(x.cat)}</span><div class="grow"><div class="qa">${esc(x.text)}</div><div class="muted" style="font-size:12px">${new Date(x.at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}・${esc(x.page||'')}・回報者 ${x.ui}${x.contact?'・聯絡：'+esc(x.contact):''}</div></div><button class="ghost sm" data-act="fbDone" data-u="${esc(x.u)}" data-id="${esc(x.id)}">${x.done?'改回未處理':'標為已處理'}</button></div>`).join('')}</div>`:'<p class="empty">還沒有人回報問題。</p>'}
+  </section>`;
+}
 function openShare(){
   if(STANDALONE){$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="box">
     <h2 id="shT">分享讀書工作台</h2>
@@ -1868,6 +1907,11 @@ function vQuiz(){
 }
 Object.assign(A,{
   share:openShare,
+  fbOpen:openFeedback,
+  fbCat:el=>{el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'))},
+  fbSend:sendFeedback,
+  fbCopy:async()=>{const t=`[${($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題'}] ${$('#fbText').value}\n頁面：${fbPageName()}`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
+  fbDone:async el=>{const u=el.dataset.u,id=el.dataset.id,d=clone(FB[u]||{items:[]});const it=(d.items||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;FB[u]=d;render();try{await DBX.doc('feedback/'+u).set(d)}catch{toast('沒有更新成功，請再試一次')}},
   copyLink:async()=>{const i=$('#shUrl');try{await navigator.clipboard.writeText(SHARE_URL);toast('已複製連結')}catch{i.focus();i.select();toast('請按 Ctrl+C 複製')}},
   foLog:el=>{const n=new Date();editDay(today(),d=>{d.fo=d.fo||[];d.fo.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),v:+el.dataset.n})});toast('已記錄專注度 '+el.dataset.n+' 分');render()},
   enLog:el=>{const n=new Date();editDay(today(),d=>{d.en=d.en||[];d.en.push({t:pad(n.getHours())+':'+pad(n.getMinutes()),e:+el.dataset.n})});toast('已記錄精力 '+el.dataset.n+' 分');render()},

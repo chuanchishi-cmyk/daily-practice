@@ -207,6 +207,12 @@ nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--
 .likert::after{content:"很像我";font-size:11px;color:var(--muted);margin-left:4px}
 .callout{background:var(--sunk);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0}
 .guide ul{margin:0;padding-left:18px}
+.likert.v6 button{width:40px}
+.spick{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px 22px}
+.spick .opt[disabled]{opacity:.35}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px;align-items:start}
+.vtable td{vertical-align:top}
+@media (max-width:820px){.vgrid{grid-template-columns:1fr}}
 .ex{font-size:12.5px;color:var(--muted);margin:-4px 0 10px;padding-left:22px}
 .grid-al{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 24px}
 .qq.al{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -1321,76 +1327,171 @@ const EQ2={
   worst:{q:'哪個時段你最容易分心、出錯，或什麼都做不下去？'}
 };
 const DRV={
-  A:{n:'自主',c:0,items:[['我喜歡自己決定做事的方法和順序。','同一份任務，比起照著範本做，我更想用自己的方式完成。'],['行程被別人排滿時，我會明顯失去幹勁。','每一步都被規定好時，我反而拖著不想做。'],['有選擇權時，我願意投入更多時間。','能自己挑主題的報告，我會做得比指定主題更久、更好。']],
-    fc:'今天的進度由我自己安排',drain:'每一步都被規定，沒有自己決定的空間',desc:'你需要「這是我自己選的」的感覺。被安排好的進度容易讓你抗拒，自己設計的計畫卻能持續很久。',
-    study:['每週自己挑下週的學習素材和練習方式，不要只照固定書單','同一個目標準備兩三種做法輪流選，今天想用哪種就用哪種'],project:['先和相關的人談好大方向，細節的順序自己決定','每天早上自己寫下今天要推進的三件事'],
-    trap:'選擇太多會把時間花在規劃上。給自己一條規則：規劃最多 10 分鐘。',tool:'每天親手寫「今天最想照顧的三件事」，番茄鐘的任務欄寫自己選的題目。'},
-  M:{n:'精熟',c:3,items:[['感覺到自己能力在進步，是我最大的樂趣。','比上個月更快完成同樣的事，會讓我很有成就感。'],['我願意花時間把一件事練到很熟練。','反覆練一個技巧，直到可以不假思索地做好。'],['比起結果，我更在意自己有沒有變強。','就算沒得獎，只要知道自己進步了就滿足。']],
-    fc:'把昨天卡住的地方練到熟練',drain:'做了很久，卻感覺不到自己進步',desc:'你的燃料是「看得見的進步」。能力提升本身就是獎勵，而且比外在肯定更持久。',
-    study:['每月用同一份測驗或任務檢查一次，比較進步','把錯誤記下來定期複習，直到真正熟練'],project:['把大目標拆成可以練習的小技能','每完成一個階段，記下這次學會了什麼'],
-    trap:'追求完美會讓你在同一處卡太久。先定義「夠好」的標準，達到就前進。',tool:'錯題本、模考趨勢、計數器都能讓進步被看見。'},
-  P:{n:'意義',c:2,items:[['我需要知道一件事為什麼重要，才做得下去。','被要求做一件事時，我會先問「這是為了什麼？」'],['和我的價值觀或長遠目標相連的事，我特別有力氣。','想到能讓未來的自己更好，就願意撐下去。'],['覺得一件事沒有意義時，我很難逼自己完成。','純粹為了交差的表格或報告，我會一拖再拖。']],
-    fc:'想起這件事對我的人生有什麼意義',drain:'不知道自己做的事有什麼用',desc:'你要先知道「為什麼」才能投入。和未來、和價值連在一起的任務，你可以做得又久又好。',
-    study:['開始學一樣東西前，先寫下「學會之後可以做什麼」','挑和自己興趣或目標相關的素材來練習'],project:['在計畫最前面寫下這件事想達成什麼、能幫到誰','卡關時重讀自己的初衷'],
-    trap:'覺得沒意義的瑣事會被一直拖。把它們集中在低精力時段一次處理掉。',tool:'在論文地圖寫下目的；週回顧時寫下這週和目標的關係。'},
-  R:{n:'連結',c:5,items:[['和別人一起做事，讓我更能持續。','和朋友約好一起運動或讀書，我比較不會偷懶。'],['有人在乎我的進度，我會更努力。','有人問「最近進行得怎樣？」會讓我想加把勁。'],['長時間一個人埋頭做事，會讓我失去動力。','連續幾天獨自工作，我會覺得空虛、不想繼續。']],
-    fc:'和夥伴約好一起開工',drain:'一個人孤軍奮戰，沒有人知道我在努力',desc:'有人一起、有人在乎，你就比較能持續。孤軍奮戰是你最大的消耗。',
-    study:['找學習夥伴，約固定時間一起做','互相教對方學到的東西，教的過程就是複習'],project:['定期向別人報告進度，不要等完成才見面','找到一兩個能互相打氣的同伴'],
-    trap:'太依賴別人的時間，節奏容易被打亂。保留自己獨立做事的時段。',tool:'把工作台分享給夥伴，每人有自己的紀錄，可以互相報告番茄數。'},
-  C:{n:'成就',c:1,items:[['明確的目標和期限，能逼出我的最佳表現。','「週五前完成三章」比「盡量多做」更讓我有動力。'],['完成清單上的項目會讓我很有快感。','把待辦事項一條條劃掉，會讓我想再多做一點。'],['看到數字或進度條往上，我會想繼續衝。','步數、字數、完成百分比，越接近目標越有勁。']],
-    fc:'今天完成清單上的三件事',drain:'沒有明確目標，做多做少都一樣',desc:'明確的目標、數字和期限能逼出你的最佳表現。打勾和看到數字上升，會讓你想繼續。',
-    study:['每次練習前設定一個具體的數字目標','每週設一個比上週多一點的挑戰'],project:['把大目標拆成每週可以打勾的里程碑','用計數器每天記錄產出，看著數字累積'],
-    trap:'結果不如預期時容易灰心。同時追蹤「投入」（番茄數），不要只看成果。',tool:'計數器目標、里程碑、統計頁的週數字和倒數日都是你的動力來源。'},
-  Q:{n:'好奇',c:6,items:[['遇到新奇的主題，我可以一口氣投入很久。','查一個問題時，常常一路延伸讀到忘記時間。'],['我喜歡弄懂事情背後的原理。','比起記住答案，我更想知道「為什麼會這樣」。'],['一成不變的重複，很快就讓我覺得無聊。','同樣的練習做到第三次，我就開始分心。']],
-    fc:'探索一個我很好奇的問題',drain:'每天重複一樣的事，沒有新鮮感',desc:'新鮮和有趣能讓你一口氣投入很久，重複練習則很快就消耗你。',
-    study:['把練習素材換成你真的想知道的主題','把要學的內容改寫成問題，帶著問題去找答案'],project:['每週留一段時間給「探索」，不設產出要求','把任務寫成一個你想知道答案的問句'],
-    trap:'容易被新主題帶走而偏離進度。探索時間要設上限，好點子先記下來。',tool:'番茄鐘任務欄寫成問句；在覺察日記的自由書寫記下好奇的問題。'},
-  K:{n:'肯定',c:8,items:[['被看見、被肯定，會讓我更有動力。','老師或主管一句「做得很好」，能讓我開心好幾天。'],['知道會有人看我的成果，我會做得更用心。','要公開發表或給別人看的作品，我會特別講究。'],['努力了卻沒人注意，會讓我很洩氣。','默默完成很多事卻沒被提到，我會不想再那麼拚。']],
-    fc:'完成後把成果給重要的人看',drain:'努力了卻沒有人注意或肯定',desc:'被看見和被肯定能點燃你。知道有人會看到成果，你會做得更好。',
-    study:['定期把成果給老師、朋友或社群看，請他們回饋','公開分享學習筆記或心得'],project:['和相關的人約好固定的成果展示時間','把階段性成果整理成可以分享的形式'],
-    trap:'太在意別人的評價，容易因為一句批評就停擺。也要練習自己肯定自己。',tool:'在覺察日記寫下「今天做到的五件事」，先當自己的第一個觀眾。'},
-  V:{n:'競爭',c:10,items:[['和別人比較，會激發我的鬥志。','知道同學或同事進度超前，我會想追上去。'],['排名、比賽或挑戰，會讓我更投入。','有排行榜的活動，我會比平常更認真。'],['有對手時，我做事會快很多。','和朋友比誰先完成，比一個人做快得多。']],
-    fc:'和別人比賽誰先完成',drain:'沒有比較對象，不知道自己表現好不好',desc:'有對手、有比較，你的鬥志就會被點燃。比賽感讓你更快、更投入。',
-    study:['找實力相近的夥伴，約好比賽每週的練習量','和過去的自己比：這次要比上次快或好'],project:['設定和同伴的進度競賽，例如誰先完成一個里程碑','參加有排名或評比的活動'],
-    trap:'一直輸可能讓你想放棄。選擇實力相近的對手，並把「贏過上週的自己」當主要對手。',tool:'把統計頁的週數字當成和上週的自己比賽。'},
-  O:{n:'秩序',c:11,items:[['有清楚的計畫和步驟，我才做得順。','先列好流程，我做起事來比較安心，也比較快。'],['固定的時間和習慣，幫助我持續。','每天同一時間做同一件事，比臨時決定更容易做到。'],['事情混亂沒有頭緒時，我很難開始。','桌面或檔案很亂時，我得先整理好才能專心。']],
-    fc:'照著排好的時間表一步步做',drain:'計畫一直被打亂，不知道下一步要做什麼',desc:'清楚的計畫和固定的節奏讓你安心，也讓你做得又穩又久。',
-    study:['把每週的學習排成固定時段，像上課一樣','每次開始前花兩分鐘列出步驟'],project:['把長期目標排成有日期的階段表','每天固定時間檢查一次進度'],
-    trap:'計畫被打亂時容易整天停擺。準備一個「備用版」的簡化計畫。',tool:'論文地圖的時程表和每個階段的「下一步」最適合你。'},
-  H:{n:'助人',c:9,items:[['想到能幫助別人，我會特別有力氣。','知道成果能讓別人省事或受益，我會更投入。'],['我很重視自己對他人或社會的貢獻。','選擇做什麼時，我會考慮它能不能幫到人。'],['為了別人做的事，我比較不容易放棄。','答應幫朋友的忙，就算累也會完成。']],
-    fc:'想到這件事完成後能幫到誰',drain:'覺得自己做的事對別人沒有幫助',desc:'知道能幫到人，你就有源源不絕的力氣。為別人而做的事，你比較不會放棄。',
-    study:['把學到的東西整理成能幫助別人的筆記或教學','想像將來會用這個能力幫助哪些人'],project:['寫下這件事完成後的受益者是誰','找機會讓成果被需要的人用到'],
-    trap:'容易先顧別人、忽略自己的進度。把自己的時段也當成對別人的承諾。',tool:'在論文地圖的目的寫下「這份成果能幫到誰」。'},
-  X:{n:'創造',c:4,items:[['能發揮創意、做出自己的東西，讓我很投入。','可以自由設計或想新點子時，我會做得忘我。'],['我喜歡把想法變成具體的作品。','寫文章、做簡報、畫圖、寫程式，看到成品成形很滿足。'],['只能照標準答案做的事，會讓我覺得悶。','沒有發揮空間的工作，我很快就提不起勁。']],
-    fc:'用自己的方式做出一個作品',drain:'只能照標準答案做，沒有發揮空間',desc:'把想法變成作品是你的動力來源。有發揮空間時，你會投入到忘記時間。',
-    study:['把學到的內容做成自己的作品：心智圖、短文、影片','練習時加入自己的變化或創意'],project:['保留一部分可以自由發揮的空間','先做出粗略的原型，再慢慢修改'],
-    trap:'容易一直想新點子卻沒完成。設定「先完成，再求好」的期限。',tool:'在靈感時段做發想，在高峰時段把想法做出來。'},
-  S:{n:'安全',c:7,items:[['為未來多一份保障，是推動我努力的重要原因。','想到經濟穩定或更好的出路，我就願意努力。'],['不想落後、不想錯過機會，會讓我開始行動。','快截止或怕錯過時，我才真正動起來。'],['有後顧之憂時，我很難放心投入其他事。','重要的事沒準備好，我會一直掛在心上。']],
-    fc:'想到做完之後未來會更安穩',drain:'未來不確定，看不到努力的保障',desc:'穩定和保障讓你安心前進。明確知道努力會換來什麼，你就願意持續。',
-    study:['寫下學會這項能力能帶來的具體保障，例如證照、機會','提早開始，避免截止前的壓力'],project:['為重要期限設定提前的「安全期限」','列出最壞情況和備案，降低不確定感'],
-    trap:'只靠截止壓力推動自己，容易累積焦慮。用提早的小期限取代最後一刻的衝刺。',tool:'考試衝刺的倒數日，以及提前設定的里程碑日期。'}
+  SD:{n:'自主',en:'Self-direction',c:0,def:'選擇並培養自己的想法、觀點和行動',ax:'open',
+    items:['我喜歡用自己的方式思考和做事，自己決定目標和方法。','我需要自由，不喜歡別人安排好我的每一步。'],
+    desc:'你需要「這是我自己選的」的感覺。目標清楚、方法自定時，你最有力氣；被規定得太死，就容易抗拒。',
+    study:['先和老師或主管確認成果標準，方法自己決定','每週自己挑下週的素材和練習方式'],project:['在行事曆上保護不被打擾的時段','行政和瑣事集中在固定時段批次處理'],
+    trap:'選擇太多會把時間花在規劃上。規劃最多 10 分鐘就開始。',ask:'有人把做法規定得太死嗎？',fix:'爭取在其中一部分用自己的方法'},
+  ST:{n:'刺激',en:'Stimulation',c:6,def:'生活中有新鮮感、刺激與挑戰',ax:'open',
+    items:['我喜歡新鮮、刺激、有挑戰的生活，常想嘗試沒做過的事。','一成不變的日子會讓我覺得悶，我喜歡驚喜和變化。'],
+    desc:'新鮮感是你的燃料。重複太久會讓你失去動力，適度的變化能讓你重新投入。',
+    study:['同一個目標準備兩三種練法輪流用','換地點、換順序，或限時挑戰自己'],project:['大框架固定，框架裡保留變化','每段時間安排一個小探索，作為獎勵'],
+    trap:'容易被新事物帶走而半途而廢。新點子先記下，完成手上的再開始。',ask:'這件事太單調、太重複嗎？',fix:'換個地點、換個做法，或給自己限時挑戰'},
+  HE:{n:'享樂',en:'Pleasure',c:10,def:'享受生活中的樂趣，特別是感官上的愉悅',ax:'self',
+    items:['我很重視享受生活，例如美食、音樂和舒服的環境。','能好好放鬆、犒賞自己，對我來說很重要。'],
+    desc:'享受是你恢復能量的方式。把享樂安排進計畫裡，而不是等到撐不下去才放縱。',
+    study:['把讀書環境弄得舒服：好喝的飲料、喜歡的音樂','完成一段後給自己一個具體的小犒賞'],project:['每週安排一段「有意識的放縱」，當成必須遵守的行程','用愉快的儀式開始一天的工作'],
+    trap:'放鬆沒有界線時容易變成拖延。先設好時間，時間到就收。',ask:'我是不是已經太久沒休息？',fix:'先安排一段有意識的放鬆，再回來'},
+  AC:{n:'成就',en:'Achievement',c:1,def:'獲得成功，不論是用自己或別人的標準',ax:'self',
+    items:['我很想成功，希望自己的能力被證明。','看到自己做出成績、比以前更有能力，最能讓我振奮。'],
+    desc:'進度和成果是你最直接的動力。挑戰高於現有能力的目標，會讓你興奮。',
+    study:['每次練習前設定一個具體的數字目標','用統計和趨勢圖讓進步被看見'],project:['每個目標寫成兩個版本：挑戰版和保底版','把大目標拆成每週能打勾的里程碑'],
+    trap:'結果不如預期時容易否定自己。同時追蹤「投入」，不要只看成果。',ask:'這件事看不到進度或成果嗎？',fix:'把它拆成可以打勾的小目標'},
+  PO:{n:'權力',en:'Power',c:11,def:'掌握物質、社會資源，或影響他人',ax:'self',
+    items:['我希望能掌握資源、做決定，或對別人有影響力。','在團體裡，我希望自己的意見有份量、能主導方向。'],
+    desc:'有主導權時你最投入。能拍板、能影響結果，會讓你更願意負責。',
+    study:['主動帶領讀書會或練習小組','替自己的學習計畫當「負責人」，定期檢討'],project:['爭取一個由你負責、能做決定的部分','把影響力用在整合資源，而不是控制人'],
+    trap:'太想掌控容易和人起衝突。先確認哪些事真的需要你決定。',ask:'我在這件事上完全沒有主導權嗎？',fix:'找一個自己可以負責、拍板的部分'},
+  FA:{n:'面子',en:'Face',c:8,def:'維護自己的形象，避免丟臉',ax:'self',
+    items:['我很在意自己的形象，不想在別人面前丟臉。','公開失敗或被批評，對我來說特別難受。'],
+    desc:'你很在意被怎麼看待。這讓你重視品質，但「怕做不好被看到」也可能讓你拖延。',
+    study:['先在不公開的地方練習，熟了再拿出來','把錯誤當成私下的練習材料，而不是成績'],project:['先寫不公開的草稿，只給一兩位信任的人看','提早排一次「小範圍試講」，降低正式上場的壓力'],
+    trap:'追求不出錯會拖住開始。先完成粗糙版本，再慢慢修。',ask:'我怕做不好被看到嗎？',fix:'先做不公開的草稿，只給一兩位信任的人看'},
+  SE:{n:'安全',en:'Security',c:3,def:'在環境與社會中找到安全和穩定',ax:'keep',
+    items:['我很重視安全和穩定，喜歡生活可預期、有保障。','做決定前，我會先確認退路和保障。'],
+    desc:'穩定和保障讓你安心前進。安全感夠，你就敢衝；不夠，你就會收手。',
+    study:['提早開始，給自己留緩衝時間','先熟悉考試或任務的規則，降低不確定感'],project:['每個挑戰都同時準備保底方案','列出最壞情況和備案，寫下來就不會一直掛心'],
+    trap:'只想求穩，可能錯過值得的挑戰。先補上安全網，而不是放棄。',ask:'這件事太陌生、太不確定嗎？',fix:'先設計保底版，或找一個有經驗的人問'},
+  TR:{n:'傳統',en:'Tradition',c:7,def:'欣賞、保存並延續文化、家庭與宗教的習俗和儀式',ax:'keep',
+    items:['我重視並願意維持家庭、文化或宗教的習俗與儀式。','節日、家族聚會或固定的儀式，對我有特別的意義。'],
+    desc:'傳承與歸屬給你力量。和你所屬的傳統、信念或師長連結的事，你特別願意投入。',
+    study:['建立固定的學習儀式，例如每天同一時間、同一地點開始','向前輩或師長請教他們的做法'],project:['寫下這件事和你重視的傳承有什麼關係','把重要節點安排成有儀式感的時刻'],
+    trap:'太依賴舊方法，遇到新情況會卡住。保留核心，調整做法。',ask:'這件事和我重視的傳承或信念脫節了嗎？',fix:'找出它和你所屬的傳統、師長或信念的連結'},
+  CO:{n:'順從',en:'Conformity',c:9,def:'遵守規則、義務與期待，避免傷害或冒犯他人',ax:'keep',
+    items:['我會遵守規則和承諾，即使沒人監督也一樣。','我盡量不做讓別人不舒服或失望的事。'],
+    desc:'清楚的規則和承諾能讓你穩定前進。你也很在意不給別人添麻煩。',
+    study:['照清楚的課表或規格練習','對別人做出承諾，例如和讀書夥伴約好進度'],project:['先確認標準、格式和期限，再開始','把截止日告訴相關的人，借承諾推自己一把'],
+    trap:'太在意別人期待，會忘了自己要什麼。偶爾問自己：這是我想要的嗎？',ask:'我不確定別人期待我怎麼做嗎？',fix:'先確認標準和期限，照著清楚的規格做'},
+  HU:{n:'謙遜',en:'Humility',c:5,def:'明白自己在大世界中的渺小，也覺得自己是更大整體的一部分',ax:'keep',
+    items:['我知道自己在大世界裡很渺小，也覺得自己是更大整體的一部分。','事情不如預期時，我能接受，不強求一定要照我的意思。'],
+    desc:'你能接受現況、看淡得失，這讓你在挫折中比較穩。',
+    study:['把每次練習當成過程，不急著證明自己','向比你強的人請教，不怕顯得不懂'],project:['提醒自己：一次失敗只是長期過程的一小步','把成果放進更大的脈絡，想想它在整體中的位置'],
+    trap:'太容易接受現況，可能錯過該爭取的機會。重要的事要說出口。',ask:'我把這件事看得太重、太在乎得失了嗎？',fix:'提醒自己這只是過程的一小步，先做完再說'},
+  UN:{n:'普世',en:'Universalism',c:2,def:'理解、欣賞並保護所有人與自然的福祉',ax:'others',
+    items:['我關心所有人和大自然的福祉，重視公平與包容。','看到不公平的事或環境被破壞，我會很在意。'],
+    desc:'意義和公平感推動你。知道這件事對世界、對更多人有什麼價值，你就有力氣。',
+    study:['挑選和你關心的議題相關的素材','想像學會之後可以用來幫助哪些人'],project:['寫下這份工作最終能幫到哪些人或議題','在力所能及的範圍內實踐，不必一次做到最好'],
+    trap:'覺得沒意義的瑣事會一直被拖。把它們集中在低精力時段處理掉。',ask:'這件事看不出對世界有什麼意義嗎？',fix:'寫下它最終能幫到哪些人或哪個議題'},
+  BE:{n:'仁慈',en:'Benevolence',c:4,def:'當一個可靠、忠誠的成員，照顧身邊的人',ax:'others',
+    items:['我想當一個可靠、值得信賴的人，照顧身邊重要的人。','朋友或家人需要我時，我會優先幫忙。'],
+    desc:'深層的關係是你的力量來源。為在乎的人而做，你比較不會放棄。',
+    study:['找一兩位讀書夥伴互相打氣','把學到的東西教給在乎的人'],project:['想想完成後能幫到誰，寫在目標旁邊','和親近的人分享進度，不需要公開'],
+    trap:'容易先顧別人、忽略自己的進度。把自己的時段也當成承諾。',ask:'這件事和我在乎的人無關嗎？',fix:'想想完成後能幫到誰，或約一位朋友一起做'}
 };
 const DK=Object.keys(DRV);
-const FCQ=['狀態普通的一天，哪一個比較能讓你坐下來開始？','做到撐不下去時，哪一個比較能讓你再撐 25 分鐘？','如果只能保留一個，你會選？'];
+const SCEN=[
+  {q:'突然多出一個完全空白的週末，你最可能：',o:[['SD','做一件自己一直想研究的事'],['ST','去沒去過的地方走走'],['HE','好好睡覺、吃美食、追劇'],['BE','陪家人或好朋友']]},
+  {q:'選工作或系所時，最打動你的是：',o:[['AC','能讓我成長、做出成績'],['SE','穩定、有保障'],['SD','能自己安排做事的方式'],['UN','對社會有意義']]},
+  {q:'團體報告分工時，你最自然的角色是：',o:[['PO','負責統整、做決定'],['CO','照分配把自己那份做好'],['BE','幫忙卡住的組員'],['FA','把關品質，避免在大家面前出糗']]},
+  {q:'老師或主管指定一個你不認同的做法時：',o:[['SD','說明理由，爭取用自己的方式'],['CO','先照做，避免衝突'],['HU','接受，也許他有我沒看到的考量'],['PO','想辦法說服大家改用我的方案']]},
+  {q:'存了一筆錢，你最想用在：',o:[['SE','存起來當緊急預備金'],['HE','一趟舒服的旅行或享受'],['ST','學一個全新技能或冒險體驗'],['UN','捐一部分給在意的公益']]},
+  {q:'一年後回頭看，最讓你驕傲的會是：',o:[['AC','達成一個很難的目標'],['BE','身邊的人因為我過得更好'],['SD','做了自己真正想做的選擇'],['TR','守住了家人或團體的重要傳統']]},
+  {q:'過年過節時，你通常：',o:[['TR','一定回家參與，覺得很重要'],['HE','趁機放鬆享受'],['ST','安排出遊或新體驗'],['CO','依家人期待安排，不讓大家失望']]},
+  {q:'被公開指出錯誤時，你最先想到：',o:[['FA','好丟臉，希望沒人注意'],['AC','下次一定要做得更好'],['HU','每個人都會犯錯，改進就好'],['SE','這會不會影響我的評價或位置']]},
+  {q:'有一個有風險、但很有發展的機會：',o:[['ST','接！新的挑戰很吸引人'],['SE','先確認最壞情況和退路'],['AC','能讓我更上一層樓就接'],['CO','先問家人或師長的意見']]},
+  {q:'看到氣候、人權等社會議題的新聞時：',o:[['UN','想了解並做點什麼'],['TR','會從自己的信仰或文化來看'],['HU','覺得個人力量有限，但盡力而為'],['PO','想著如果我有影響力會怎麼改變']]},
+  {q:'什麼樣的一天，讓你覺得最「值得」：',o:[['HE','過得舒服愉快'],['PO','完成了一件由我主導的事'],['FA','表現得體，得到大家認可'],['BE','幫上了別人的忙']]},
+  {q:'加入一個新團體時，你最在意：',o:[['TR','團體的傳統和規矩'],['FA','給人留下好印象'],['HU','先安靜觀察，不急著表現'],['UN','大家是否被公平對待、彼此包容']]}
+];
 const SHORT=[
-  ['flow','最近一次做事做到忘記時間，是在做什麼？'],
-  ['procr','你最容易在什麼情況下拖延或放棄？'],
+  ['flow','最近一個你真的完成的目標是什麼？你覺得自己為什麼做得到？'],
+  ['procr','你最常拖延的是哪一類事？是其中哪個部分讓你抗拒？'],
   ['hope','完成目前最重要的目標之後，你最期待的是什麼？'],
   ['restore','狀態很差的時候，什麼最能讓你恢復？']];
+const ORIENT=[
+  {id:'or1',q:'整體來說，你比較希望生活維持現狀，還是變得更好、更不一樣？',o:[['非常希望維持現狀',-2],['偏向維持',-1],['差不多',0],['偏向改變',1],['非常希望改變',2]]},
+  {id:'or2',q:'做決定時，你比較常先想到自己的目標，還是先想到別人的需要？',o:[['幾乎都先想自己',-2],['偏向自己',-1],['差不多',0],['偏向別人',1],['幾乎都先想別人',2]]}
+];
+const FU_OPTS=[['抽象題比較準','A'],['情境題比較準','S'],['它不是我追求的目標，但沒有它我不敢行動','base'],['我想要，但有顧慮擋著','want'],['要看情況','ctx']];
+const TENSIONS=[
+  {a:['AC','ST'],b:['SE'],n:'成就、刺激 vs. 安全',show:'想挑戰，又怕失敗',warn:'遲遲不送出、不開始',fix:'同時準備挑戰版和保底版'},
+  {a:['SD'],b:['SE','CO'],n:'自主 vs. 安全、順從',show:'想要保障，又不想被綁死',warn:'對穩定的選擇感到窒息',fix:'在穩定的框架內爭取自由，例如彈性時段'},
+  {a:['AC'],b:['HE'],n:'成就 vs. 享樂',show:'休息要先賺到',warn:'放鬆一天後，罪惡感讓你更沒動力',fix:'先完成每日最低進度，之後的休息是賺到的'},
+  {a:['AC','PO'],b:['BE','UN'],n:'成就、權力 vs. 仁慈、普世',show:'機會和情誼衝突',warn:'為了爭取還是退讓反覆糾結',fix:'事先定好競爭原則：公平爭取、透明告知'},
+  {a:['ST'],b:['TR','SE'],n:'刺激 vs. 傳統、安全',show:'想要變化，又捨不得穩定',warn:'想逃離日常，卻遲遲不行動',fix:'大框架固定，在框架裡安排小變化'},
+  {a:['FA'],b:['AC','SD'],n:'面子 vs. 成就、自主',show:'想做出成績，又怕公開失敗',warn:'作品一直改，不敢交出去',fix:'先做不公開的版本，給信任的人看'},
+  {a:['HE'],b:['CO','TR'],n:'享樂 vs. 順從、傳統',show:'想放鬆，又怕辜負期待',warn:'偷偷放縱後感到內疚',fix:'安排「有意識的放縱」時段，事先說好、事後不內疚'}
+];
 const RECOVER={move:'休息時起來走動、伸展或倒杯水，不要坐著滑手機。',nap:'午後低潮時小睡 10–20 分鐘，鬧鐘設好，不要超過 30 分鐘。',food:'準備不會讓你昏沉的點心（堅果、水果），並記得喝水。',talk:'休息時和人聊幾句，但設好 5 分鐘的界線。',music:'休息時聽一兩首歌，閉眼放空。'};
-let QZ=lsGet('sd-quiz',null);if(!QZ||QZ.v!==2)QZ={v:2,step:0,a:{},pairs:null};
+let QZ=lsGet('sd-quiz',null);if(!QZ||QZ.v!==3)QZ={v:3,step:0,a:{},pairs:null};
 let qzView=null;
 const savQZ=()=>lsSet('sd-quiz',QZ);
-const STEPS=['開始','作息','精力曲線','驅動力 1','驅動力 2','驅動力 3','確認','簡答'];
+const STEPS=['開始','作息','精力曲線','價值 1','價值 2','生活情境','追問','簡答'];
 function step1Ids(){return QZ.a.reg==='n'?['reg','iSleep','iWake','morning']:['reg','fSleep','fWake','wSleep','wWake','alarm','morning']}
 function step2Ids(){return BL.map(b=>'al_'+b.k).concat(['focusBest','ideaBest','worst','dip','span','recover'])}
-function baseDrv(){const s={};DK.forEach(k=>{const v=[0,1,2].map(i=>+QZ.a['d'+k+i]||0);s[k]=v.reduce((a,b)=>a+b,0)/3});return s}
+function valScores(a){
+  const A={},S={},cnt={};DK.forEach(k=>{A[k]=0;S[k]=0;cnt[k]=0});
+  DK.forEach(k=>{const v=[0,1].map(i=>+a['va'+k+i]||0).filter(Boolean);A[k]=v.length?((v.reduce((x,y)=>x+y,0)/v.length)-1)/5:0});
+  SCEN.forEach((s,i)=>{s.o.forEach(([k])=>cnt[k]++);const b=a['sb'+i],w=a['sw'+i];if(b)S[b]+=2;if(w)S[w]-=1});
+  DK.forEach(k=>{const n=cnt[k]||1;S[k]=(S[k]+n)/(3*n)});
+  const C={};DK.forEach(k=>C[k]=(A[k]+S[k])/2);
+  const rank=o=>{const r={};DK.slice().sort((x,y)=>o[y]-o[x]).forEach((k,i)=>r[k]=i+1);return r};
+  return {A,S,C,rA:rank(A),rS:rank(S)};
+}
 function buildPairs(){
-  const s=baseDrv(),srt=DK.slice().sort((a,b)=>s[b]-s[a]);
-  let c=srt.filter(k=>s[k]>=s[srt[0]]-0.67).slice(0,4);
-  if(c.length<2&&s[srt[1]]-s[srt[2]]<0.34)c=[srt[1],srt[2]];
-  if(c.length<2)return [];
-  const out=[];for(let i=0;i<c.length;i++)for(let j=i+1;j<c.length;j++)out.push([c[i],c[j]]);return out;
+  const v=valScores(QZ.a);
+  const gaps=DK.map(k=>({k,g:Math.abs(v.rA[k]-v.rS[k])})).filter(x=>x.g>=4).sort((x,y)=>y.g-x.g).slice(0,5).map(x=>x.k);
+  return gaps;
+}
+function computeValues(a,fu){
+  const v=valScores(a),fin={},layerOf={};
+  DK.forEach(k=>{fin[k]=v.C[k];const ans=a['fu_'+k];if(fu.includes(k)&&ans){if(ans==='A')fin[k]=v.A[k];else if(ans==='S')fin[k]=v.S[k];else if(ans==='base'){fin[k]=Math.max(v.C[k],.6);layerOf[k]='base'}else if(ans==='want')layerOf[k]='want';else if(ans==='ctx')layerOf[k]='ctx'}});
+  const rest=DK.filter(k=>!layerOf[k]).sort((x,y)=>fin[y]-fin[x]);
+  rest.forEach((k,i)=>{layerOf[k]=i<2?'core':i<5?'support':i>=rest.length-3?'low':'mid'});
+  const order=DK.slice().sort((x,y)=>fin[y]-fin[x]);
+  const pct={};DK.forEach(k=>pct[k]=Math.round(Math.max(0,Math.min(1,fin[k]))*100));
+  const keep=(v.C.SE+v.C.TR+v.C.CO)/3,open=(v.C.SD+v.C.ST)/2,selfE=(v.C.AC+v.C.PO)/2,trans=(v.C.UN+v.C.BE)/2;
+  const ox=Math.max(-1,Math.min(1,((+a.or1||0)/2)*.5+(open-keep)*1.2)),oy=Math.max(-1,Math.min(1,((+a.or2||0)/2)*.5+(trans-selfE)*1.2));
+  const why={};fu.forEach(k=>{if((a['s_fu_'+k]||'').trim())why[k]=a['s_fu_'+k].trim()});
+  return {pct,layerOf,order,A:v.A,S:v.S,rA:v.rA,rS:v.rS,fu,ans:Object.fromEntries(fu.map(k=>[k,a['fu_'+k]||''])),why,ox,oy};
+}
+const LAYERS=[['core','核心驅動','你的引擎'],['support','重要支持','讓你走得穩的力量'],['base','必要條件','不是目標，但沒有它不敢行動'],['want','被壓抑的渴望','想要，但有顧慮擋著'],['ctx','情境性','要看情況'],['mid','一般','有影響，但不是主要動力'],['low','影響有限','不必勉強用它推動自己']];
+function orientSVG(V){
+  const W=260,H=260,cx=W/2,cy=H/2,r=100,x=cx+V.ox*r,y=cy-V.oy*r;
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="價值方向圖" style="max-width:280px">
+    <rect x="${cx-r}" y="${cy-r}" width="${2*r}" height="${2*r}" rx="10" fill="var(--sunk)" stroke="var(--line)"/>
+    <line x1="${cx-r}" x2="${cx+r}" y1="${cy}" y2="${cy}" class="grid"/><line y1="${cy-r}" y2="${cy+r}" x1="${cx}" x2="${cx}" class="grid"/>
+    <text class="lbl" x="${cx}" y="${cy-r-8}" text-anchor="middle">關注他人</text><text class="lbl" x="${cx}" y="${cy+r+18}" text-anchor="middle">關注自己</text>
+    <text class="lbl" x="${cx-r-4}" y="${cy+4}" text-anchor="end" style="writing-mode:initial">維持</text><text class="lbl" x="${cx+r+4}" y="${cy+4}">改變</text>
+    <circle cx="${x}" cy="${y}" r="9" fill="var(--accent)" stroke="var(--surface)" stroke-width="3"/></svg>`;
+}
+function valueReport(r){
+  const V=r.vals,byL=k=>DK.filter(x=>V.layerOf[x]===k).sort((a,b)=>V.pct[b]-V.pct[a]);
+  const imp=k=>['core','support','base','want'].includes(V.layerOf[k]);
+  const tens=TENSIONS.filter(t=>t.a.some(imp)&&t.b.some(imp)).slice(0,4);
+  const core=byL('core');
+  const askRows=[...new Set([...core,...byL('support'),...byL('base'),...byL('want'),...(V.layerOf.FA!=='low'?['FA']:[]),'HE'])].slice(0,6);
+  const fuNote=k=>V.fu.includes(k)?({A:'追問：抽象題較準',S:'追問：情境題較準',base:'追問：重新定義為前提',want:'追問：想要但有顧慮',ctx:'追問：看情況'}[V.ans[k]]||''):'';
+  const qx=V.ox>=0?'偏向改變':'偏向維持',qy=V.oy>=0?'偏向關注他人':'偏向關注自己';
+  return `<section class="card" style="margin-bottom:16px"><h2>價值輪廓 <span class="muted">Bailey《Intentional》的 12 個基本價值</span></h2>
+    <p>${core.map(k=>'「'+DRV[k].n+'」').join('和')}是你的引擎${byL('base').length?'，'+byL('base').map(k=>'「'+DRV[k].n+'」').join('、')+'是你敢行動的地基':''}${byL('want').length?'，'+byL('want').map(k=>'「'+DRV[k].n+'」').join('、')+'是被顧慮擋住的渴望':''}。</p>
+    <div class="vgrid"><div class="tablewrap"><table class="vtable"><thead><tr><th>層級</th><th>價值</th><th>對你的意義</th><th class="num">抽象／情境排名</th></tr></thead><tbody>
+    ${LAYERS.flatMap(([L,ln])=>byL(L).map(k=>`<tr><td><span class="pill ${L==='core'?'bad':L==='support'?'warn':L==='low'||L==='mid'?'mut':'good'}">${ln}</span></td><td><b>${DRV[k].n}</b></td><td style="white-space:normal">${esc(DRV[k].def)}${V.why[k]?`<div class="muted">你說：${esc(V.why[k])}</div>`:''}</td><td class="num">${V.rA[k]} / ${V.rS[k]}${fuNote(k)?`<div class="muted" style="font-size:11px">${fuNote(k)}</div>`:''}</td></tr>`)).join('')}
+    </tbody></table></div>
+    <div><h3 style="margin-top:0">你的方向</h3>${orientSVG(V)}<p class="muted">整體${qx}、${qy}。Bailey 指出，價值分布在兩條軸上：想維持現狀還是讓事情變得更好；關注自己還是關注他人。</p></div></div>
+  </section>
+  ${tens.length?`<section class="card" style="margin-bottom:16px"><h2>價值拉扯 <span class="muted">內耗常從這裡來</span></h2><p class="muted">相對位置的價值容易互相拉扯。認出警訊，就能提早用對應的做法。</p>
+    <div class="tablewrap"><table><thead><tr><th>拉扯</th><th>典型表現</th><th>警訊</th><th>做法</th></tr></thead><tbody>${tens.map(t=>`<tr><td><b>${t.n}</b></td><td style="white-space:normal">${t.show}</td><td style="white-space:normal">${t.warn}</td><td style="white-space:normal">${t.fix}</td></tr>`).join('')}</tbody></table></div></section>`:''}
+  <h2 style="margin-top:6px">使用指南</h2>
+  <div class="grid2">${core.map((k,i)=>{const d=DRV[k];return `<section class="card guide" style="border-top:3px solid var(--c${d.c})"><p class="eyebrow">核心驅動 ${i+1}</p><h2 style="font-family:var(--f-display);font-size:20px">${d.n} <span class="muted" style="font-family:var(--f-body);font-size:12px">${d.en}</span></h2><p>${d.desc}</p>
+    <h3>學習與練習</h3><ul>${d.study.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <h3>長期目標與專案</h3><ul>${d.project.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <h3>小心陷阱</h3><p>${esc(d.trap)}</p></section>`}).join('')}</div>
+  <section class="card" style="margin-top:16px"><h2>卡住時：先找出是哪個價值沒被滿足</h2>
+    <div class="tablewrap"><table><thead><tr><th>拖延時，問自己</th><th>可能的價值</th><th>這樣做</th></tr></thead><tbody>${askRows.map(k=>`<tr><td style="white-space:normal">${DRV[k].ask}</td><td>${DRV[k].n}</td><td style="white-space:normal">${DRV[k].fix}</td></tr>`).join('')}</tbody></table></div>
+    ${byL('base').length?`<p class="callout">「${byL('base').map(k=>DRV[k].n).join('、')}」是你的地基：重大決定前先問「如果失敗，我的保底是什麼？」答不出來就先補上，而不是放棄。</p>`:''}
+    ${byL('want').length?`<p class="callout">「${byL('want').map(k=>DRV[k].n).join('、')}」被顧慮擋住了。給自己安排一個推手：找同伴一起、先做小規模的試探。</p>`:''}
+  </section>`;
 }
 function optBtns(qid,opts){return `<div class="opts">${opts.map(([t,v])=>`<button class="opt" data-act="qa" data-q="${qid}" data-v="${esc(v)}" aria-pressed="${String(QZ.a[qid])===String(v)}">${esc(t)}</button>`).join('')}</div>`}
 function qBlock(n,qid,q,opts,ex){return `<div class="qq" id="q_${qid}"><div class="qt"><span class="num muted">${n}</span> ${esc(q)}</div>${ex?`<div class="ex">${esc(ex)}</div>`:''}${optBtns(qid,opts)}</div>`}
@@ -1403,8 +1504,8 @@ function quizScreen(){
     const enN=Object.values(S.days).reduce((a,d)=>a+((d.en||[]).length),0);
     body=`<h2>找出你的最佳狀態</h2>
     <p>你什麼時候頭腦最清楚？什麼最能讓你動起來？回答一些關於日常生活的問題，你會得到一份個人報告：</p>
-    <ul style="padding-left:20px;margin:0 0 12px"><li>你的生理時鐘類型，以及一天中的高峰和低潮時段</li><li>依照你的節奏排好的一天：什麼時段適合做什麼事</li><li>最能推動你的兩種力量，以及怎麼用它們學習、完成目標</li></ul>
-    <p>大約需要 10 分鐘。照實際情況回答就好，沒有標準答案。中途離開也沒關係，回來可以接著做。</p>
+    <ul style="padding-left:20px;margin:0 0 12px"><li>你的生理時鐘類型，以及一天中的高峰和低潮時段</li><li>依照你的節奏排好的一天：什麼時段適合做什麼事</li><li>你的價值輪廓：最能推動你的力量、敢行動的前提、彼此拉扯的地方，以及怎麼用它們學習、完成目標</li></ul>
+    <p>大約需要 12 分鐘，以選擇題為主，最後有幾題簡答。照實際情況回答就好，沒有標準答案。中途離開也沒關係，回來可以接著做。</p>
     <p class="muted">${enN>=8?`你已經記錄了 ${enN} 次精力，報告會一起參考這些紀錄。`:'小提醒：先在「今日」記錄幾天精力（大約 3 天、8 次以上），報告會更準確。現在就做也可以，之後報告會自動更新。'}</p>`;
     nav=`<button class="pri" data-act="qzNext">開始測驗</button>`;
   }else if(st===1){
@@ -1425,17 +1526,21 @@ function quizScreen(){
     const blOpts=BL.map(b=>[`${b.n} ${b.r}`,b.k]);
     body+=qBlock(++n,'focusBest',EQ2.focusBest.q,blOpts)+qBlock(++n,'ideaBest',EQ2.ideaBest.q,blOpts)+qBlock(++n,'worst',EQ2.worst.q,blOpts)
       +`<h3>專注與恢復</h3>`+['dip','span','recover'].map(id=>qBlock(++n,id,EQ2[id].q,EQ2[id].o)).join('');
-  }else if(st>=3&&st<=5){
-    const i=st-3;
-    body=`<h2>驅動力 <span class="muted">第 ${i+1} / 3 頁</span></h2><p class="muted">1 = 完全不像我，5 = 非常像我。照直覺回答，例子只是幫助理解，不必完全相同。</p>`+
-      DK.map((k,j)=>{const id='d'+k+i,[t,ex]=DRV[k].items[i];return `<div class="qq" id="q_${id}"><div class="qt"><span class="num muted">${i*12+j+1}</span> ${esc(t)}</div><div class="ex">例：${esc(ex)}</div><div class="likert">${[1,2,3,4,5].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div></div>`}).join('');
+  }else if(st===3||st===4){
+    const i=st-3;let n=0;
+    const lik=id=>`<div class="likert v6">${[1,2,3,4,5,6].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div>`;
+    body=(i===0?`<h2>你的方向</h2>`+ORIENT.map(o=>qBlock(++n,o.id,o.q,o.o)).join(''):'')+`<h2>價值 <span class="muted">第 ${i+1} / 2 頁</span></h2><p class="muted">每一句描述有多像你？1 = 完全不像我，6 = 非常像我。沒有對錯，照直覺選。</p>`+
+      DK.map((k,j)=>{const id='va'+k+i;return `<div class="qq" id="q_${id}"><div class="qt"><span class="num muted">${i*12+j+1}</span> ${esc(DRV[k].items[i])}</div>${lik(id)}</div>`}).join('');
+  }else if(st===5){
+    body=`<h2>生活情境</h2><p class="muted">每一題選出「最像我」和「最不像我」的做法。不必完全一樣，選最接近的。</p>`+SCEN.map((sc,i)=>{
+      const pick=(pre,lab)=>`<div class="spick"><span class="muted">${lab}</span><div class="opts">${sc.o.map(([k,t])=>`<button class="opt" data-act="qa" data-q="${pre}${i}" data-v="${k}" aria-pressed="${QZ.a[pre+i]===k}"${(pre==='sb'?QZ.a['sw'+i]:QZ.a['sb'+i])===k?' disabled':''}>${esc(t)}</button>`).join('')}</div></div>`;
+      return `<div class="qq" id="q_sb${i}"><div class="qt"><span class="num muted">${i+1}</span> ${esc(sc.q)}</div>${pick('sb','最像我')}<div id="q_sw${i}">${pick('sw','最不像我')}</div></div>`}).join('');
   }else if(st===6){
-    const pairs=QZ.pairs||[];let n=0;
-    body=`<h2>進一步確認</h2>`+(pairs.length?`<p class="muted">「${[...new Set(pairs.flat())].map(k=>DRV[k].n).join('」「')}」對你來說都很重要。下面每題選出比較接近你的一個。</p>`:'<p class="muted">最後兩題，幫你把結果看得更清楚。</p>')+
-      pairs.map((p,i)=>qBlock(++n,'fc'+i,FCQ[i%FCQ.length],p.map(k=>[DRV[k].fc,k]))).join('')+
-      qBlock(++n,'drain','哪一種情況最容易讓你失去動力？',DK.map(k=>[DRV[k].drain,k]).concat([['其他（請說明）','other']]))+
-      (QZ.a.drain==='other'?`<div class="qq" id="q_drainWhy"><label class="qt" for="sa_drainWhy">請描述這個情況，以及它為什麼讓你失去動力</label><textarea id="sa_drainWhy" data-in="qs" data-q="drainWhy" rows="2">${esc(QZ.a.s_drainWhy)}</textarea></div>`:'')+
-      `<div class="qq"><label class="qt" for="sa_oth"><span class="num muted">${++n}</span> 除了上面這些，還有什麼力量在推動你？寫下它，並說明原因。<span class="muted">（選填）</span></label><div class="ex">例：「家人的期待，因為我想讓他們放心。」</div><textarea id="sa_oth" data-in="qs" data-q="oth" rows="2">${esc(QZ.a.s_oth)}</textarea></div>`;
+    const fu=QZ.pairs||[];const v=valScores(QZ.a);let n=0;
+    body=`<h2>追問</h2>`+(fu.length?`<p class="muted">有 ${fu.length} 個價值，你在抽象題和生活情境的答案不太一樣。選出比較接近你的說法，並簡單說明原因，報告會更準。</p>`+fu.map(k=>{const hiA=v.rA[k]<v.rS[k];
+      return `<div class="qq" id="q_fu_${k}"><div class="qt"><span class="num muted">${++n}</span> 「${DRV[k].n}」：${esc(DRV[k].def)}</div><div class="ex">抽象題排第 ${v.rA[k]} 名，生活情境排第 ${v.rS[k]} 名。${hiA?'你覺得自己重視它，但做選擇時比較少選它。':'你做選擇時常選它，但描述時覺得不太像你。'}</div>${optBtns('fu_'+k,FU_OPTS)}
+      <label class="f" style="margin-top:8px">為什麼？（選填，寫一句就好）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="例：我想挑戰，但要先有保底才敢"></label></div>`}).join(''):`<p class="muted">你的抽象題和生活情境答案很一致，不需要追問。</p>`)+
+      `<div class="qq"><label class="qt" for="sa_oth"><span class="num muted">${++n}</span> 除了這 12 個價值，還有什麼力量在推動你？寫下它，並說明原因。<span class="muted">（選填）</span></label><div class="ex">例：「家人的期待，因為我想讓他們放心。」</div><textarea id="sa_oth" data-in="qs" data-q="oth" rows="2">${esc(QZ.a.s_oth)}</textarea></div>`;
   }else if(st===7){
     body=`<h2>簡答 <span class="muted">選填，但寫得越具體，報告越貼近你</span></h2>`+SHORT.map(([id,q],i)=>`<div class="qq"><label class="qt" for="sa_${id}"><span class="num muted">${i+1}</span> ${esc(q)}</label><textarea id="sa_${id}" data-in="qs" data-q="${id}" rows="2">${esc(QZ.a['s_'+id])}</textarea></div>`).join('');
   }
@@ -1446,10 +1551,11 @@ function missing(){
   const st=QZ.step;let ids=[];
   if(st===1)ids=QZ.a.reg?step1Ids():['reg'];
   if(st===2)ids=step2Ids();
-  if(st>=3&&st<=5)ids=DK.map(k=>'d'+k+(st-3));
-  if(st===6)ids=(QZ.pairs||[]).map((_,i)=>'fc'+i).concat(['drain']);
+  if(st===3)ids=ORIENT.map(o=>o.id).concat(DK.map(k=>'va'+k+'0'));
+  if(st===4)ids=DK.map(k=>'va'+k+'1');
+  if(st===5)ids=SCEN.flatMap((_,i)=>['sb'+i,'sw'+i]);
+  if(st===6)ids=(QZ.pairs||[]).map(k=>'fu_'+k);
   const miss=ids.filter(id=>QZ.a[id]===undefined||QZ.a[id]==='');
-  if(st===6&&QZ.a.drain==='other'&&!(QZ.a.s_drainWhy||'').trim())miss.push('drainWhy');
   return miss;
 }
 const blOfHour=h=>h>=6&&h<9?'b1':h>=9&&h<12?'b2':h>=12&&h<14?'b3':h>=14&&h<17?'b4':h>=17&&h<20?'b5':h>=20&&h<23?'b6':(h>=23||h<2)?'b7':null;
@@ -1504,28 +1610,25 @@ function computeResult(){
   const a=QZ.a;
   const E={reg:a.reg,fSleep:a.fSleep,fWake:a.fWake,wSleep:a.wSleep,wWake:a.wWake,iSleep:a.iSleep,iWake:a.iWake,alarm:a.alarm,morning:a.morning,focusBest:a.focusBest,ideaBest:a.ideaBest,worst:a.worst,dip:+a.dip||0,span:+a.span||25,recover:a.recover||'move'};
   BL.forEach(b=>E['al_'+b.k]=+a['al_'+b.k]||1);
-  const raw=baseDrv();
-  if(a.drain&&a.drain!=='other')raw[a.drain]+=0.5;
-  (QZ.pairs||[]).forEach((p,i)=>{const w=a['fc'+i];if(w)raw[w]+=0.25});
-  const pct={};DK.forEach(k=>pct[k]=Math.max(0,Math.min(100,Math.round((raw[k]-1)/5.25*100))));
-  const top=DK.slice().sort((x,y)=>raw[y]-raw[x]);
+  const vals=computeValues(a,QZ.pairs||[]);
   const short={};SHORT.forEach(([id])=>short[id]=(a['s_'+id]||'').trim());
-  return {v:2,date:today(),at:new Date().toISOString(),energy:E,drv:pct,top,drain:a.drain||'',drainWhy:(a.s_drainWhy||'').trim(),other:(a.s_oth||'').trim(),short,ai:''};
+  return {v:3,date:today(),at:new Date().toISOString(),energy:E,vals,top:vals.order,drv:vals.pct,other:(a.s_oth||'').trim(),short,ai:''};
 }
 function reportText(r){
-  const M=energyModel(r.energy),T0=TYPE5[M.sl.type],ps=pomoSuggest(r.energy.span),d1=DRV[r.top[0]],d2=DRV[r.top[1]];
+  const M=energyModel(r.energy),T0=TYPE5[M.sl.type],ps=pomoSuggest(r.energy.span);
   let t=`# 我的最佳狀態報告（${r.date}）\n\n## 精力\n- 作息類型：${T0.n}（休假日睡眠中點 ${hm(M.sl.msf*60)}）\n- 高峰時段：${blName(M.peak)}\n- 低潮時段：${blName(M.low)}\n${M.idea?`- 靈感時段：${blName(M.idea)}\n`:''}- 建議番茄長度：專注 ${ps.w} 分、休息 ${ps.s} 分\n\n### 建議的一天\n`+M.roles.map(x=>`- ${x.b.n} ${x.b.r}（${x.r[0]}）：${x.r[2]}`).join('\n');
-  t+=`\n\n## 驅動力\n`+r.top.map(k=>`- ${DRV[k].n}：${r.drv[k]}`).join('\n');
-  if(r.other)t+=`\n- 其他：${r.other}`;
-  [d1,d2].forEach(d=>{t+=`\n\n### ${d.n}\n${d.desc}\n- 學習與練習：${d.study.join('；')}\n- 長期目標：${d.project.join('；')}\n- 小心：${d.trap}`});
+  const V=r.vals;
+  t+=`\n\n## 價值輪廓（Bailey《Intentional》12 個基本價值）\n`+LAYERS.map(([L,ln])=>{const ks=DK.filter(k=>V.layerOf[k]===L);return ks.length?`- ${ln}：${ks.map(k=>DRV[k].n+(V.why[k]?`（${V.why[k]}）`:'')).join('、')}`:''}).filter(Boolean).join('\n');
+  if(r.other)t+=`\n- 其他推動我的力量：${r.other}`;
+  DK.filter(k=>V.layerOf[k]==='core').forEach(k=>{const d=DRV[k];t+=`\n\n### ${d.n}\n${d.desc}\n- 學習與練習：${d.study.join('；')}\n- 長期目標：${d.project.join('；')}\n- 小心：${d.trap}`});
   const sa=SHORT.filter(([id])=>r.short[id]);if(sa.length)t+=`\n\n## 我的簡答\n`+sa.map(([id,q])=>`- ${q}\n  ${r.short[id]}`).join('\n');
   if(r.ai)t+=`\n\n## Claude 的個人化建議\n${r.ai}`;
-  t+=`\n\n## 參考書籍\n`+Object.values(BOOKS).map(b=>`- 《${b.zh}》（${b.en}），${b.au}`).join('\n');
+  t+=`\n\n## 參考書籍\n`+Object.values(BOOKS).map(b=>b.noZh?`- ${b.en}，${b.au}`:`- 《${b.zh}》（${b.en}），${b.au}`).join('\n');
   return t;
 }
 function reportHTML(id,r){
-  if(!r||r.v!==2)return `<section class="card"><h2>這是舊版的報告</h2><p>題目已經更新，問得更細也更準確。重新做一次，就能看到新的報告。</p><div class="row"><button class="pri" data-act="qzRestart">重新測驗</button><button class="ghost sm" data-act="qzDel" data-id="${id}">刪除舊報告</button></div></section>`;
-  const E=r.energy,M=energyModel(E),sl=M.sl,T0=TYPE5[sl.type],ps=pomoSuggest(E.span),d1=DRV[r.top[0]],d2=DRV[r.top[1]],low=r.top[r.top.length-1];
+  if(!r||r.v!==3)return `<section class="card"><h2>這是舊版的報告</h2><p>題目已經更新，問得更細也更準確。重新做一次，就能看到新的報告。</p><div class="row"><button class="pri" data-act="qzRestart">重新測驗</button><button class="ghost sm" data-act="qzDel" data-id="${id}">刪除舊報告</button></div></section>`;
+  const E=r.energy,M=energyModel(E),sl=M.sl,T0=TYPE5[sl.type],ps=pomoSuggest(E.span),coreK=DK.filter(k=>r.vals.layerOf[k]==='core');
   const cur=cfg().pomo;
   const rows=BL.map(b=>({key:b.k,label:b.n,parts:[{c:b.k===M.peak?4:0,v:Math.round(Math.min(5,M.sc[b.k])*10)/10,n:b.r}]}));
   const sleepLine=sl.free?`${E.reg==='n'?'理想狀態下':'休假日'}約 ${hm(sl.free.on)} 睡著、${hm(sl.free.off)} 起床，睡 ${fmtN(sl.free.dur/60)} 小時，睡眠中點是 <b>${hm(sl.msf*60)}</b>。`:'';
@@ -1539,7 +1642,7 @@ function reportHTML(id,r){
     <div class="kpi"><div class="l">作息類型</div><div class="n" style="font-family:var(--f-display)">${T0.n}</div></div>
     <div class="kpi"><div class="l">高峰時段</div><div class="n" style="font-size:20px">${blName(M.peak)}</div></div>
     <div class="kpi"><div class="l">建議番茄長度</div><div class="n">${ps.w}<small>分 + 休息 ${ps.s} 分</small></div></div>
-    <div class="kpi"><div class="l">主要驅動力</div><div class="n" style="font-family:var(--f-display)">${d1.n} × ${d2.n}</div></div>
+    <div class="kpi"><div class="l">核心驅動</div><div class="n" style="font-family:var(--f-display)">${coreK.map(k=>DRV[k].n).join(' × ')}</div></div>
   </div>
   <div class="grid2">
     <section class="card"><h2>精力報告</h2>
@@ -1553,19 +1656,12 @@ function reportHTML(id,r){
       ${cur.work!==ps.w?`<button class="sec sm" data-act="qzPomo" data-w="${ps.w}" data-s="${ps.s}">套用建議的番茄長度</button>`:''}
       <h3>恢復方式</h3><p>${RECOVER[E.recover]||''}</p>
     </section>
-    <section class="card"><h2>驅動力分布 <span class="muted">12 種</span></h2>${hbars(r.top.map(k=>({n:DRV[k].n,c:DRV[k].c,v:r.drv[k]})),i=>i.v)}
-      <p class="muted" style="margin-top:10px">${r.drain==='other'?`最容易讓你失去動力的情況：${esc(r.drainWhy)}`:r.drain?`最容易讓你失去動力的是：${esc(DRV[r.drain].drain)}。`:''} 分數最低的是「${DRV[low].n}」，這種方式對你效果有限，不必勉強。</p>
-      ${r.other?`<h3>你補充的驅動力</h3><p class="qa">${esc(r.other)}</p>`:''}
-      <h3>你的簡答</h3>${SHORT.filter(([k])=>r.short[k]).map(([k,q])=>`<p class="qa"><span class="muted">${esc(q)}</span><br>${esc(r.short[k])}</p>`).join('')||'<p class="empty">這次沒有填寫簡答。</p>'}
+    <section class="card"><h2>你的簡答</h2>${SHORT.filter(([k])=>r.short[k]).map(([k,q])=>`<p class="qa"><span class="muted">${esc(q)}</span><br>${esc(r.short[k])}</p>`).join('')||'<p class="empty">這次沒有填寫簡答。</p>'}
+      ${r.other?`<h3>你補充的推動力</h3><p class="qa">${esc(r.other)}</p>`:''}
       ${r.short.procr?`<p class="callout">下次遇到「${esc(r.short.procr.slice(0,30))}${r.short.procr.length>30?'…':''}」時，先只開一個 15 分鐘的番茄，做完再決定要不要繼續。</p>`:''}
     </section>
   </div>
-  <h2 style="margin-top:6px">驅動力指南</h2>
-  <div class="grid2">${[d1,d2].map((d,i)=>`<section class="card guide" style="border-top:3px solid var(--c${d.c})"><p class="eyebrow">第 ${i+1} 驅動力</p><h2 style="font-family:var(--f-display);font-size:20px">${d.n}</h2><p>${d.desc}</p>
-    <h3>學習與練習</h3><ul>${d.study.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-    <h3>長期目標與專案</h3><ul>${d.project.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-    <h3>小心陷阱</h3><p>${esc(d.trap)}</p>
-    <h3>在工作台這樣用</h3><p>${esc(d.tool)}</p></section>`).join('')}</div>
+  ${valueReport(r)}
   ${experimentHTML(r,M)}
   ${STANDALONE?'':`<section class="card" style="margin-top:16px"><h2>Claude 的個人化建議 <span class="muted">依你的簡答和分數撰寫</span></h2>
     <div id="aiOut" class="qa">${r.ai?esc(r.ai):'<span class="muted">按下按鈕，Claude 會讀你的報告和簡答，寫出專屬建議。</span>'}</div>
@@ -1580,25 +1676,25 @@ const BOOKS={
     intro:'品克整理心理學、生物學和經濟學中關於「時機」的研究，回答一個實際的問題：同樣的事，什麼時候做表現最好？你的精力曲線和「建議的一天」，就是用這本書的概念整理出來的。',
     notes:['多數人一天會經歷高峰、低谷、回升三個階段。晨型和中間型大致依這個順序，夜型的順序接近相反。','高峰時警覺度最高，適合需要專注和分析的工作；低谷時最容易出錯，適合例行事務；回升時心情放鬆、比較不受拘束，適合需要創意和聯想的任務。','休息是表現的一部分。短暫、規律、離開螢幕的休息，例如走動、和人聊天、到戶外，比硬撐更能恢復狀態。','書中建議連續幾天定時記錄自己的精力，用數據而不是印象找出自己的模式。'],
     use:'報告裡的「靈感時段」就是書中的回升期：頭腦放鬆時，最容易冒出好點子。多記錄幾天精力，你的曲線會越來越準。'},
-  drive:{zh:'動機，單純的力量',en:'Drive: The Surprising Truth About What Motivates Us',au:'Daniel H. Pink（丹尼爾・品克）',part:'驅動力',
-    intro:'品克整理數十年的動機研究，包括 Deci 和 Ryan 的自我決定論，說明為什麼獎勵和懲罰常常無法讓人持續投入，以及真正讓人投入的是什麼。',
-    notes:['獎勵和懲罰（胡蘿蔔與棍子）對簡單、規則明確的工作有效，但對需要思考與創意的工作效果有限，有時甚至會削弱原本的興趣。','自主：能決定做什麼、什麼時候做、怎麼做、和誰一起做。','專精：想把重要的事越做越好。專精像一條漸近線，永遠無法完全抵達，這正是它持續吸引人的原因。','目的：知道自己為了比自己更大的事而做。','最能投入的任務難度剛剛好，不會太簡單也不會太難。'],
-    use:'報告裡的「自主」「精熟」「意義」，就是書中的三要素。如果你的前幾名是「肯定」「競爭」或「安全」這類外在動力，也不必擔心：書中提到，它們對目標明確、步驟清楚的事仍然很有用。'}
+  intent:{zh:'Intentional: How to Finish What You Start',en:'Intentional: How to Finish What You Start',au:'Chris Bailey（克里斯・貝利）',part:'價值',noZh:true,
+    intro:'Bailey 認為，完成目標的關鍵不是意志力或最新的效率技巧，而是更有意圖地行動。他結合目標達成、渴望、價值與拖延的研究，以及和佛教僧侶的對話，整理出從價值到每天行動的方法。你的價值輪廓，就是依照書中的 12 個基本價值整理的。',
+    notes:['12 個基本價值源自心理學家 Shalom Schwartz 的研究，已在八十多個國家、數十萬人身上驗證。每個人都擁有全部 12 種，只是比重不同。','價值分布在兩條軸上：想維持現狀還是讓事情變得更好；關注自己還是關注他人。相鄰的價值動機相近，相對的價值容易互相拉扯。','每個行動背後都有價值在推動。目標接上你重視的價值，就更容易開始，也更容易完成。','目標可以「編輯」：有些值得堅持，有些值得放下。','書中提到幾個日常做法：有意識的放縱、認識自己的相對價值，以及檢查時間花在哪些價值上。'],
+    use:'報告的價值輪廓、價值拉扯和「卡住時問自己」，都依照書中的 12 個價值和兩條軸整理。作者自己用的是正式的 PVQ-RR 量表；這份測驗是簡易自編版本，適合用來認識自己。'}
 };
-const bookLinks=b=>`<a href="https://search.books.com.tw/search/query/key/${encodeURIComponent(b.zh.split('：')[0])}/cat/all" target="_blank" rel="noopener">博客來找中文版</a><a href="https://www.google.com/search?tbm=bks&q=${encodeURIComponent(b.en+' Daniel Pink')}" target="_blank" rel="noopener">查原文書</a>`;
+const bookLinks=b=>`<a href="https://search.books.com.tw/search/query/key/${encodeURIComponent(b.noZh?b.en.split(':')[0]+' '+b.au.split('（')[0]:b.zh.split('：')[0])}/cat/all" target="_blank" rel="noopener">${b.noZh?'博客來搜尋':'博客來找中文版'}</a><a href="https://www.google.com/search?tbm=bks&q=${encodeURIComponent(b.en+' '+b.au.split('（')[0])}" target="_blank" rel="noopener">查原文書</a>`;
 function theoryHTML(){
   return `<section class="card" style="margin-top:16px" id="theory"><h2>想了解更多 <span class="muted">兩本推薦書</span></h2>
   <p class="muted">這份報告幫助你認識自己的傾向，不是診斷，也不是標籤。生活改變時，結果也會跟著改變。</p>
   <div class="grid2" style="margin:0">${Object.values(BOOKS).map(b=>`<article class="book">
     <span class="pill mut" style="align-self:flex-start">${b.part}</span>
-    <div class="bt">《${esc(b.zh)}》</div><div class="muted">${esc(b.au)}</div><div class="muted en">${esc(b.en)}</div>
+    <div class="bt">${b.noZh?esc(b.en):'《'+esc(b.zh)+'》'}</div><div class="muted">${esc(b.au)}</div>${b.noZh?'<div class="muted" style="font-size:12px">2026 年 1 月出版，目前沒有查到中文版</div>':`<div class="muted en">${esc(b.en)}</div>`}
     <h3>簡介</h3><p>${esc(b.intro)}</p>
     <h3>書摘重點</h3><ul>${b.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>
     <p class="callout"><b>和你的報告有什麼關係：</b>${esc(b.use)}</p>
     <div class="blinks">${bookLinks(b)}</div></article>`).join('')}</div></section>`;
 }
 function experimentHTML(r,M){
-  const ps=pomoSuggest(r.energy.span),d1=DRV[r.top[0]];
+  const ps=pomoSuggest(r.energy.span),d1=DRV[(DK.find(k=>r.vals.layerOf[k]==='core'))||r.top[0]];
   const steps=[
     ['第 1–7 天','把最難的一件事排進高峰時段：'+blName(M.peak)+'。'],
     ['第 1–7 天','番茄設為專注 '+ps.w+' 分、休息 '+ps.s+' 分。'],
@@ -1611,7 +1707,7 @@ function experimentHTML(r,M){
 }
 function vQuiz(){
   const res=Object.entries(S.quiz||{}).sort((a,b)=>a[1].at<b[1].at?1:-1);
-  const lab=r=>r.v===2?`${r.date}・${DRV[r.top[0]].n} × ${DRV[r.top[1]].n}`:`${r.date}・舊版`;
+  const lab=r=>r.v===3?`${r.date}・${DRV[r.top[0]].n} × ${DRV[r.top[1]].n}`:`${r.date}・舊版`;
   const head=`<header class="ph"><div><p class="eyebrow">我的節奏</p><h1>我的最佳狀態</h1></div>${res.length?`<div class="row">${res.length>1?`<select id="qzPick" data-ch="qzPick" aria-label="選擇報告">${res.map(([id,r])=>`<option value="${id}"${id===qzView?' selected':''}>${esc(lab(r))}</option>`).join('')}</select>`:''}<button data-act="qzRestart">重新測驗</button></div>`:''}</header>`;
   if(QZ.step>0||!res.length)return head+quizScreen();
   const id=qzView&&S.quiz[qzView]?qzView:res[0][0];
@@ -1624,15 +1720,15 @@ Object.assign(A,{
   recEn:el=>{readRecordForm();const n=+el.dataset.n;REC.en=REC.en===n?null:n;drawRecord()},
   qa:el=>{const q=el.dataset.q,v=el.dataset.v;QZ.a[q]=/^-?\d+(\.\d+)?$/.test(v)?+v:v;savQZ();
     el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));
-    if(q==='reg'||q==='drain'){render();return}
+    if(q==='reg'||/^s[bw]\d/.test(q)){const y=window.scrollY;render();window.scrollTo(0,y);return}
     const bk=el.closest('.qq');const nx=bk&&bk.nextElementSibling;if(nx&&nx.classList.contains('qq')&&!nx.querySelector('[aria-pressed="true"]')){const r=nx.getBoundingClientRect();if(r.bottom>innerHeight)nx.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}},
   qzNext:()=>{const m=missing();if(m.length){toast(`還有 ${m.length} 題沒回答`);const e=$('#q_'+m[0]);e&&e.scrollIntoView({block:'center'});return}
     if(QZ.step===5)QZ.pairs=buildPairs();
-    if(QZ.step===7){const r=computeResult();const id=rid();save('quiz',id,r);qzView=id;QZ={v:2,step:0,a:{},pairs:null};savQZ();render();window.scrollTo(0,0);toast('報告完成');return}
+    if(QZ.step===7){const r=computeResult();const id=rid();save('quiz',id,r);qzView=id;QZ={v:3,step:0,a:{},pairs:null};savQZ();render();window.scrollTo(0,0);toast('報告完成');return}
     QZ.step++;savQZ();render();window.scrollTo(0,0)},
   qzBack:()=>{QZ.step=Math.max(0,QZ.step-1);savQZ();render();window.scrollTo(0,0)},
   qzQuit:()=>{QZ.step=0;savQZ();render()},
-  qzRestart:()=>{QZ={v:2,step:1,a:{},pairs:null};savQZ();render();window.scrollTo(0,0)},
+  qzRestart:()=>{QZ={v:3,step:1,a:{},pairs:null};savQZ();render();window.scrollTo(0,0)},
   qzPomo:el=>{editCfg(c=>{c.pomo.work=+el.dataset.w;c.pomo.short=+el.dataset.s});if(!P.running){P.left=null;savP()}toast('已套用：專注 '+el.dataset.w+' 分、休息 '+el.dataset.s+' 分');render()},
   qzCopy:async el=>{const t=reportText(S.quiz[el.dataset.id]);try{await navigator.clipboard.writeText(t);toast('已複製報告文字')}catch{toast('這裡無法複製，請手動選取文字')}},
   qzDl:async el=>{const r=S.quiz[el.dataset.id];if(await saveFile(`最佳狀態報告-${r.date}.md`,reportText(r),'text/markdown',`my-rhythm-report-${r.date}.md`))toast('已下載')},
@@ -1643,7 +1739,7 @@ Object.assign(A,{
     if(!sample){out.innerHTML='<span class="muted">這個環境不能呼叫 Claude。報告內的指南仍然完整可用。</span>';return}
     el.disabled=true;out.textContent='Claude 正在閱讀你的報告…';
     const M=energyModel(r.energy);
-    const prompt=`你是一位熟悉學習科學與時間管理的教練。以下是一位使用者的自我評估結果，他可能在學習、工作或準備考試。請用繁體中文寫 6 到 8 條具體、可立即執行的建議，每條一到兩句，盡量引用他簡答裡的內容，避免空泛。不要重述分數，不要寫開場白和結語，用「- 」開頭的條列。\n\n作息類型：${TYPE5[M.sl.type].n}（休假日睡眠中點 ${hm(M.sl.msf*60)}${M.sl.sj>=1?`，社會時差約 ${fmtN(M.sl.sj)} 小時`:''}）。高峰時段：${blName(M.peak)}；低潮：${blName(M.low)}${M.idea?`；靈感時段：${blName(M.idea)}`:''}。午後低潮：${['很少','有時','幾乎每天'][r.energy.dip]}；一次專注約 ${r.energy.span} 分鐘。\n驅動力前五名（0–100）：${r.top.slice(0,5).map(k=>DRV[k].n+' '+r.drv[k]).join('、')}；最低：${DRV[r.top[r.top.length-1]].n}。最容易失去動力：${r.drain==='other'?r.drainWhy:r.drain?DRV[r.drain].drain:'未填'}。${r.other?`\n自己補充的驅動力：${r.other}`:''}\n簡答：\n${SHORT.map(([k,q])=>`${q}：${r.short[k]||'（未填）'}`).join('\n')}`;
+    const prompt=`你是一位熟悉學習科學與時間管理的教練。以下是一位使用者的自我評估結果，他可能在學習、工作或準備考試。請用繁體中文寫 6 到 8 條具體、可立即執行的建議，每條一到兩句，盡量引用他簡答裡的內容，避免空泛。不要重述分數，不要寫開場白和結語，用「- 」開頭的條列。\n\n作息類型：${TYPE5[M.sl.type].n}（休假日睡眠中點 ${hm(M.sl.msf*60)}${M.sl.sj>=1?`，社會時差約 ${fmtN(M.sl.sj)} 小時`:''}）。高峰時段：${blName(M.peak)}；低潮：${blName(M.low)}${M.idea?`；靈感時段：${blName(M.idea)}`:''}。午後低潮：${['很少','有時','幾乎每天'][r.energy.dip]}；一次專注約 ${r.energy.span} 分鐘。\n價值輪廓（Chris Bailey《Intentional》的 12 個基本價值）：${LAYERS.map(([L,ln])=>{const ks=DK.filter(k=>r.vals.layerOf[k]===L);return ks.length?ln+'＝'+ks.map(k=>DRV[k].n+(r.vals.why[k]?'（'+r.vals.why[k]+'）':'')).join('、'):''}).filter(Boolean).join('；')}。${r.other?`\n自己補充的推動力：${r.other}`:''}\n簡答：\n${SHORT.map(([k,q])=>`${q}：${r.short[k]||'（未填）'}`).join('\n')}`;
     try{const res=await sample(prompt,{onText:({text})=>{out.textContent=text},cache:false});const t=(res.text||'').trim();out.textContent=t;const nr=clone(r);nr.ai=t;save('quiz',id,nr)}
     catch(e){out.innerHTML=`<span class="muted">${e&&e.code==='not_granted'?'你沒有允許這個頁面使用 Claude。指南的其他部分仍然可用。':e&&e.code==='rate_limited'?'使用次數暫時太多，請過幾分鐘再試。':'暫時無法產生建議，請稍後再試。'}</span>`}
     el.disabled=false;

@@ -985,21 +985,33 @@ function vExam(){
 }
 
 /* ---------- plan view (research projects) ---------- */
-const PTYPES={thesis:'論文',article:'期刊論文',conf:'研討會論文',chapter:'專書章節',grant:'研究計畫申請',other:'其他'};
-const PMETHODS={text:'文本細讀',hist:'史料考證',field:'田野與訪談',theory:'理論思辨',mixed:'還不確定／混合'};
+const PTYPES={thesis:'論文',article:'期刊論文',conf:'研討會論文',chapter:'專書章節',project:'專題／實驗計畫',report:'研究報告',grant:'研究計畫申請',other:'其他（自己填）'};
+const PMETHOD_GROUPS=[['人文社會',['text','hist','field','theory','survey']],['理工醫學',['exp','data','dev','clinical','sysrev']],['其他',['mixed','custom']]];
+const PMETHODS={text:'文本細讀',hist:'史料考證',field:'田野與訪談',theory:'理論思辨',survey:'問卷調查',exp:'實驗研究',data:'資料與統計分析',dev:'程式與系統開發',clinical:'臨床研究',sysrev:'系統性文獻回顧',mixed:'還不確定／混合',custom:'其他（自己填）'};
+const typeName=p=>p.type==='other'&&p.typeName?p.typeName:(PTYPES[p.type]||'').replace('（自己填）','');
+const methodName=p=>p.method==='custom'&&p.methodName?p.methodName:(PMETHODS[p.method]||'').replace('（自己填）','');
 const MSTEPS={
   text:{collect:['確定研究文本與版本','建立文本清單與出處','初讀並標記關鍵段落'],analyze:['逐段細讀並寫分析筆記','整理反覆出現的主題或意象','把觀察寫成一句一句的論點']},
   hist:{collect:['確認檔案、館藏與資料庫','調閱、抄錄或拍攝史料','建立史料目錄（出處、年代、頁碼）'],analyze:['史料校勘與比對','排出事件年表','從史料提出可以論證的說法']},
   field:{collect:['擬訪談大綱','準備同意書，必要時申請倫理審查','聯絡受訪者並安排時間','進行訪談並錄音'],analyze:['整理逐字稿','初步編碼、標記主題','歸納主題並挑出代表性引文']},
   theory:{collect:['列出核心理論著作','精讀並寫概念筆記','找出要對話的學者與立場'],analyze:['畫出概念之間的關係','寫下自己和既有說法的差異','形成可以論證的命題']},
-  mixed:{collect:['列出需要的資料類型','蒐集並整理資料','建立資料清單與出處'],analyze:['寫分析筆記','整理主題與模式','形成可以論證的說法']}};
+  mixed:{collect:['列出需要的資料類型','蒐集並整理資料','建立資料清單與出處'],analyze:['寫分析筆記','整理主題與模式','形成可以論證的說法']},
+  survey:{collect:['確定研究問題與變項','設計問卷並做前測','必要時申請倫理審查','發放問卷並回收'],analyze:['整理與清理資料','描述統計與主要分析','對照假設解釋結果']},
+  exp:{collect:['寫下實驗設計：假設、變項、對照組','準備材料、儀器與流程表','做預實驗並調整流程','正式實驗並詳實記錄'],analyze:['整理原始數據','統計分析與作圖','解釋結果，討論誤差與限制']},
+  data:{collect:['確定資料來源與使用權限','取得或蒐集資料','清理資料並建立資料說明'],analyze:['探索性分析與視覺化','建立模型或進行檢定','檢查穩健性並解釋結果']},
+  dev:{collect:['整理需求與規格','設計架構與介面','做出可運作的原型'],analyze:['完成主要功能','測試與除錯','效能或使用者評估']},
+  clinical:{collect:['撰寫研究計畫與收案條件','申請 IRB 審查','招募受試者並取得同意','收案並記錄資料'],analyze:['資料整理與品質檢查','統計分析','解釋結果並撰寫討論']},
+  sysrev:{collect:['訂定研究問題與納入條件（如 PICO）','擬定檢索策略並搜尋資料庫','依序篩選標題、摘要與全文'],analyze:['萃取資料','評估研究品質與偏誤','綜合分析或統合分析']},
+  custom:{collect:['列出需要準備的資料或材料','蒐集並整理','建立清單與出處'],analyze:['依你的方法進行分析','整理結果','形成結論']}};
 const TEMPLATES={
   thesis:[['問題意識',2,['寫下 3 個你真正好奇的問題','每個問題略讀 2–3 篇相關研究','和指導教授討論，選定方向']],['文獻回顧',3,['建立書目清單','精讀核心文獻並做書摘','把文獻分成幾個討論脈絡','寫文獻回顧草稿']],['資料蒐集',3,'collect'],['研究計畫書',3,['研究動機與問題（1–2 頁）','把文獻回顧整理成一節','研究方法與章節架構','整理參考書目','交給指導教授並修改']],['計畫書口試',1,['確認口試日期與委員','準備簡報','口試','整理委員意見成修改清單']],['分析與論點',4,'analyze'],['章節撰寫',5,['緒論','第二章初稿','第三章初稿','第四章初稿','結論','逐章交給指導教授']],['修訂與格式',2,['依意見逐章修改','核對引文與註腳','統一書目格式','中英文摘要與關鍵詞']],['學位口試',1,['送審並申請口試','準備簡報與預想問題','口試','修改並繳交最終版']]],
   article:[['論點與定位',1,['用一句話寫出這篇文章的論點','選定目標期刊，讀投稿規定','找 2–3 篇該期刊的範文']],['文獻與資料',2,'collect'],['架構',1,['列出段落大綱','畫論證地圖：主張、證據、回應反方']],['初稿',3,['前言','主體第一節','主體第二節','主體第三節','結論']],['修改',2,['自己通讀並修改','請同儕或老師讀','文字潤飾']],['投稿',1,['格式、引註與字數','中英文摘要與關鍵詞','寫投稿信並送出']],['審查與回覆',2,['把審查意見整理成清單','逐點修改','寫回覆信並再次送出']]],
   conf:[['摘要',1,['確認徵稿主題與截止日','寫摘要並投稿']],['撰寫',3,['段落大綱','初稿','修改']],['發表準備',1,['製作簡報','練習並計時','準備可能的提問']],['會議',1,['發表','記下回饋']],['會後修改',2,['依回饋修改','評估改投期刊']]],
   chapter:[['構想',1,['確認主編要求與字數','寫章節摘要給主編']],['資料',2,'collect'],['撰寫',3,['大綱','初稿','修改']],['交稿',1,['格式與引註','交稿','依主編意見修改']]],
   grant:[['構想',1,['確認申請資格與截止日','寫一頁研究構想']],['內容',3,['研究背景與問題','文獻回顧','研究方法與步驟','預期成果與貢獻']],['行政',2,['預算與人力','時程表','個人資料與著作目錄']],['送件',1,['請同事或老師讀','校對','送出申請']]],
-  other:[['第一階段',1,['寫下第一個小步驟']]]};
+  project:[['問題與目標',1,['寫下要解決的問題與預期成果','確認指導老師或合作者的期待']],['文獻與背景',2,['蒐集相關研究','整理重點與可用的方法']],['方法與資料',3,'collect'],['分析與結果',3,'analyze'],['撰寫',3,['架構大綱','初稿','修改']],['發表或繳交',1,['製作簡報或海報','發表或繳交']]],
+  report:[['規劃',1,['確認報告目的、讀者與格式']],['資料',2,'collect'],['分析',2,'analyze'],['撰寫',2,['大綱','初稿','修改與校對']],['繳交',1,['檢查格式','繳交']]],
+  other:[['規劃',1,['寫下目標和完成時的樣子']],['準備',2,'collect'],['執行',3,'analyze'],['完成',1,['整理成果','檢查並交出']]]};
 const WIN_KINDS=[['write','寫一段','寫 150 字，不管好壞'],['quote','整理書摘','抄一則書摘，寫一句想法'],['read','讀一點','讀 10 頁，或一篇的摘要'],['outline','列大綱','列 3 點這段要說的事'],['revise','改一段','只改一段，改完就停'],['find','找資料','查 1 筆書目或史料'],['idea','記想法','寫下一個卡住的問題']];
 function starters(){const c=cfg();return Array.isArray(c.starters)?c.starters:WIN_KINDS}
 let starterEdit=false;
@@ -1023,11 +1035,11 @@ function nextStep(pid){const st=curStageOf(pid);if(!st)return null;const s=st.st
 function projProgress(p){let t=0,d=0;p.stages.forEach(s=>{if(s.status==='done'&&s.steps.length===0){t++;d++}else{t+=s.steps.length;d+=s.steps.filter(x=>x.done||s.status==='done').length}});return t?d/t:0}
 function editProj(fn){const p=clone(proj(curProj));fn(p);save('projects',curProj,p)}
 function newProject(){
-  const name=($('#npName').value||'').trim()||'未命名專案',type=$('#npType').value,method=($('#npMethod')||{}).value||'mixed',dl=$('#npDate').value||addDays(today(),type==='thesis'?365:120);
+  const name=($('#npName').value||'').trim()||'未命名專案',type=$('#npType').value,method=($('#npMethod')||{}).value||'mixed',typeX=(($('#npTypeX')||{}).value||'').trim(),methodX=(($('#npMethodX')||{}).value||'').trim(),dl=$('#npDate').value||addDays(today(),type==='thesis'?365:120);
   const id=rid(),st=today(),span=Math.max(14,diffDays(st,dl)),tpl=TEMPLATES[type]||TEMPLATES.other,tw=tpl.reduce((a,x)=>a+x[1],0);let cur=st;
   const stages=tpl.map(([n,w,steps],i)=>{const len=Math.max(3,Math.round(span*w/tw));const s=cur,e=i===tpl.length-1?dl:addDays(cur,len-1);cur=addDays(e,1);
-    const list=typeof steps==='string'?MSTEPS[method][steps]:steps;return {id:rid(),name:n,start:s,end:e,status:'',note:'',steps:list.map(t=>({id:rid(),t,done:false,due:''}))}});
-  save('projects',id,{name,type,method,deadline:dl,created:st,stages,meetings:[],wins:[],prep:[],next:null});curProj=id;planNew=false;render();
+    const list=typeof steps==='string'?(MSTEPS[method]||MSTEPS.mixed)[steps]:steps;return {id:rid(),name:n,start:s,end:e,status:'',note:'',steps:list.map(t=>({id:rid(),t,done:false,due:''}))}});
+  save('projects',id,{name,type,method,typeName:type==='other'?typeX:'',methodName:method==='custom'?methodX:'',deadline:dl,created:st,stages,meetings:[],wins:[],prep:[],next:null});curProj=id;planNew=false;render();
 }
 function dayActivity(pid,k){
   const p=proj(pid);let n=(p.wins||[]).filter(w=>w.d===k).length;
@@ -1053,17 +1065,17 @@ function vPlan(){
   const ids=Object.keys(S.projects);
   if(curProj&&!S.projects[curProj])curProj=null;
   if(!curProj&&ids.length)curProj=ids[0];
-  const chips=ids.length?`<div class="projchips">${ids.map(id=>{const p=proj(id),pr=projProgress(p);return `<button class="pchip${id===curProj&&!planNew?' on':''}" data-act="projSel" data-id="${id}"><span class="pn">${esc(p.name)}</span><span class="muted">${PTYPES[p.type]||''}・${Math.round(pr*100)}%</span></button>`}).join('')}<button class="pchip add" data-act="projSel" data-id="">＋ 新專案</button></div>`:'';
+  const chips=ids.length?`<div class="projchips">${ids.map(id=>{const p=proj(id),pr=projProgress(p);return `<button class="pchip${id===curProj&&!planNew?' on':''}" data-act="projSel" data-id="${id}"><span class="pn">${esc(p.name)}</span><span class="muted">${esc(typeName(p))}・${Math.round(pr*100)}%</span></button>`}).join('')}<button class="pchip add" data-act="projSel" data-id="">＋ 新專案</button></div>`:'';
   if(planNew||!curProj)return `<header class="ph"><div><p class="eyebrow">論文地圖</p><h1>新增研究專案</h1></div></header>${chips}
-  <section class="card" style="max-width:680px"><h2>從哪一種寫作開始？</h2>
+  <section class="card" style="max-width:680px"><h2>從哪一種研究開始？</h2>
     <p class="muted">選好類型和完成日，就會從今天排到那天，切成幾個階段和許多小步驟。每一步都小到可以在一兩次番茄鐘內完成。日期、步驟之後都能改。</p>
     <div class="fields" style="grid-template-columns:1fr 1fr;margin:12px 0">
       <label class="f" style="grid-column:1/-1">專案名稱<input id="npName" type="text" placeholder="例：碩士論文、〈晚明文人的書信網絡〉"></label>
-      <label class="f">類型<select id="npType">${Object.entries(PTYPES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
-      <label class="f">主要研究方法<select id="npMethod">${Object.entries(PMETHODS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="f">類型<select id="npType" data-ch="npType">${Object.entries(PTYPES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><input id="npTypeX" type="text" placeholder="寫下類型，例：碩士學位論文、技術報告" hidden></label>
+      <label class="f">主要研究方法<select id="npMethod" data-ch="npMethod">${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}">${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select><input id="npMethodX" type="text" placeholder="寫下方法，例：語料庫分析、模擬實驗" hidden></label>
       <label class="f">預計完成日<input id="npDate" type="date" value="${addDays(today(),365)}"></label>
     </div>
-    <p class="muted">研究方法會決定「資料蒐集」和「分析」階段的步驟。例如選「史料考證」，會出現調閱史料、校勘、排年表；選「田野與訪談」，會出現訪談大綱、逐字稿、編碼。</p>
+    <p class="muted">研究方法會決定「資料蒐集」和「分析」階段的步驟。例如選「史料考證」，會出現調閱史料、校勘、排年表；選「實驗研究」，會出現實驗設計、預實驗、統計作圖；選「臨床研究」，會出現收案條件、IRB 審查、受試者同意。沒有合適的選項，選「其他」自己填。</p>
     <div class="row" style="margin-top:12px"><button class="pri" data-act="projNew">建立專案</button>${ids.length?'<button class="ghost" data-act="projSel" data-id="'+ids[0]+'">取消</button>':''}</div></section>`;
   const p=proj(curProj),cur=curStageOf(curProj),pr=projProgress(p),left=diffDays(today(),p.deadline),ns=nextStep(curProj);
   const wk=weekStart(today()),wkDays=Array.from({length:7},(_,i)=>addDays(wk,i));
@@ -1071,7 +1083,7 @@ function vPlan(){
   const wkMin=wkDays.reduce((a,k)=>a+(day(k).sessions||[]).filter(s=>s.proj===curProj).reduce((x,s)=>x+(+s.min||0),0),0);
   const days30=Array.from({length:35},(_,i)=>addDays(today(),i-34));
   const others=p.stages.filter(s=>!cur||s.id!==cur.id);
-  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">論文地圖・${PTYPES[p.type]||''}${p.method?'・'+(PMETHODS[p.method]||''):''}</p><input class="pgtitle" id="pjTitle" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}" aria-label="專案名稱（點一下可以改）" title="點一下可以改名稱"></div>
+  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">論文地圖・${esc(typeName(p))}${p.method?'・'+esc(methodName(p)):''}</p><input class="pgtitle" id="pjTitle" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}" aria-label="專案名稱（點一下可以改）" title="點一下可以改名稱"></div>
     <div class="chips"><span class="chip">完成 <b>${Math.round(pr*100)}</b>%</span><span class="chip${left<=30?' hot':''}">距離 ${fmtMD(p.deadline)} 還有 <b>${left}</b> 天</span></div></header>
   ${chips}
   <section class="card" style="margin-bottom:16px">${stageTrack(p,cur)}</section>
@@ -1111,6 +1123,9 @@ function vPlan(){
         <label class="f">名稱<input id="pjN" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}"></label>
         <label class="f" style="margin-top:8px">預計完成日<input id="pjD" type="date" data-ch="pjF" data-f="deadline" value="${esc(p.deadline)}"></label>
         <label class="f" style="margin-top:8px">類型<select id="pjT" data-ch="pjF" data-f="type">${Object.entries(PTYPES).map(([k,v])=>`<option value="${k}"${p.type===k?' selected':''}>${v}</option>`).join('')}</select></label>
+        ${p.type==='other'?`<label class="f" style="margin-top:8px">類型名稱<input id="pjTX" type="text" data-ch="pjF" data-f="typeName" value="${esc(p.typeName||'')}" placeholder="例：技術報告"></label>`:''}
+        <label class="f" style="margin-top:8px">主要研究方法<select id="pjM" data-ch="pjF" data-f="method">${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}"${p.method===k?' selected':''}>${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select></label>
+        ${p.method==='custom'?`<label class="f" style="margin-top:8px">方法名稱<input id="pjMX" type="text" data-ch="pjF" data-f="methodName" value="${esc(p.methodName||'')}" placeholder="例：語料庫分析"></label>`:''}
         <button class="ghost sm" style="margin-top:10px" data-act="projDel" data-id="${curProj}">刪除這個專案</button></section>
     </aside>
   </div>
@@ -1997,6 +2012,8 @@ Object.assign(A,{
   mtDel:el=>{if(!twoStep(el))return;editProj(p=>{p.meetings=p.meetings.filter(m=>m.id!==el.dataset.id)});render()}
 });
 Object.assign(C,{
+  npType:el=>{const x=$('#npTypeX');x.hidden=el.value!=='other';if(!x.hidden)x.focus()},
+  npMethod:el=>{const x=$('#npMethodX');x.hidden=el.value!=='custom';if(!x.hidden)x.focus()},
   examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()||'考試準備'})},
   pjF:el=>{editProj(p=>{p[el.dataset.f]=el.value});render()},
   stF:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id)[el.dataset.f]=el.value});if(el.dataset.f!=='name')render()},

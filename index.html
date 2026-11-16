@@ -297,6 +297,11 @@ label.visrow{align-items:flex-start;margin-bottom:8px;cursor:pointer}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .mobcard{display:flex;gap:18px;align-items:center}
 .mobcard img{width:132px;height:132px;border-radius:12px;border:1px solid var(--line);flex:none;background:#fff}
+.visline{display:flex;gap:6px;align-items:stretch}
+.visline .visrow{flex:1;min-width:0}
+.visline .ord{display:flex;flex-direction:column;gap:2px;justify-content:center}
+.visline .ord button{padding:0 10px;min-height:26px;line-height:1}
+.visline .ord button:disabled{opacity:.25}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -522,6 +527,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   .seg button{min-height:36px}
   .xlink{display:inline-block;padding:6px 0}
   .tdel,.mood button,.likert button,.hcell,.cal .cell,nav.rail button,nav.rail a{min-height:0}
+  .visline .ord button{min-height:34px}
   .modal{align-items:flex-end;padding:0}
   .modal .box{width:100%;border-radius:20px 20px 0 0;max-height:92vh;padding:22px 18px calc(18px + env(safe-area-inset-bottom,0px))}
   .modal .box.welcome{border-radius:20px;margin:16px;width:calc(100% - 32px)!important;align-self:center}
@@ -1722,7 +1728,9 @@ function vPrefs(){
     </section>
   </div>
   <section class="card" style="margin-bottom:16px"><h2>要顯示哪些頁面</h2><p class="muted">用不到的頁面可以先藏起來，資料都會保留，之後再打開就回來了。</p>
-    <div class="vis">${Object.entries(OPTIONAL).sort((x,y)=>NAV.findIndex(n=>n[0]===x[0])-NAV.findIndex(n=>n[0]===y[0])).map(([r,d])=>`<button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button>`).join('')}</div>
+    <p class="muted" style="margin:0 0 8px">用右邊的 ↑ ↓ 調整選單順序；「今日」固定在最前面，「設定」固定在最後。</p>
+    <div class="vis">${(()=>{const ord=navOrder().filter(r=>OPTIONAL[r]);return ord.map((r,i)=>{const d=OPTIONAL[r];return `<div class="visline"><button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button><span class="ord"><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="-1" aria-label="往上移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="1" aria-label="往下移" ${i===ord.length-1?'disabled':''}>↓</button></span></div>`}).join('')})()}</div>
+    ${(cfg().navOrder||[]).length?'<button class="ghost sm" data-act="navReset" style="margin-top:6px">恢復預設順序</button>':''}
     <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div></section>
   ${fbAdminHTML()}
   ${mobileCardHTML()}
@@ -2771,7 +2779,9 @@ Object.assign(IN,{
 const NAV=[['today','今日'],['plan','論文地圖'],['exam','考試衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
 const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'考試衝刺：測驗計時、考試倒數、模考、錯題本',plan:'論文地圖：研究專案、書摘、會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
-function navItems(){return NAV.filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}
+function navOrder(){const def=NAV.map(n=>n[0]).filter(r=>r!=='today'),o=(cfg().navOrder||[]).filter(r=>def.includes(r));return ['today'].concat(o,def.filter(r=>!o.includes(r)))}
+function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n]));return navOrder().map(r=>m[r]).filter(Boolean)}
+function navItems(){return navOrdered().filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}
 const ICON={
   today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -2931,6 +2941,8 @@ Object.assign(A,{
   gcOn:()=>{editCfg(c=>{c.gcalOn=true});GC.state='idle';render();gcLoad(false)},
   gcOff:()=>{editCfg(c=>{c.gcalOn=false});render()},
   gcRefresh:()=>{gcLoad(true);render()},
+  navMove:el=>{const o=navOrder().filter(r=>r!=='today'),i=o.indexOf(el.dataset.r),j=i+(+el.dataset.d);if(i<0||j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];editCfg(c=>{c.navOrder=o});render();setTimeout(()=>{const b=document.querySelector(`[data-act=navMove][data-r="${el.dataset.r}"][data-d="${el.dataset.d}"]`);b&&!b.disabled&&b.focus()},30)},
+  navReset:()=>{editCfg(c=>{delete c.navOrder});render()},
   navToggle:el=>{const r=el.dataset.r;editCfg(c=>{c.hidden=c.hidden||[];if(c.hidden.includes(r))c.hidden=c.hidden.filter(x=>x!==r);else c.hidden.push(r)});render()}
 });
 Object.assign(C,{

@@ -440,6 +440,11 @@ main .grid2+.setgrp{margin-top:26px}
 .ctrrow .ctrnum{flex:0 0 56px}
 .ctrrow .ctrnum input{width:56px;min-width:0;padding-left:8px;padding-right:4px}
 .ctrrow>button{flex:none;align-self:center;margin-top:18px;padding:0 6px}
+.minchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center}
+.minchip{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 12px;border:1px dashed var(--line);border-radius:999px;font-size:calc(13px * var(--fs,1))}
+.minedit{color:var(--muted)}
+.minadd{justify-content:center;margin-top:8px;gap:6px}
+.prcard+.prcard{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1065,7 +1070,7 @@ function phaseOptions(pid,sel){const p=S.projects[pid];if(!p)return '<option val
 const XL=(label,to,extra='')=>(to==='prefs'||to==='today'||isOn(to))?`<a class="xlink" href="#${to}" data-act="go" data-to="${to}" ${extra}>${label} →</a>`:'';
 function todayMindHTML(){
   const ps=(day(today()).j||{}).practice||[],tot=ps.reduce((a,x)=>a+(+x.min||0),0);
-  return `<div class="row sb" style="align-items:center"><div class="mclock small" id="mTime">--:--</div><div class="row" style="gap:4px">${[3,5,10,15,20,30].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m}′</button>`).join('')}</div></div>
+  return `<div class="row sb" style="align-items:center"><div class="mclock small" id="mTime">--:--</div><div class="row" style="gap:4px">${medMins().slice(0,6).map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m}′</button>`).join('')}</div></div>
   <div class="row" style="margin-top:8px">${methodSelect('mMethodT')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
   <p class="muted" style="margin:8px 0 0">${tot?`今天已靜心 ${tot} 分鐘，很好。`:'不必求長，今天坐一下就很好。'}選好時間，按下開始，慢慢回到呼吸。</p>`;
 }
@@ -1498,7 +1503,8 @@ function mindStats(keys){
   const notes=all.filter(x=>x.note).slice(-5).reverse();
   return `<section class="card" style="margin-bottom:16px">${head}
     <div class="grid3" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)">
-      <div><h3 style="margin-top:0">每天靜心分鐘</h3>${stackBars(rows,{h:150,unit:'分',minW:480,every:stMode==='month'?3:1,marker:today()})}</div>
+      <div><h3 style="margin-top:0">每天靜心分鐘</h3>${stackBars(rows,{h:150,unit:'分',minW:480,every:stMode==='month'?3:1,marker:today()})}
+        ${(()=>{const qv=keys.map(k=>{const q=((day(k).j||{}).practice||[]).filter(x=>x.q).map(x=>x.q);return q.length?q.reduce((a,b)=>a+b,0)/q.length:null});return qv.filter(v=>v!=null).length>=2?`<h3>每天的安住程度 <span class="muted">1–5</span></h3>${lineChart([{n:'安住',c:9,vals:qv}],{h:130,ymax:5,steps:5,labels:keys.map(k=>stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()))})}`:''})()}</div>
       <div><h3 style="margin-top:0">方法</h3>${hbars(Object.entries(byM).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,v],i)=>({n,v,c:[9,0,5,3,2][i]})),x=>x.v+' 分')}
         ${Object.keys(byD).length?`<h3>常見干擾</h3><div class="chips">${Object.entries(byD).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<span class="chip">${esc(t)} <b>${n}</b></span>`).join('')}</div>`:''}</div>
       <div><h3 style="margin-top:0">最近的觀察</h3>${notes.length?notes.map(x=>`<p class="qa" style="margin:0 0 8px"><span class="muted">${fmtMD(x.d)}</span> ${esc(x.note)}</p>`).join(''):'<p class="empty">還沒有寫觀察筆記。</p>'}</div>
@@ -2784,7 +2790,7 @@ function bell(n){if(!AC)return;try{for(let i=0;i<n;i++){const t=T0()+i*2.2;[528,
 function mComplete(){
   const min=Math.round((MT.min*60-(MT.left??0))/60)||MT.min;
   MT.running=false;MT.left=null;savMT();endSound('m',()=>yinqing(3,6.5),'靜心結束','慢慢睜開眼睛，回到這裡。');
-  editDay(today(),d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:MT.min,method:MT.method,q:null,note:''})});
+  editDay(today(),d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:MT.min,method:MT.method,q:null,note:'',t:(()=>{const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes())})()})});
   toast('靜心 '+MT.min+' 分鐘，已記錄');if(R==='journal'||R==='today'||R==='mind')render();
 }
 function emoGrid(k){
@@ -2817,7 +2823,7 @@ function momentsHTML(k){
 function practiceHTML(k){
   const ps=(day(k).j||{}).practice||[],tot=ps.reduce((a,p)=>a+(+p.min||0),0);
   return `${k===today()?`<div class="mclock-wrap"><div class="mclock" id="mTime">--:--</div>
-    <div class="row" style="justify-content:center">${[3,5,10,15,20,30,45,60,90].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m===60?'1 小時':m===90?'1.5 小時':m+' 分'}</button>`).join('')}</div>
+    <div class="row" style="justify-content:center">${minChips()}</div>
     <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
     <p class="muted" style="text-align:center;margin:8px 0 0">找一個舒服的姿勢，選好時間就開始。鐘聲響起時，輕輕回到呼吸；結束後會自動記下這次練習。</p></div>`:''}
   <h3>練習紀錄 <span class="muted">${tot} 分鐘</span></h3>
@@ -2827,27 +2833,35 @@ function practiceHTML(k){
   <div class="row" style="margin-top:8px"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘"><select id="prM" aria-label="方法">${medMethods().map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="sm" data-act="prAdd" data-k="${k}">補登練習</button></div>`;
 }
 function lastPractice(){const ds=Object.keys(S.days).filter(d=>((day(d).j||{}).practice||[]).length).sort();const d=ds[ds.length-1];if(!d)return null;const ps=day(d).j.practice;return {d,p:ps[ps.length-1]}}
+const MIN_DEF=[3,5,10,15,30,60];
+function medMins(){const v=cfg().medMins;return Array.isArray(v)&&v.length>=3?v.slice().sort((a,b)=>a-b):MIN_DEF}
+const minLabel=m=>m>=60?(m%60?fmtN(m/60):m/60)+' 小時':m+' 分';
+let minEdit=false;
+function minChips(){const ms=medMins();
+  return `<div class="minchips">${ms.map(m=>minEdit?`<span class="minchip editing">${minLabel(m)}<button class="tdel" data-act="minDel" data-m="${m}" aria-label="刪除 ${minLabel(m)}">×</button></span>`:`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${minLabel(m)}</button>`).join('')}
+    <button class="ghost sm minedit" data-act="minEditT">${minEdit?'完成':'編輯時間'}</button></div>
+    ${minEdit?`<div class="row minadd"><input id="minNew" type="number" min="1" max="240" placeholder="分鐘" aria-label="自訂分鐘" style="width:90px"><button class="sm sec" data-act="minAdd">加入</button><button class="ghost sm" data-act="minReset">恢復預設</button><span class="muted">至少保留 3 個時間</span></div>`:''}`}
 function mindTimerHTML(){
   return `<div class="mclock-wrap" style="border:0;padding-bottom:0"><div class="mclock" id="mTime">--:--</div>
-    <div class="row" style="justify-content:center">${[3,5,10,15,20,30,45,60,90].map(m=>`<button class="sm" data-act="mMin" data-m="${m}" aria-pressed="${MT.min===m}">${m===60?'1 小時':m===90?'1.5 小時':m+' 分'}</button>`).join('')}</div>
+    <div class="row" style="justify-content:center">${minChips()}</div>
     <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
     <p class="muted" style="text-align:center;margin:8px 0 0">找一個舒服的姿勢，選好時間就開始。鐘聲響起時，輕輕回到呼吸；結束後會自動記下這次練習。</p></div>`;
 }
 function methodTally(){const o={};Object.keys(S.days).forEach(d=>((day(d).j||{}).practice||[]).forEach(x=>{const m=x.method||'其他';o[m]=o[m]||{n:0,min:0};o[m].n++;o[m].min+=+x.min||0}));return Object.entries(o).sort((a,b)=>b[1].n-a[1].n)}
 function tallyHTML(){const t=methodTally();if(!t.length)return '';return `<div class="mtally"><h3>各方法累計</h3><div class="chips">${t.map(([m,v])=>`<span class="chip">${esc(m)} <b>${v.n}</b> 次・${fmtMin(v.min)}</span>`).join('')}</div></div>`}
-function mindRecordHTML(){
-  const L=lastPractice();
-  const add=`<details class="madd"><summary class="muted">補登一次練習</summary><div class="row" style="margin-top:8px"><input id="prDate" type="date" value="${today()}"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘" style="width:70px"><span class="muted">分</span><select id="prM" aria-label="方法">${medMethods().map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="sm" data-act="prAdd2">補登</button></div></details>`;
-  if(!L)return `<p class="empty">完成第一次靜心後，這裡會出現紀錄欄，讓你寫下這次的觀察。</p>${add}`;
-  const TL=tallyHTML();
-  const {d,p:x}=L;
-  return `<div class="row sb"><div><div class="bigstep">${x.min} 分鐘・${esc(x.method)}</div><div class="muted">${fmtLong(d)}</div></div><button class="ghost sm" data-act="prDel" data-k="${d}" data-id="${x.id}">刪除這筆</button></div>
+function practiceCard(d,x){return `<div class="prcard"><div class="row sb"><div><div class="bigstep">${x.min} 分鐘・${esc(x.method)}</div>${x.t?`<div class="muted">${esc(x.t)}</div>`:''}</div><button class="ghost sm" data-act="prDel" data-k="${d}" data-id="${x.id}">刪除這筆</button></div>
     <div class="mrec2">
       <div><h3>安住程度 <span class="muted">1 散亂，5 很安定</span></h3><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="prQ" data-k="${d}" data-id="${x.id}" data-n="${n}" aria-pressed="${x.q===n}">${n}</button>`).join('')}</div></div>
       <div><h3>主要的干擾</h3><div class="opts">${['念頭','昏沈','掉舉','身體不適','聲音','情緒','幾乎沒有'].map(t=>`<button class="opt sm" data-act="prDist" data-k="${d}" data-id="${x.id}" data-v="${t}" aria-pressed="${(x.dist||[]).includes(t)}">${t}</button>`).join('')}</div></div>
     </div>
-    <label class="f" style="margin-top:10px">觀察筆記<textarea id="prn${x.id}" data-in="prNote" data-k="${d}" data-id="${x.id}" rows="3" placeholder="這次注意到什麼？念頭、身體、聲音、呼吸的變化">${esc(x.note)}</textarea></label>
-    <p class="muted" style="margin:6px 0 0">輸入後會自動儲存。每一次的紀錄都會整理到「統計」。</p>${TL}${add}`;
+    <label class="f" style="margin-top:10px">觀察筆記<textarea id="prn${x.id}" data-in="prNote" data-k="${d}" data-id="${x.id}" rows="3" placeholder="這次注意到什麼？念頭、身體、聲音、呼吸的變化">${esc(x.note)}</textarea></label></div>`}
+function mindRecordHTML(){
+  const k=today(),ps=((day(k).j||{}).practice||[]).slice().reverse(),L=lastPractice();
+  const add=`<details class="madd"><summary class="muted">補登一次練習</summary><div class="row" style="margin-top:8px"><input id="prDate" type="date" value="${k}"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘" style="width:70px"><span class="muted">分</span><select id="prM" aria-label="方法">${medMethods().map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="sm" data-act="prAdd2">補登</button></div></details>`;
+  const TL=tallyHTML();
+  if(!ps.length)return `<p class="empty">今天還沒有靜心紀錄。完成一次練習後，這裡會出現今天的紀錄欄。</p>${L?`<p class="muted" style="margin:0">上一次：${fmtMD(L.d)}（週${wdName(L.d)}）${L.p.min} 分鐘・${esc(L.p.method)}${L.p.q?`・安住 ${L.p.q}`:''}</p>`:''}${TL}${add}`;
+  return `${ps.map(x=>practiceCard(k,x)).join('')}
+    <p class="muted" style="margin:6px 0 0">輸入後會自動儲存。每一次的安住程度、干擾和筆記，都會整理到「統計」的靜心區。</p>${TL}${add}`;
 }
 function vMind(){
   const k=today();
@@ -2858,7 +2872,7 @@ function vMind(){
   return `<header class="ph"><div><p class="eyebrow">靜心</p><h1>安住當下</h1></div><div class="chips"><span class="chip">連續 <b>${streak}</b> 天</span><span class="chip">本週 <b>${wkMin}</b> 分</span><span class="chip">本月 <b>${moMin}</b> 分</span></div></header>
   <div class="grid2">
     <section class="card">${mindTimerHTML()}</section>
-    <section class="card"><h2>紀錄區 <span class="muted">上一次練習</span> ${XL('看統計','stats','data-m="week"')}</h2>${mindRecordHTML()}</section>
+    <section class="card"><h2>紀錄區 <span class="muted">今天的練習</span> ${XL('看統計','stats','data-m="week"')}</h2>${mindRecordHTML()}</section>
   </div>`;
 }
 function emoMap(k){
@@ -2960,6 +2974,10 @@ Object.assign(A,{
   emoAdd:el=>{const n=$('#emoNew').value.trim();if(!n)return;editDay(el.dataset.k,d=>{d.j.emoX=d.j.emoX||[];d.j.emoX.push({n,v:1})});render()},
   moAdd:el=>{const w=$('#moW').value.trim(),e=$('#moE').value;if(!w&&!e)return toast('寫下發生了什麼，或選一個情緒');editDay(el.dataset.k,d=>{d.j.moments=d.j.moments||[];d.j.moments.push({id:rid(),t:$('#moT').value,e,w,b:$('#moB').value.trim(),r:$('#moR').value.trim()});d.j.moments.sort((a,b)=>a.t<b.t?-1:1);if(e){d.j.emo=d.j.emo||{};if(!d.j.emo[e])d.j.emo[e]=1}});render()},
   moDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.moments=(d.j.moments||[]).filter(m=>m.id!==el.dataset.id)});render()},
+  minEditT:()=>{minEdit=!minEdit;render()},
+  minDel:el=>{const m=+el.dataset.m,ms=medMins();if(ms.length<=3)return toast('至少保留 3 個時間');editCfg(c=>{c.medMins=ms.filter(x=>x!==m)});if(MT.min===m&&!MT.running){MT.min=ms.filter(x=>x!==m)[0];MT.left=null;savMT()}render()},
+  minAdd:()=>{const v=Math.round(+$('#minNew').value);if(!v||v<1||v>240)return toast('請輸入 1–240 分鐘');const ms=medMins();if(ms.includes(v))return toast('已經有這個時間了');if(ms.length>=10)return toast('最多 10 個時間');editCfg(c=>{c.medMins=ms.concat([v])});render();setTimeout(()=>{const i=$('#minNew');i&&i.focus()},30)},
+  minReset:()=>{editCfg(c=>{delete c.medMins});render()},
   mMin:el=>{if(MT.running)return toast('練習進行中，先暫停或重設');MT.min=+el.dataset.m;MT.left=null;savMT();render()},
   mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{if(MT.left==null)smallWoodfish(3,6);MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
   mReset:()=>{MT.running=false;MT.left=null;savMT();render()},

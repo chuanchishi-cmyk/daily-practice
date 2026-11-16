@@ -70,7 +70,7 @@ nav.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;heigh
 nav.rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500}
 nav.rail a:hover{background:var(--surface)}
 nav.rail a[aria-current="page"]{background:var(--surface);box-shadow:inset 3px 0 0 var(--focus)}
-nav.rail a .nb{margin-left:auto;font-family:var(--f-mono);font-size:calc(11px * var(--fs,1));color:var(--muted);padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--line) 55%,transparent);line-height:1.5;white-space:nowrap}
+nav.rail a .nb{margin-left:auto;min-width:22px;text-align:center;letter-spacing:.02em;font-family:var(--f-mono);font-size:calc(11px * var(--fs,1));color:var(--muted);padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--line) 55%,transparent);line-height:1.5;white-space:nowrap}
 nav.rail a .nb.ok{color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,transparent)}
 nav.rail a .nb.hot{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
 nav.rail a .nb.ghostk{padding:0;background:none}
@@ -2788,12 +2788,12 @@ function navBadge(r,k){
   const key=k<=9?`快捷鍵：按 ${k}`:'';let t='',cls='',tip='';
   try{const td=today(),d=day(td),j=d.j||{};
     if(r==='today'){const tp=(j.top3||[]).filter(x=>x&&x.t);if(tp.length){const dn=tp.filter(x=>x.done).length;t=`${dn}/${tp.length}`;cls=dn===tp.length?'ok':'';tip=`今天三件事完成 ${dn}/${tp.length}`}}
-    else if(r==='plan'){const ds=Object.keys(S.projects||{}).map(id=>proj(id)).filter(p=>p&&p.deadline).map(p=>diffDays(td,p.deadline)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t=n+'天';cls=n<=30?'hot':'';tip=`最近的專案還有 ${n} 天到期`}}
-    else if(r==='exam'){const ds=(cfg().exams||[]).filter(e=>e.date).map(e=>diffDays(td,e.date)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t=n+'天';cls=n<=30?'hot':'';tip=`最近的考試還有 ${n} 天`}}
+    else if(r==='plan'){const ds=Object.keys(S.projects||{}).map(id=>proj(id)).filter(p=>p&&p.deadline).map(p=>diffDays(td,p.deadline)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的專案還有 ${n} 天到期`}}
+    else if(r==='exam'){const ds=(cfg().exams||[]).filter(e=>e.date).map(e=>diffDays(td,e.date)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的考試還有 ${n} 天`}}
     else if(r==='mind'){if((j.practice||[]).length){t='✓';cls='ok';tip='今天已經靜心'}}
     else if(r==='journal'){if(j.intent||(j.wins||[]).some(Boolean)||j.good||j.adjust||Object.keys(j.emo||{}).length||(j.moments||[]).length){t='✓';cls='ok';tip='今天已經寫了覺察日記'}}
-    else if(r==='quiz'){if(QZ&&QZ.step>0){t='續';cls='hot';tip='測驗做到一半，可以接著做'}else if(!Object.keys(S.quiz||{}).length){t='新';tip='還沒做過，大約 12 分鐘'}}
-    else if(r==='prefs'){const need=backend==='local'&&(()=>{if(STANDALONE&&gdAvail()&&GD.on)return !gdHealthy();const last=lsGet('sd-lastexport',''),has=Object.keys(S.days).length+Object.keys(S.projects).length>0;return has&&(!last||diffDays(last,td)>=7)})();if(need){t='•';cls='hot';tip='資料需要備份或同步'}}
+    else if(r==='quiz'){if(QZ&&QZ.step>0){t=`${QZ.step}/${STEPS.length-1}`;cls='hot';tip='測驗做到一半，可以接著做'}else if(!Object.keys(S.quiz||{}).length){t='NEW';tip='還沒做過，大約 12 分鐘'}}
+    else if(r==='prefs'){const need=backend==='local'&&(()=>{if(STANDALONE&&gdAvail()&&GD.on)return !gdHealthy();const last=lsGet('sd-lastexport',''),has=Object.keys(S.days).length+Object.keys(S.projects).length>0;return has&&(!last||diffDays(last,td)>=7)})();if(need){t='!';cls='hot';tip='資料需要備份或同步'}}
   }catch{}
   const title=[tip,key].filter(Boolean).join('・');
   return t?`<span class="nb ${cls}" title="${esc(title)}">${t}</span>`:(key?`<span class="nb ghostk" title="${esc(key)}" aria-hidden="true"></span>`:'');

@@ -365,6 +365,14 @@ details.others .sumhint{font-size:calc(12px * var(--fs,1))}
 .extoday.mile{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
 .extoday.mile .num{color:var(--accent)}
 @media (max-width:520px){.excard{grid-template-columns:84px minmax(0,1fr);gap:12px}.exring-wrap,.exring{width:84px;height:84px}.exnum{padding-top:28px}.exnum b{font-size:calc(24px * var(--fs,1))}.extoday{flex-wrap:wrap}}
+.jrev{padding:12px 0;border-top:1px solid var(--line)}
+.jrev:first-of-type{border-top:0}
+.jrev header{margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.jrev .qa{margin:4px 0}
+.jt3{list-style:none;margin:4px 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
+.jt3 li.done{color:var(--focus)}
+.jms p{margin:2px 0;font-size:calc(13px * var(--fs,1))}
+.jfree{white-space:pre-wrap}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1335,11 +1343,11 @@ function stackBars(rows,{h=200,unit='分',every=1,marker=null,minW=320,minMax=nu
     if(i%every===0)s+=`<text class="ax" x="${pl+i*bw+bw/2}" y="${h-6}" text-anchor="middle">${esc(r.label)}</text>`});
   return `<div class="chartwrap">${s}</svg></div>`;
 }
-function lineChart(series,{h=220,ymax=30,labels=[]}={}){
+function lineChart(series,{h=220,ymax=30,labels=[],steps=4}={}){
   const W=640,pl=34,pr=26,pb=24,pt=10,ih=h-pb-pt,iw=W-pl-pr,n=labels.length;
   const X=i=>pl+(n<=1?iw/2:iw*i/(n-1)),Y=v=>pt+ih-ih*v/ymax;
   let s=`<svg class="chart" viewBox="0 0 ${W} ${h}" role="img" aria-label="分數趨勢">`;
-  for(let i=0;i<=4;i++){const v=ymax*i/4;s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl-6}" y="${Y(v)+3.5}" text-anchor="end">${fmtN(v)}</text>`}
+  for(let i=0;i<=steps;i++){const v=ymax*i/steps;s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl-6}" y="${Y(v)+3.5}" text-anchor="end">${fmtN(v)}</text>`}
   const ev=Math.max(1,Math.ceil(n/8));labels.forEach((l,i)=>{if(i%ev===0||i===n-1)s+=`<text class="ax" x="${X(i)}" y="${h-6}" text-anchor="middle">${esc(l)}</text>`});
   series.forEach(se=>{const pts=se.vals.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);if(!pts.length)return;
     s+=`<polyline fill="none" stroke="var(--c${se.c})" stroke-width="2" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
@@ -1955,6 +1963,10 @@ const A={
   msRm:el=>{editProj(p=>{const x=p.phases.find(y=>y.id===el.dataset.id);x.ms=x.ms.filter(m=>m.id!==el.dataset.m)});render()},
   mtAdd:()=>{const n=$('#mtN').value.trim(),a=$('#mtA').value.split('\n').map(s=>s.trim()).filter(Boolean);if(!n&&!a.length)return;editProj(p=>{p.meetings=p.meetings||[];p.meetings.push({id:rid(),date:$('#mtD').value||today(),notes:n,acts:a.map(t=>({id:rid(),t,done:false}))})});render()},
   mtDel:el=>{if(!twoStep(el))return;editProj(p=>{p.meetings=p.meetings.filter(m=>m.id!==el.dataset.id)});render()},
+  jTab:el=>{jTab=el.dataset.v;jMore=30;render();window.scrollTo(0,0)},
+  jRange:el=>{jRange=el.dataset.v;jMore=30;render()},
+  jMore:()=>{jMore+=30;render()},
+  jOpen:el=>{jDay=el.dataset.k;jTab='day';render();window.scrollTo(0,0)},
   jNav:el=>{const d=+el.dataset.d;jDay=d?addDays(jDay,d):today();render()},
   jScore:el=>{const f=el.dataset.f,n=+el.dataset.n;editDay(el.dataset.k,d=>{d.j[f]=d.j[f]===n?null:n});render()},
   subAdd:()=>{editCfg(c=>c.subjects.push({id:rid(),name:'新標籤',c:c.subjects.length%12,unit:''}));render()},
@@ -2766,13 +2778,61 @@ function emoMap(k){
   const rows=emoList().map(x=>{const vals=days.map(d=>+((day(d).j||{}).emo||{})[x.k]||0);if(!vals.some(Boolean))return '';return `<div class="em-n">${x.n}</div>${vals.map((v,i)=>`<div class="em-c ${x.g}" style="--lv:${v}" title="${fmtMD(days[i])} ${x.n} ${LV[v]}"></div>`).join('')}`}).join('');
   return rows?`<div class="emap" style="grid-template-columns:44px repeat(14,minmax(0,1fr))"><div></div>${days.map(d=>`<div class="em-d">${parseD(d).getDate()}</div>`).join('')}${rows}</div><p class="muted" style="margin:6px 0 0">顏色越深代表越強。橘色是需要照顧的狀態，綠色是順暢的狀態。</p>`:'<p class="empty">記錄幾天情緒覺察後，這裡會出現兩週的情緒地圖。</p>';
 }
+let jTab='day',jRange='month',jQ='',jMore=30;
+function jHas(j){return !!(j&&(j.intent||(j.top3||[]).some(x=>x&&x.t)||j.mood||j.energy||j.calm||Object.keys(j.emo||{}).length||(j.emoX||[]).length||(j.moments||[]).length||(j.wins||[]).some(Boolean)||j.good||j.adjust||j.free||(j.practice||[]).length||(j.park||[]).length))}
+function jText(k){const j=day(k).j||{};return [j.intent,j.good,j.adjust,j.free,...(j.top3||[]).map(x=>x&&x.t),...(j.wins||[]),...(j.moments||[]).map(m=>[m.w,m.b,m.r,m.e?emoName(m.e):''].join(' ')),...Object.keys(j.emo||{}).map(emoName),...(j.emoX||[]).map(o=>o.n),...(j.practice||[]).map(x=>[x.method,x.note].join(' '))].filter(Boolean).join(' ')}
+function jRangeKeys(){const t=today();if(jRange==='all'){return Object.keys(S.days).filter(k=>k<=t&&jHas(day(k).j)).sort().reverse()}
+  const n=jRange==='week'?7:jRange==='month'?30:90;/* 'q' = 90 */return Array.from({length:n},(_,i)=>addDays(t,-i))}
+function jTabs(){return `<div class="seg" role="tablist">${[['day','這一天'],['review','回顧']].map(([v,n])=>`<button data-act="jTab" data-v="${v}" aria-pressed="${jTab===v}" role="tab">${n}</button>`).join('')}</div>`}
+function journalReviewHTML(){
+  const keys=jRangeKeys(),filled=keys.filter(k=>jHas(day(k).j)),chrono=(jRange==='all'?filled.slice(0,90):keys).slice().reverse();
+  let tot=0,done=0,pmin=0,pdays=0;const emoC={},sc={mood:[],energy:[],calm:[]};
+  filled.forEach(k=>{const j=day(k).j||{};const tp=(j.top3||[]).filter(x=>x&&x.t);tot+=tp.length;done+=tp.filter(x=>x.done).length;const m=(j.practice||[]).reduce((a,x)=>a+(+x.min||0),0);pmin+=m;if(m)pdays++;
+    Object.entries(j.emo||{}).forEach(([e,v])=>{emoC[e]=(emoC[e]||0)+(+v||1)});(j.emoX||[]).forEach(o=>{emoC['x:'+o.n]=(emoC['x:'+o.n]||0)+(+o.v||1)});['mood','energy','calm'].forEach(f=>{if(j[f])sc[f].push(+j[f])})});
+  const avg=a=>a.length?fmtN(a.reduce((x,y)=>x+y,0)/a.length):'—',topE=Object.entries(emoC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const span=jRange==='all'?filled.length:keys.length;
+  const kpi=`<div class="kpis">
+    <div class="kpi"><div class="l">有紀錄的天數</div><div class="n">${filled.length}<small>${jRange==='all'?'天':' / '+span+' 天'}</small></div></div>
+    <div class="kpi"><div class="l">三件事完成率</div><div class="n">${tot?Math.round(done/tot*100):'—'}<small>${tot?'%・'+done+'/'+tot:''}</small></div></div>
+    <div class="kpi"><div class="l">平均心境・精力・安定</div><div class="n" style="font-size:calc(19px * var(--fs,1));white-space:nowrap">${avg(sc.mood)}<small>/</small>${avg(sc.energy)}<small>/</small>${avg(sc.calm)}</div></div>
+    <div class="kpi"><div class="l">靜心</div><div class="n">${pmin}<small>分・${pdays} 天</small></div></div></div>`;
+  const labels=chrono.map(k=>fmtMD(k)),series=[['mood','心境',4],['energy','精力',5],['calm','安定',0]].map(([f,n,c])=>({n,c,vals:chrono.map(k=>{const v=(day(k).j||{})[f];return v?+v:null})}));
+  const hasScores=series.some(se=>se.vals.filter(v=>v!=null).length>=2);
+  const t3rows=chrono.map(k=>{const tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t);const d=tp.filter(x=>x.done).length;return {key:k,label:String(parseD(k).getDate()),parts:[{c:5,v:d,n:'完成'},{c:11,v:tp.length-d,n:'未完成'}]}});
+  const prows=chrono.map(k=>({key:k,label:String(parseD(k).getDate()),parts:[{c:9,v:((day(k).j||{}).practice||[]).reduce((a,x)=>a+(+x.min||0),0),n:'靜心'}]}));
+  const every=chrono.length>45?7:chrono.length>14?3:1;
+  const charts=filled.length?`<div class="grid2" style="margin-bottom:16px">
+    <section class="card"><h2>心境・精力・安定 <span class="muted">1–5</span></h2>${hasScores?lineChart(series,{h:200,ymax:5,labels,steps:5})+`<div class="legend">${series.map(se=>`<span><i class="dot" style="background:var(--c${se.c})"></i>${se.n}</span>`).join('')}</div>`:'<p class="empty">記錄兩天以上的身心分數，這裡會出現趨勢線。</p>'}</section>
+    <section class="card"><h2>每天的三件事</h2>${tot?stackBars(t3rows,{h:170,unit:'件',minMax:3,every,minW:280,per:14})+'<div class="legend"><span><i class="dot" style="background:var(--c5)"></i>完成</span><span><i class="dot" style="background:var(--c11)"></i>未完成</span></div>':'<p class="empty">寫下每天最重要的三件事，這裡會看到完成的節奏。</p>'}</section>
+    ${pmin?`<section class="card"><h2>靜心分鐘</h2>${stackBars(prows,{h:150,unit:'分',minMax:10,every,minW:280,per:14})}</section>`:''}
+    <section class="card"><h2>常出現的情緒</h2>${topE.length?`<div class="chips">${topE.map(([e,v])=>`<span class="chip">${esc(e.startsWith('x:')?e.slice(2):emoName(e))} <b>${v}</b></span>`).join('')}</div><p class="muted" style="margin:8px 0 0">數字是這段期間累計的強度（輕 1、中 2、強 3）。</p>`:'<p class="empty">在「情緒覺察」或「覺察片段」記下情緒後，這裡會整理出常見的情緒。</p>'}</section>
+  </div>`:'';
+  const q=jQ.trim().toLowerCase(),list=filled.filter(k=>!q||jText(k).toLowerCase().includes(q));
+  const card=k=>{const j=day(k).j||{},tp=(j.top3||[]).filter(x=>x&&x.t),ms=j.moments||[],ps=j.practice||[],w=(j.wins||[]).filter(Boolean),em=Object.entries(j.emo||{});
+    return `<article class="jrev"><header class="row sb"><b>${fmtMD(k)}（週${wdName(k)}）</b><span class="row" style="gap:6px">${j.mood||j.energy||j.calm?`<span class="muted num">心境 ${j.mood||'—'}・精力 ${j.energy||'—'}・安定 ${j.calm||'—'}</span>`:''}<button class="ghost sm" data-act="jOpen" data-k="${k}">打開這天</button></span></header>
+      ${j.intent?`<p class="qa"><span class="muted">意向</span> ${esc(j.intent)}</p>`:''}
+      ${tp.length?`<ul class="jt3">${tp.map(x=>`<li class="${x.done?'done':''}">${x.done?'✓':'○'} ${esc(x.t)}</li>`).join('')}</ul>`:''}
+      ${em.length||(j.emoX||[]).length?`<div class="chips">${em.map(([e,v])=>`<span class="chip">${esc(emoName(e))}・${LV[v]||''}</span>`).join('')}${(j.emoX||[]).map(o=>`<span class="chip">${esc(o.n)}・${LV[o.v]||''}</span>`).join('')}</div>`:''}
+      ${ms.length?`<div class="jms">${ms.map(m=>`<p><span class="num muted">${esc(m.t||'')}</span> ${m.e?`<b>${esc(emoName(m.e))}</b> `:''}${esc(m.w||'')}${m.r?`<span class="muted">・回應：${esc(m.r)}</span>`:''}</p>`).join('')}</div>`:''}
+      ${ps.length?`<p class="muted" style="margin:4px 0">靜心 ${ps.reduce((a,x)=>a+(+x.min||0),0)} 分（${ps.map(x=>esc(x.method)).join('、')}）</p>`:''}
+      ${w.length?`<p class="qa"><span class="muted">做到</span> ${w.map(esc).join('、')}</p>`:''}
+      ${j.good?`<p class="qa"><span class="muted">感恩</span> ${esc(j.good)}</p>`:''}
+      ${j.adjust?`<p class="qa"><span class="muted">反思</span> ${esc(j.adjust)}</p>`:''}
+      ${j.free?`<p class="qa jfree"><span class="muted">自由書寫</span> ${esc(j.free)}</p>`:''}
+    </article>`};
+  return `${kpi}${charts}
+  <section class="card"><div class="row sb" style="margin-bottom:10px"><h2 style="margin:0">每日紀錄 <span class="muted">${list.length} 天${q?'・符合「'+esc(jQ)+'」':''}</span></h2><input type="search" id="jQ" data-in="jQ" value="${esc(jQ)}" placeholder="搜尋，例：焦慮、散步、第三章" style="max-width:260px;flex:1"></div>
+    ${list.length?list.slice(0,jMore).map(card).join('')+(list.length>jMore?`<button class="ghost" data-act="jMore" style="width:100%">再顯示 ${Math.min(30,list.length-jMore)} 天</button>`:''):`<p class="empty">${q?'這段期間沒有符合的紀錄。':'這段期間還沒有紀錄。從「這一天」開始寫，回顧會慢慢累積。'}</p>`}
+  </section>`;
+}
 function vJournal(){
+  if(jTab==='review')return `<header class="ph"><div><p class="eyebrow">覺察日記</p><h1>回顧</h1></div><div class="row">${jTabs()}<div class="seg">${[['week','本週'],['month','30 天'],['q','90 天'],['all','全部']].map(([v,n])=>`<button data-act="jRange" data-v="${v}" aria-pressed="${jRange===v}">${n}</button>`).join('')}</div></div></header>${journalReviewHTML()}`;
   const k=jDay,j=day(k).j||{},wins=j.wins||[];
   const pr14=Array.from({length:14},(_,i)=>addDays(k,-i)).reduce((a,d)=>a+((day(d).j||{}).practice||[]).reduce((x,p)=>x+(+p.min||0),0),0);
   const recent=[];for(let i=1;i<=14;i++){const kk=addDays(k,-i);const jj=day(kk).j||{};const w=(jj.wins||[]).filter(Boolean);if(w.length||jj.good||jj.adjust)recent.push({kk,w,g:jj.good,l:jj.adjust})}
   const sc=(f,label,lo,hi)=>`<div><h3 style="margin-top:0">${label} <span class="muted">${lo} 1 – 5 ${hi}</span></h3><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="${f}" data-n="${n}" aria-pressed="${j[f]===n}">${n}</button>`).join('')}</div></div>`;
   return `<header class="ph"><div><p class="eyebrow">覺察日記</p><h1>${fmtLong(k)}</h1></div>
-    <div class="row"><button data-act="jNav" data-d="-1" aria-label="前一天">‹</button><input type="date" id="jPick" data-ch="jPick" value="${k}"><button data-act="jNav" data-d="0">今天</button><button data-act="jNav" data-d="1" aria-label="後一天">›</button></div></header>
+    <div class="row">${jTabs()}<button data-act="jNav" data-d="-1" aria-label="前一天">‹</button><input type="date" id="jPick" data-ch="jPick" value="${k}"><button data-act="jNav" data-d="0">今天</button><button data-act="jNav" data-d="1" aria-label="後一天">›</button></div></header>
   <div class="gridA">
     <div class="stack">
       <section class="card"><h2>早晨・今日意向</h2>
@@ -2798,7 +2858,7 @@ function vJournal(){
     <aside class="stack">
       <section class="card"><h2>兩週情緒地圖</h2>${emoMap(k)}</section>
       <section class="card"><h2>靜心累積 <span class="muted">近 14 天</span> ${XL('靜心頁','mind')}</h2><div class="bigdays num">${pr14}<span class="muted" style="font-size:calc(14px * var(--fs,1));font-family:var(--f-body)"> 分鐘</span></div></section>
-      <section class="card"><h2>最近的回顧</h2>${recent.length?recent.slice(0,8).map(r=>`<div style="margin-bottom:12px"><div class="muted">${fmtMD(r.kk)}（週${wdName(r.kk)}）</div>${r.w.length?`<ul style="margin:2px 0;padding-left:18px">${r.w.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}${r.g?`<div class="qa">感恩：${esc(r.g)}</div>`:''}${r.l?`<div class="qa">反思：${esc(r.l)}</div>`:''}</div>`).join(''):'<p class="empty">寫幾天之後，這裡會列出最近的回顧，低潮時可以回來看。</p>'}</section>
+      <section class="card"><h2>最近的回顧 <a class="xlink" href="#journal" data-act="jTab" data-v="review">看完整回顧 →</a></h2>${recent.length?recent.slice(0,8).map(r=>`<div style="margin-bottom:12px"><div class="muted">${fmtMD(r.kk)}（週${wdName(r.kk)}）</div>${r.w.length?`<ul style="margin:2px 0;padding-left:18px">${r.w.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}${r.g?`<div class="qa">感恩：${esc(r.g)}</div>`:''}${r.l?`<div class="qa">反思：${esc(r.l)}</div>`:''}</div>`).join(''):'<p class="empty">寫幾天之後，這裡會列出最近的回顧，低潮時可以回來看。</p>'}</section>
     </aside>
   </div>`;
 }
@@ -2843,7 +2903,7 @@ Object.assign(A,{
   starterAdd:()=>{const n=$('#stNewN').value.trim(),d=$('#stNewD').value.trim();if(!n)return toast('先寫名稱');editCfg(c=>{c.starters=starters().concat([['u_'+rid(),n,d||'15 分鐘內能完成']])});render()},
   starterReset:el=>{if(!twoStep(el))return;editCfg(c=>{delete c.starters});render()}
 });
-Object.assign(IN,{vol:el=>{lsSet('sd-vol',+el.value);applyVol();const v=$('#volVal');if(v)v.textContent=el.value+'%'},prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.note=el.value},true)}});
+Object.assign(IN,{jQ:el=>{jQ=el.value;jMore=30;const pos=el.selectionStart;clearTimeout(window.__jqT);window.__jqT=setTimeout(()=>{render();const i=$('#jQ');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch{}}},250)},vol:el=>{lsSet('sd-vol',+el.value);applyVol();const v=$('#volVal');if(v)v.textContent=el.value+'%'},prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.note=el.value},true)}});
 
 /* ---------- plan actions ---------- */
 function findStr(o,re,d=0){if(d>6||o==null)return null;if(typeof o==='string')return re.test(o)?o:null;if(typeof o==='object'){for(const v of Object.values(o)){const r=findStr(v,re,d+1);if(r)return r}}return null}

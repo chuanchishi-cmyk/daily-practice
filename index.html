@@ -258,7 +258,7 @@ button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;g
 input[type=date],input[type=time]{min-width:0;max-width:100%}
 label.f input[type=date],label.f input[type=time]{width:100%}
 .row>input[type=date]{flex:0 1 170px}
-.daterow{flex-wrap:nowrap;max-width:100%}.daterow input{min-width:0;flex:1 1 0;width:0;max-width:180px}
+.daterow{flex-wrap:nowrap;max-width:100%}.daterow input{min-width:0;flex:0 1 160px;width:160px}
 .mdone{padding:14px 16px;border:1px solid var(--accent);border-radius:12px;background:var(--sunk)}
 .mdone label.f:has(.stepn){display:block}.mdone label.f:has(.stepn) textarea{display:block;width:100%;margin-top:4px}
 .mdue{margin-bottom:16px;border-left:4px solid var(--accent)}
@@ -331,6 +331,15 @@ details.others .sumhint{font-size:calc(12px * var(--fs,1))}
 .combo-back{position:absolute;right:4px;top:50%;transform:translateY(-50%);min-height:0!important;height:30px;width:32px;padding:0;border:0;background:transparent;color:var(--muted);font-size:calc(13px * var(--fs,1))}
 .combo-back:hover{color:var(--ink);background:var(--sunk)}
 .combo-back[hidden],.combo>[hidden]{display:none}
+.step .stepnote,.step .stepdue{padding:2px 8px;color:var(--muted);font-size:calc(12px * var(--fs,1))}
+.step .stepnote.has{color:var(--focus)}
+.step .stepnote .ndot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--focus);margin-left:3px;vertical-align:middle}
+.step .stepnote.open{background:var(--sunk)}
+.step .stepdue{opacity:.0;transition:opacity .15s}
+.step:hover .stepdue,.step:focus-within .stepdue{opacity:1}
+.stepdetail{padding:2px 0 10px 30px;border-bottom:1px solid var(--line)}
+.stepdetail textarea{width:100%;font-size:calc(13px * var(--fs,1))}
+#npMode{flex-wrap:wrap}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -440,7 +449,7 @@ h3 .xlink{margin-left:8px}
 .starter[aria-pressed="true"] span{color:var(--surface)}
 .stagecard .stname{font-family:var(--f-display);font-size:calc(20px * var(--fs,1));font-weight:700;border:0;background:transparent;padding:2px 0;width:100%}
 .steps{display:flex;flex-direction:column;margin-top:10px}
-.step{display:grid;grid-template-columns:auto minmax(0,1fr) 140px auto auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
 .step .stt{border-color:transparent;background:transparent;width:100%}
 .step .stt:focus{background:var(--bg);border-color:var(--line)}
 .step.done .stt{text-decoration:line-through;color:var(--muted)}
@@ -540,8 +549,8 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   .navlinks{flex-direction:row}
   .navadd{white-space:nowrap}
   .grid3{grid-template-columns:1fr!important}
-  .step{grid-template-columns:auto minmax(0,1fr) auto}
-  .step input[type=date],.step [data-act=stepMv]{display:none}
+  .step{grid-template-columns:auto minmax(0,1fr) auto auto}
+  .step input[type=date],.step [data-act=stepMv],.step .stepdue{display:none}
   .card,main>*{min-width:0}
   .track{width:100%;max-width:100%;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px;-webkit-overflow-scrolling:touch}
   .tseg{flex:0 0 auto!important;min-width:96px;scroll-snap-align:start}
@@ -557,6 +566,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   .xlink{display:inline-block;padding:6px 0}
   .tdel,.mood button,.likert button,.hcell,.cal .cell,nav.rail button,nav.rail a{min-height:0}
   .visline .ord button,.ostrow .ord button{min-height:34px}
+  .stepdetail{padding-left:0}
   .wincards{grid-template-columns:1fr 1fr}
   .winact{flex-direction:column;align-items:flex-start;gap:6px}
   .modal{align-items:flex-end;padding:0}
@@ -1234,7 +1244,7 @@ function monthDays(ym){const [y,m]=ym.split('-').map(Number);const first=new Dat
 function dayMarks(k){
   const t=[];
   cfg().exams.forEach(e=>{if(e.date===k)t.push({c:'ex',n:e.name})});
-  Object.keys(S.projects).forEach(id=>{const p=proj(id);if(p.deadline===k)t.push({c:'ex',n:p.name+' 截止'});if(p.next&&p.next.date===k)t.push({c:'ex',n:'會談：'+p.name});p.stages.forEach(st=>{if(st.end===k&&!stageDone(st))t.push({c:'ms',n:st.name+' 結束'});st.steps.forEach(x=>{if(x.due===k&&!x.done)t.push({c:'ms',n:x.t})})})});
+  Object.keys(S.projects).forEach(id=>{const p=proj(id);if(p.deadline===k&&!p.flex)t.push({c:'ex',n:p.name+' 截止'});if(p.next&&p.next.date===k)t.push({c:'ex',n:'會談：'+p.name});p.stages.forEach(st=>{if(st.end===k&&!stageDone(st))t.push({c:'ms',n:st.name+' 結束'});st.steps.forEach(x=>{if(x.due===k&&!x.done)t.push({c:'ms',n:x.t})})})});
   return t;
 }
 function vCalendar(){
@@ -1511,6 +1521,7 @@ function starters(){const c=cfg();return Array.isArray(c.starters)?c.starters:WI
 let starterEdit=false;
 const winLabel=k=>(starters().find(w=>w[0]===k)||WIN_KINDS.find(w=>w[0]===k)||[k,k==='pomo'?'番茄鐘':'小成果'])[1];
 const NOTE_KINDS=['待辦','想法','問題','提醒'];
+const noteOpen=new Set(),dueOpen=new Set();
 let stagesOpen=false,curProj=null,planNew=false,planTab='notes',starter=null,noteFilter='',quoteQ='';
 let curStageMap=lsGet('sd-curstage',{});
 function normProj(p){
@@ -1539,10 +1550,11 @@ function editProj(fn){const p=clone(proj(curProj));fn(p);save('projects',curProj
 function comboSet(sel,customV){const box=sel.closest('.combo');if(!box)return;const inp=box.querySelector('input'),bk=box.querySelector('.combo-back'),on=sel.value===customV;sel.hidden=on;inp.hidden=!on;bk.hidden=!on;if(on)setTimeout(()=>inp.focus(),20)}
 function newProject(){
   const name=($('#npName').value||'').trim()||'未命名計畫',type=$('#npType').value,method=isResearch($('#npType').value)?(($('#npMethod')||{}).value||'mixed'):'',typeX=(($('#npTypeX')||{}).value||'').trim(),methodX=(($('#npMethodX')||{}).value||'').trim(),dl=$('#npDate').value||addDays(today(),type==='thesis'?365:type==='exam'||type==='apply'?90:120);
+  const flex=(($('#npMode [aria-pressed="true"]')||{}).dataset||{}).v!=='full';
   const id=rid(),st=today(),span=Math.max(14,diffDays(st,dl)),tpl=TEMPLATES[type]||TEMPLATES.other,tw=tpl.reduce((a,x)=>a+x[1],0);let cur=st;
   const stages=tpl.map(([n,w,steps],i)=>{const len=Math.max(3,Math.round(span*w/tw));const s=cur,e=i===tpl.length-1?dl:addDays(cur,len-1);cur=addDays(e,1);
-    const list=typeof steps==='string'?(MSTEPS[method||'mixed']||MSTEPS.mixed)[steps]:steps;return {id:rid(),name:n,start:s,end:e,status:'',note:'',steps:list.map(t=>({id:rid(),t,done:false,due:''}))}});
-  save('projects',id,{name,type,method,typeName:type==='other'?typeX:'',methodName:method==='custom'?methodX:'',deadline:dl,created:st,stages,meetings:[],wins:[],prep:[],next:null});curProj=id;planNew=false;render();
+    const list=typeof steps==='string'?(MSTEPS[method||'mixed']||MSTEPS.mixed)[steps]:steps;return {id:rid(),name:n,start:flex?'':s,end:flex?'':e,status:'',note:'',steps:(flex&&i>0?[]:list).map(t=>({id:rid(),t,done:false,due:''}))}});
+  save('projects',id,{flex,name,type,method,deadline:flex&&!$('#npDate').dataset.touched?'':dl,typeName:type==='other'?typeX:'',methodName:method==='custom'?methodX:'',created:st,stages,meetings:[],wins:[],prep:[],next:null});curProj=id;planNew=false;render();
 }
 function dayActivity(pid,k){
   const p=proj(pid);let n=(p.wins||[]).filter(w=>w.d===k).length;
@@ -1587,7 +1599,10 @@ function vPlan(){
       <label class="f" style="grid-column:1/-1">計畫名稱<input id="npName" type="text" placeholder="例：碩士論文、研究所申請、作品集、托福 100 分"></label>
       <label class="f">類型<span class="combo"><select id="npType" data-ch="npType">${typeOpts('thesis')}</select><input id="npTypeX" type="text" placeholder="寫下類型，例：讀書會、健身計畫" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npType" hidden aria-label="改回選單">▾</button></span></label>
       <label class="f" id="npMethodWrap">主要研究方法<span class="combo"><select id="npMethod" data-ch="npMethod">${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}">${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select><input id="npMethodX" type="text" placeholder="寫下方法，例：語料庫分析、模擬實驗" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npMethod" hidden aria-label="改回選單">▾</button></span></label>
-      <label class="f">預計完成日<input id="npDate" type="date" value="${addDays(today(),365)}"></label>
+      <label class="f">預計完成日<input id="npDate" type="date" value="${addDays(today(),365)}" onchange="this.dataset.touched=1"></label>
+      <div class="f" style="grid-column:1/-1"><span class="muted" style="font-size:calc(12px * var(--fs,1))">怎麼開始</span>
+        <div class="seg" id="npMode">${[['flex','先探索，邊做邊加（不排日期）'],['full','照類型排好階段和時程']].map(([v,n],i)=>`<button type="button" data-act="npMode" data-v="${v}" aria-pressed="${i===0}">${n}</button>`).join('')}</div>
+        <p class="muted" style="margin:6px 0 0" id="npModeNote">還不確定時間和步驟時選這個：先列出這一段要做的事，之後的階段只寫個大概，想清楚再補。隨時可以在設定裡改成有時程。</p></div>
     </div>
     <p class="muted" id="npMethodNote">研究方法會決定「資料蒐集」和「分析」階段的步驟。例如選「史料考證」，會出現調閱史料、校勘、排年表；選「實驗研究」，會出現實驗設計、預實驗、統計作圖；選「臨床研究」，會出現收案條件、IRB 審查、受試者同意。沒有合適的選項，選「其他」自己填。</p>
     <div class="row" style="margin-top:12px"><button class="pri" data-act="projNew">建立專案</button>${ids.length?'<button class="ghost" data-act="projSel" data-id="'+ids[0]+'">取消</button>':''}</div></section>`;
@@ -1598,14 +1613,14 @@ function vPlan(){
   const days30=Array.from({length:35},(_,i)=>addDays(today(),i-34));
   const others=p.stages.filter(s=>!cur||s.id!==cur.id);
   return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">計畫地圖・${esc(typeName(p))}${p.method&&isResearch(p.type)?'・'+esc(methodName(p)):''}</p><input class="pgtitle" id="pjTitle" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}" aria-label="專案名稱（點一下可以改）" title="點一下可以改名稱"></div>
-    <div class="chips"><span class="chip">完成 <b>${Math.round(pr*100)}</b>%</span><span class="chip${left<=30?' hot':''}">距離 ${fmtMD(p.deadline)} 還有 <b>${left}</b> 天</span></div></header>
+    <div class="chips"><span class="chip">完成 <b>${Math.round(pr*100)}</b>%</span>${p.flex||!p.deadline?`<span class="chip">${p.flex?'彈性時程'+(p.deadline?'・目標 '+fmtMD(p.deadline):''):'尚未設定完成日'}</span>`:`<span class="chip${left<=30?' hot':''}">距離 ${fmtMD(p.deadline)} 還有 <b>${left}</b> 天</span>`}</div></header>
   ${chips}
   <section class="card" style="margin-bottom:16px">${stageTrack(p,cur)}</section>
   <div class="plan-grid">
     <div class="stack">
       <section class="card focus">
         ${planWinHTML(p)||`<p class="eyebrow">今天的最小一步</p>
-        ${ns?`<div class="row sb"><div class="bigstep">${esc(ns.s.t)}<div class="muted" style="font-size:calc(12px * var(--fs,1));font-weight:400">${esc(ns.st.name)}</div></div><div class="row"><button class="sec" data-act="stepPomo" data-id="${ns.s.id}" data-st="${ns.st.id}">用番茄鐘開始</button><button data-act="stepDone" data-st="${ns.st.id}" data-id="${ns.s.id}">完成了</button></div></div>`:'<p>這個階段的步驟都完成了。選下一個階段，或新增步驟。</p>'}
+        ${ns?`<div class="row sb"><div class="bigstep">${esc(ns.s.t)}<div class="muted" style="font-size:calc(12px * var(--fs,1));font-weight:400">${esc(ns.st.name)}</div></div><div class="row"><button class="sec" data-act="stepPomo" data-id="${ns.s.id}" data-st="${ns.st.id}">用番茄鐘開始</button><button data-act="stepDone" data-st="${ns.st.id}" data-id="${ns.s.id}">完成了</button></div></div>`:(cur&&!cur.steps.length?'<p>這個階段還沒有步驟。想到第一件要做的事，就加在下方的階段卡片裡；不急，邊做邊加就好。</p>':'<p>這個階段的步驟都完成了。選下一個階段，或新增步驟。</p>')}
         <div class="row sb"><h3>沒有動力？選一件 15 分鐘內能完成的事</h3><button class="ghost sm" data-act="starterEditT">${starterEdit?'完成':'編輯'}</button></div>
         <div class="starters">${starters().map(([k,n,d])=>starterEdit?`<div class="starter editing"><b>${esc(n)}</b><span>${esc(d)}</span><button class="ghost sm stdel" data-act="starterDel" data-k="${esc(k)}" aria-label="刪除「${esc(n)}」">×</button></div>`:`<button class="starter" data-act="starter" data-k="${esc(k)}" aria-pressed="${starter===k}"><b>${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
         ${starterEdit?`<div class="row" style="margin-top:10px"><input id="stNewN" type="text" placeholder="名稱，例：整理註腳" style="width:150px"><input id="stNewD" type="text" placeholder="說明，例：只整理一頁的註腳" style="flex:1"><button class="sm sec" data-act="starterAdd">加入</button><button class="ghost sm" data-act="starterReset">恢復預設</button></div>`:''}
@@ -1613,15 +1628,15 @@ function vPlan(){
       </section>
       ${cur?`<section class="card stagecard">
         <div class="row sb"><div><p class="eyebrow">目前階段 ${p.stages.indexOf(cur)+1} / ${p.stages.length}</p><input class="stname" id="stn${cur.id}" type="text" data-ch="stF" data-f="name" data-id="${cur.id}" value="${esc(cur.name)}" aria-label="階段名稱（點一下可以改）" title="點一下可以改名稱"></div>
-          <div class="row daterow"><input type="date" id="sts${cur.id}" data-ch="stF" data-f="start" data-id="${cur.id}" value="${esc(cur.start)}" aria-label="開始"><span class="muted">→</span><input type="date" id="ste${cur.id}" data-ch="stF" data-f="end" data-id="${cur.id}" value="${esc(cur.end)}" aria-label="結束"></div></div>
-        <div class="steps">${cur.steps.map((x,i)=>`<div class="step${x.done?' done':''}"><input type="checkbox" data-ch="stepChk" data-st="${cur.id}" data-id="${x.id}" ${x.done?'checked':''} aria-label="完成"><input class="stt" type="text" id="stt${x.id}" data-ch="stepT" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.t)}"><input type="date" id="std${x.id}" data-ch="stepDue" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.due)}" aria-label="預計日期"><button class="ghost sm" data-act="stepMv" data-st="${cur.id}" data-id="${x.id}" data-d="-1" aria-label="上移"${i===0?' disabled':''}>↑</button><button class="ghost sm" data-act="stepDel" data-st="${cur.id}" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">還沒有步驟。</p>'}</div>
+          ${p.flex?'':`<div class="row daterow"><input type="date" id="sts${cur.id}" data-ch="stF" data-f="start" data-id="${cur.id}" value="${esc(cur.start)}" aria-label="開始"><span class="muted">→</span><input type="date" id="ste${cur.id}" data-ch="stF" data-f="end" data-id="${cur.id}" value="${esc(cur.end)}" aria-label="結束"></div>`}</div>
+        <div class="steps">${cur.steps.map((x,i)=>`<div class="step${x.done?' done':''}"><input type="checkbox" data-ch="stepChk" data-st="${cur.id}" data-id="${x.id}" ${x.done?'checked':''} aria-label="完成"><input class="stt" type="text" id="stt${x.id}" data-ch="stepT" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.t)}">${x.due||dueOpen.has(x.id)?`<input type="date" id="std${x.id}" data-ch="stepDue" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.due)}" aria-label="預計日期">`:`<button class="ghost sm stepdue" data-act="dueOpen" data-id="${x.id}" title="加上預計日期（選填）">＋日期</button>`}<button class="ghost sm stepnote${x.note?' has':''}${noteOpen.has(x.id)?' open':''}" data-act="stepNoteT" data-id="${x.id}" aria-expanded="${noteOpen.has(x.id)}" title="${x.note?'查看細節':'寫下細節'}">細節${x.note?'<i class="ndot"></i>':''}</button><button class="ghost sm" data-act="stepMv" data-st="${cur.id}" data-id="${x.id}" data-d="-1" aria-label="上移"${i===0?' disabled':''}>↑</button><button class="ghost sm" data-act="stepDel" data-st="${cur.id}" data-id="${x.id}" aria-label="刪除">×</button></div>${noteOpen.has(x.id)?`<div class="stepdetail"><textarea id="stn_${x.id}" data-in="stepNote" data-st="${cur.id}" data-id="${x.id}" rows="3" placeholder="細節、想法、連結、卡住的地方…例：課程第 3 講談推薦信，記得回頭看">${esc(x.note||'')}</textarea></div>`:''}`).join('')||'<p class="empty">還沒有步驟。想到什麼就先加進來，順序和日期之後都能改。</p>'}</div>
         <div class="row" style="margin-top:8px"><input id="newStep" type="text" placeholder="新增小步驟：一兩次番茄鐘能完成的事" style="flex:1"><button class="sm sec" data-act="stepAdd" data-st="${cur.id}">加入</button></div>
         <label class="f" style="margin-top:14px">階段手記<textarea id="stnote${cur.id}" data-in="stNote" data-id="${cur.id}" rows="3" placeholder="這個階段的想法、卡住的地方、下次從哪裡接著做">${esc(cur.note)}</textarea></label>
         <div class="row sb" style="margin-top:10px"><label class="row" style="font-size:calc(13px * var(--fs,1))"><input type="checkbox" data-ch="stDone" data-id="${cur.id}" ${cur.status==='done'?'checked':''}> 這個階段完成了</label><button class="ghost sm" data-act="stDel" data-id="${cur.id}">刪除階段</button></div>
       </section>`:''}
       <details class="card others"${stagesOpen?' open':''}><summary class="row sb"><h2 style="margin:0">所有階段 <span class="muted">${p.stages.length} 個・排序、改名、新增</span></h2><span class="muted sumhint">${stagesOpen?'收起':'展開'}</span></summary>
         <p class="muted" style="margin:8px 0 6px">點階段名稱就能打開它，在上方卡片改名稱、日期和步驟；用 ↑ ↓ 調整先後順序。</p>
-        <div class="list">${p.stages.map((s,i)=>{const n=s.steps.length,d=s.steps.filter(x=>x.done).length,on=cur&&s.id===cur.id;return `<div class="ostrow${on?' on':''}"><button class="ostage${stageDone(s)?' done':''}" data-act="stSel" data-id="${s.id}" aria-current="${on}"><span class="num muted">${i+1}</span><span class="grow">${esc(s.name)}${on?' <span class="pill good">目前</span>':''}</span><span class="muted num">${s.start?fmtMD(s.start):''}–${s.end?fmtMD(s.end):''}</span><span class="bar"><i style="width:${n?d/n*100:stageDone(s)?100:0}%"></i></span><span class="num muted">${d}/${n}</span></button><span class="ord"><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="-1" aria-label="往前移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="1" aria-label="往後移" ${i===p.stages.length-1?'disabled':''}>↓</button></span></div>`}).join('')}</div>
+        <div class="list">${p.stages.map((s,i)=>{const n=s.steps.length,d=s.steps.filter(x=>x.done).length,on=cur&&s.id===cur.id;return `<div class="ostrow${on?' on':''}"><button class="ostage${stageDone(s)?' done':''}" data-act="stSel" data-id="${s.id}" aria-current="${on}"><span class="num muted">${i+1}</span><span class="grow">${esc(s.name)}${on?' <span class="pill good">目前</span>':''}</span><span class="muted num">${!p.flex&&(s.start||s.end)?(s.start?fmtMD(s.start):'')+'–'+(s.end?fmtMD(s.end):''):''}</span><span class="bar"><i style="width:${n?d/n*100:stageDone(s)?100:0}%"></i></span><span class="num muted">${d}/${n}</span></button><span class="ord"><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="-1" aria-label="往前移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="1" aria-label="往後移" ${i===p.stages.length-1?'disabled':''}>↓</button></span></div>`}).join('')}</div>
         <button class="ghost sm" data-act="stAdd" style="margin-top:8px">＋ 新增階段</button>
       </details>
     </div>
@@ -1637,7 +1652,8 @@ function vPlan(){
         <button class="sm" style="margin-top:8px" data-act="planTab" data-t="meet">${p.next&&p.next.date?'查看會談':'安排會談'}</button></section>
       <section class="card"><h2>專案設定</h2>
         <label class="f">名稱<input id="pjN" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}"></label>
-        <label class="f" style="margin-top:8px">預計完成日<input id="pjD" type="date" data-ch="pjF" data-f="deadline" value="${esc(p.deadline)}"></label>
+        <label class="row" style="margin-top:10px;font-size:calc(13px * var(--fs,1))"><input type="checkbox" data-ch="flexSet" ${p.flex?'checked':''}> 彈性時程（先不排日期，邊做邊加）</label>
+        <label class="f" style="margin-top:8px">${p.flex?'目標完成日（選填）':'預計完成日'}<input id="pjD" type="date" data-ch="pjF" data-f="deadline" value="${esc(p.deadline||'')}"></label>
         <label class="f" style="margin-top:8px">類型<span class="combo"><select id="pjT" data-ch="pjF" data-f="type"${p.type==='other'?' hidden':''}>${typeOpts(p.type)}</select><input id="pjTX" type="text" data-ch="pjF" data-f="typeName" value="${esc(p.typeName||'')}" placeholder="寫下類型"${p.type==='other'?'':' hidden'}><button type="button" class="combo-back" data-act="comboBack" data-sel="pjT"${p.type==='other'?'':' hidden'} aria-label="改回選單">▾</button></span></label>
         ${isResearch(p.type)?`<label class="f" style="margin-top:8px">主要研究方法<span class="combo"><select id="pjM" data-ch="pjF" data-f="method"${p.method==='custom'?' hidden':''}>${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}"${p.method===k?' selected':''}>${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select><input id="pjMX" type="text" data-ch="pjF" data-f="methodName" value="${esc(p.methodName||'')}" placeholder="寫下方法"${p.method==='custom'?'':' hidden'}><button type="button" class="combo-back" data-act="comboBack" data-sel="pjM"${p.method==='custom'?'':' hidden'} aria-label="改回選單">▾</button></span></label>`:''}
         <button class="ghost sm" style="margin-top:10px" data-act="projDel" data-id="${curProj}">刪除這個專案</button></section>
@@ -2505,6 +2521,7 @@ Object.assign(A,{
     if(QZ.step===7){const r=computeResult();const id=rid();save('quiz',id,r);qzView=id;QZ={v:3,step:0,a:{},pairs:null};savQZ();render();window.scrollTo(0,0);toast('報告完成');return}
     QZ.step++;savQZ();render();window.scrollTo(0,0)},
   saDir:el=>{const ta=$('#sa_'+el.dataset.q);if(!ta)return;const v=ta.value.replace(/\s+$/,'');ta.value=(v?v+'\n':'')+el.dataset.t;ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);ta.dispatchEvent(new Event('input',{bubbles:true}))},
+  npMode:el=>{el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));const f=el.dataset.v==='flex';$('#npModeNote').textContent=f?'還不確定時間和步驟時選這個：先列出這一段要做的事，之後的階段只寫個大概，想清楚再補。隨時可以在設定裡改成有時程。':'依完成日把整個計畫排成幾個階段和步驟，適合截止日明確的計畫。日期之後都能調整。';const d=$('#npDate');if(d)d.closest('label').querySelector('input').required=!f},
   comboBack:el=>{const sel=$('#'+el.dataset.sel);if(!sel)return;const box=sel.closest('.combo');box.querySelector('input').hidden=true;el.hidden=true;sel.hidden=false;sel.focus();try{sel.showPicker&&sel.showPicker()}catch{}},
   qzCont:()=>{QZ.cp=null;QZ.step++;savQZ();render();window.scrollTo(0,0)},
   qzCpBack:()=>{QZ.cp=null;savQZ();render();window.scrollTo(0,0)},
@@ -2733,7 +2750,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -2781,6 +2798,9 @@ Object.assign(A,{
   projSel:el=>{planNew=!el.dataset.id;if(el.dataset.id)curProj=el.dataset.id;starter=null;render()},
   projNew:newProject,
   projDel:el=>{if(!twoStep(el))return;const id=el.dataset.id;remove('projects',id);Object.entries(S.quotes).forEach(([k,q])=>{if(q.proj===id)remove('quotes',k)});Object.entries(S.pnotes).forEach(([k,q])=>{if(q.proj===id)remove('pnotes',k)});curProj=null;render()},
+  stepNoteT:el=>{const id=el.dataset.id;noteOpen.has(id)?noteOpen.delete(id):noteOpen.add(id);render();if(noteOpen.has(id))setTimeout(()=>{const t=$('#stn_'+id);t&&t.focus()},30)},
+  dueOpen:el=>{dueOpen.add(el.dataset.id);render();setTimeout(()=>{const d=$('#std'+el.dataset.id);if(d){d.focus();try{d.showPicker&&d.showPicker()}catch{}}},30)},
+  flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},
   stMove:el=>{const id=el.dataset.id,d=+el.dataset.d;editProj(p=>{const i=p.stages.findIndex(s=>s.id===id),j=i+d;if(i<0||j<0||j>=p.stages.length)return;[p.stages[i],p.stages[j]]=[p.stages[j],p.stages[i]]});stagesOpen=true;render()},
   stSel:el=>{curStageMap[curProj]=el.dataset.id;lsSet('sd-curstage',curStageMap);render()},
   stAdd:()=>{editProj(p=>{const last=p.stages[p.stages.length-1];const s=last&&last.end?addDays(last.end,1):today();const id=rid();p.stages.push({id,name:'新階段',start:s,end:addDays(s,30),status:'',note:'',steps:[]});curStageMap[curProj]=id;lsSet('sd-curstage',curStageMap)});render()},
@@ -2845,6 +2865,7 @@ Object.assign(C,{
   todoChk:el=>{editProj(p=>{const l=el.dataset.m?(p.meetings.find(m=>m.id===el.dataset.m)||{}).todo:p.prep;const t=(l||[]).find(x=>x.id===el.dataset.id);if(t)t.done=el.checked});render()}
 });
 Object.assign(IN,{
+  stepNote:el=>{const v=el.value;const p=clone(proj(curProj));const st=p.stages.find(s=>s.id===el.dataset.st);const x=st&&st.steps.find(y=>y.id===el.dataset.id);if(!x)return;x.note=v;saveSoon('projects',curProj,p)},
   stNote:el=>{const id=el.dataset.id,v=el.value;const p=clone(proj(curProj));p.stages.find(s=>s.id===id).note=v;saveSoon('projects',curProj,p)},
   qSearch:el=>{quoteQ=el.value;clearTimeout(window.__qs);window.__qs=setTimeout(()=>{const pos=el.selectionStart;render();const n=$('#qSearch');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch{}}},250)}
 });
@@ -2872,7 +2893,7 @@ function navBadge(r,k){
   const key=k<=9?`快捷鍵：按 ${k}`:'';let t='',cls='',tip='';
   try{const td=today(),d=day(td),j=d.j||{};
     if(r==='today'){const tp=(j.top3||[]).filter(x=>x&&x.t);if(tp.length){const dn=tp.filter(x=>x.done).length;t=`${dn}/${tp.length}`;cls=dn===tp.length?'ok':'';tip=`今天三件事完成 ${dn}/${tp.length}`}}
-    else if(r==='plan'){const ds=Object.keys(S.projects||{}).map(id=>proj(id)).filter(p=>p&&p.deadline).map(p=>diffDays(td,p.deadline)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的專案還有 ${n} 天到期`}}
+    else if(r==='plan'){const ds=Object.keys(S.projects||{}).map(id=>proj(id)).filter(p=>p&&p.deadline&&!p.flex).map(p=>diffDays(td,p.deadline)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的專案還有 ${n} 天到期`}}
     else if(r==='exam'){const ds=(cfg().exams||[]).filter(e=>e.date).map(e=>diffDays(td,e.date)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的考試還有 ${n} 天`}}
     else if(r==='mind'){if((j.practice||[]).length){t='✓';cls='ok';tip='今天已經靜心'}}
     else if(r==='journal'){if(j.intent||(j.wins||[]).some(Boolean)||j.good||j.adjust||Object.keys(j.emo||{}).length||(j.moments||[]).length){t='✓';cls='ok';tip='今天已經寫了覺察日記'}}

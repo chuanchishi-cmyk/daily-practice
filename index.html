@@ -466,7 +466,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   body{--fs:calc(var(--fsu,1) * 1.1)}
   input,select,textarea{font-size:max(16px,calc(13px * var(--fs,1)))}
   .app{grid-template-columns:minmax(0,1fr)}
-  nav.rail{max-width:100vw}
+  nav.rail{max-width:100%;width:100%;box-sizing:border-box}
   nav.rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;overflow-x:auto;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));border-right:0;border-bottom:1px solid var(--line);z-index:5}
   .brand,.rail .foot,nav.rail a .k{display:none}
   nav.rail .sharebtn{margin:0;white-space:nowrap}
@@ -989,6 +989,7 @@ setInterval(()=>tick(false),250);
 /* ---------- audio ---------- */
 let AC=null,MASTER=null,CUR_BUS=null,SOFF=0;const SCH={};
 function volPref(){const v=+lsGet('sd-vol',80);return v>=0&&v<=100?v:80}
+if(lsGet('sd-bg-v2',false)!==true){lsSet('sd-bg',true);lsSet('sd-bg-v2',true)}
 function bgPref(){return lsGet('sd-bg',true)!==false}
 function wakePref(){return lsGet('sd-wake',false)===true}
 function applyVol(){if(MASTER)MASTER.gain.value=Math.pow(volPref()/100,1.6)*1.4}

@@ -251,6 +251,11 @@ input[type=date],input[type=time]{width:100%;min-width:0;max-width:100%}
 .direct{margin-top:10px}.direct summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
 .visrow input[type=checkbox]{margin-top:3px;flex:none}
 label.visrow{align-items:flex-start;margin-bottom:8px;cursor:pointer}
+.syncchip{margin:4px 6px 0;font-size:calc(12px * var(--fs,1));color:var(--sage)}
+.syncchip.warn{color:var(--accent)}
+.welcome p{line-height:1.75}
+.wdots{display:flex;gap:6px;justify-content:center;margin:4px 0}
+.wdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.wdots i.on{background:var(--accent);width:18px;border-radius:4px}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -441,6 +446,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   .brand,.rail .foot,nav.rail a .k{display:none}
   nav.rail .sharebtn{margin:0;white-space:nowrap}
   nav.rail .fbbtn{margin:0;white-space:nowrap}
+  nav.rail .syncchip{margin:0;white-space:nowrap}
   nav.rail a{white-space:nowrap}
   main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .grid2,.grid3{grid-template-columns:1fr}
@@ -506,6 +512,7 @@ sp.addEventListener('click',go);setTimeout(go,rm?1200:2600);})();</script>
     <div id="navLinks" class="navlinks"></div>
     <button class="sharebtn" data-act="share">複製連結・分享</button>
     <button class="ghost sm fbbtn" data-act="fbOpen">問題回報</button>
+    <button class="ghost sm syncchip" id="syncChip" data-act="syncChip" hidden></button>
     <div class="mini" id="miniClock"></div>
     <div class="foot" id="storeNote">連線中…</div>
   </nav>
@@ -590,10 +597,13 @@ const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":18
 function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
 function persistLocal(){lsSet(LKEY,S)}
+let MT_=lsGet('sd-mtime',{})||{},TOMB=lsGet('sd-tomb',{})||{};
+function stamp(c,id,del){const k=c+'/'+id,t=Date.now();if(del){TOMB[k]=t;delete MT_[k]}else{MT_[k]=t;delete TOMB[k]}lsSet('sd-mtime',MT_);lsSet('sd-tomb',TOMB);gdDirty()}
+function stampAll(){const t=Date.now();COLLS.forEach(c=>Object.keys(S[c]).forEach(id=>MT_[c+'/'+id]=t));lsSet('sd-mtime',MT_);gdDirty()}
 const wq={};
 function save(c,id,data){
   S[c][id]=data;
-  if(backend!=='db'){persistLocal();return}
+  if(backend!=='db'){persistLocal();stamp(c,id);return}
   const k=c+'/'+id,q=wq[k]||(wq[k]={busy:false,next:null});
   q.next=data;pump(c,id,q);
 }
@@ -606,12 +616,85 @@ async function pump(c,id,q){
 }
 function remove(c,id){
   delete S[c][id];
-  if(backend!=='db'){persistLocal();return}
+  if(backend!=='db'){persistLocal();stamp(c,id,true);return}
   base.collection(c).doc(id).delete().catch(()=>toast('沒有刪除成功，請再試一次'));
 }
 const soonT={};
 function saveSoon(c,id,data){S[c][id]=data;clearTimeout(soonT[c+id]);soonT[c+id]=setTimeout(()=>save(c,id,S[c][id]),600)}
 function editDay(k,fn,soon){const d=clone(day(k));d.date=k;d.sessions=d.sessions||[];d.j=d.j||{};d.counts=d.counts||{};fn(d);(soon?saveSoon:save)('days',k,d)}
+/* ---------- Google Drive sync (app data folder, per user) ---------- */
+const GDRIVE_CLIENT_ID='';
+const GD_FILE='daily-practice-sync.json',GD_SCOPE='https://www.googleapis.com/auth/drive.appdata';
+let GD={on:lsGet('sd-gd-on',false)===true,tok:null,exp:0,busy:false,last:lsGet('sd-gd-last',''),err:'',dirtyT:null,client:null};
+try{const t=JSON.parse(sessionStorage.getItem('sd-gd-tok')||'null');if(t&&t.exp>Date.now()+60000){GD.tok=t.tok;GD.exp=t.exp}}catch{}
+const gdAvail=()=>STANDALONE&&!!GDRIVE_CLIENT_ID&&/^https:/.test(location.protocol);
+const gdReady=()=>GD.tok&&GD.exp>Date.now()+30000;
+function gdLoadLib(){return new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.onload=()=>ok();sc.onerror=()=>no(new Error('lib'));document.head.appendChild(sc)})}
+async function gdConnect(consent){
+  try{await gdLoadLib()}catch{GD.err='連不上 Google，請確認網路。';render();return}
+  if(!GD.client)GD.client=google.accounts.oauth2.initTokenClient({client_id:GDRIVE_CLIENT_ID,scope:GD_SCOPE,callback:r=>{
+    if(r&&r.access_token){GD.tok=r.access_token;GD.exp=Date.now()+(+r.expires_in||3600)*1000;try{sessionStorage.setItem('sd-gd-tok',JSON.stringify({tok:GD.tok,exp:GD.exp}))}catch{}if(!GD.on){COLLS.forEach(c=>Object.keys(S[c]).forEach(id=>{const k=c+'/'+id;if(!MT_[k])MT_[k]=1}));lsSet('sd-mtime',MT_)}GD.on=true;lsSet('sd-gd-on',true);GD.err='';gdSync()}
+    else{GD.err='沒有完成 Google 登入。';render()}},error_callback:()=>{GD.err='登入視窗被關閉或擋下了，請再試一次。';render()}});
+  GD.client.requestAccessToken({prompt:consent?'consent':''});
+}
+async function gdFetch(url,opt={}){const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+GD.tok},opt.headers||{})}));if(r.status===401){GD.tok=null;try{sessionStorage.removeItem('sd-gd-tok')}catch{}throw Object.assign(new Error('auth'),{auth:true})}if(!r.ok)throw new Error('http '+r.status);return r}
+function gdMerge(remote){
+  const rd=(remote&&remote.data)||{},rm=(remote&&remote.mt)||{},rt=(remote&&remote.tomb)||{};let changed=false;
+  COLLS.forEach(c=>{const ids=new Set([...Object.keys(S[c]||{}),...Object.keys(rd[c]||{})]);
+    ids.forEach(id=>{const k=c+'/'+id,lt=MT_[k]||0,lT=TOMB[k]||0,rT=rt[k]||0,rtime=rm[k]||0;
+      const local=Math.max(lt,lT),rem=Math.max(rtime,rT);
+      if(rem>local){if(rT>=rtime){if(S[c][id]!==undefined){delete S[c][id];changed=true}TOMB[k]=rT;delete MT_[k]}else if(rd[c]&&rd[c][id]!==undefined){S[c][id]=rd[c][id];MT_[k]=rtime;delete TOMB[k];changed=true}}
+      else if(!local&&!rem&&S[c][id]===undefined&&rd[c]&&rd[c][id]!==undefined){S[c][id]=rd[c][id];changed=true}});
+    Object.keys(rt).forEach(k=>{if(k.startsWith(c+'/')&&(rt[k]>(TOMB[k]||0))){const id=k.slice(c.length+1);if(!(MT_[k]>rt[k])){if(S[c][id]!==undefined){delete S[c][id];changed=true}TOMB[k]=rt[k];delete MT_[k]}}})});
+  lsSet('sd-mtime',MT_);lsSet('sd-tomb',TOMB);if(changed)persistLocal();return changed;
+}
+async function gdSync(){
+  if(!gdAvail()||!GD.on||GD.busy)return;if(!gdReady()){render();return}
+  GD.busy=true;renderSyncChip();
+  try{
+    const q=encodeURIComponent(`name='${GD_FILE}'`);
+    const ls=await (await gdFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,modifiedTime)`)).json();
+    const f=(ls.files||[])[0];let changed=false;
+    if(f){const remote=await (await gdFetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`)).json();changed=gdMerge(remote)}
+    const body=JSON.stringify({app:'daily-practice',v:1,at:new Date().toISOString(),data:S,mt:MT_,tomb:TOMB});
+    if(f)await gdFetch(`https://www.googleapis.com/upload/drive/v3/files/${f.id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body});
+    else{const bd='gd'+Math.random().toString(36).slice(2),meta=JSON.stringify({name:GD_FILE,parents:['appDataFolder']});
+      await gdFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:`--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bd}--`})}
+    GD.last=new Date().toISOString();lsSet('sd-gd-last',GD.last);lsSet('sd-lastexport',today());GD.err='';GD.busy=false;
+    if(changed){toast('已從其他裝置同步最新資料');render()}else renderSyncChip();if(R==='prefs')render();
+  }catch(e){GD.busy=false;GD.err=e&&e.auth?'Google 登入已過期，按「立即同步」重新連線。':'同步失敗，稍後會再試一次。';renderSyncChip();if(R==='prefs')render()}
+}
+function gdDirty(){try{if(!gdAvail()||!GD.on)return}catch{return}clearTimeout(GD.dirtyT);GD.dirtyT=setTimeout(()=>{if(gdReady())gdSync();else renderSyncChip()},15000)}
+function gdDisconnect(){GD.on=false;lsSet('sd-gd-on',false);try{if(GD.tok&&window.google)google.accounts.oauth2.revoke(GD.tok,()=>{})}catch{}GD.tok=null;try{sessionStorage.removeItem('sd-gd-tok')}catch{}render()}
+function renderSyncChip(){const el=$('#syncChip');if(!el)return;if(!gdAvail()||!GD.on){el.hidden=true;return}el.hidden=false;
+  const pend=Object.values(MT_).concat(Object.values(TOMB)).some(t=>!GD.last||t>Date.parse(GD.last));
+  el.textContent=GD.busy?'同步中…':!gdReady()?'⟳ 點一下同步':pend?'⟳ 等待同步':'✓ 已同步';el.classList.toggle('warn',!gdReady()&&!GD.busy)}
+function syncCardHTML(){
+  if(!STANDALONE)return '';
+  if(!GDRIVE_CLIENT_ID)return '';
+  const ok=GD.on;
+  return `<section class="card" style="margin-top:16px"><h2>Google 雲端硬碟同步</h2>
+    ${ok?`<div class="list"><div class="li"><span class="pill ${gdReady()?'good':'warn'}">${gdReady()?'✓':'!'}</span><div class="grow"><b>${gdReady()?'已連線':'需要重新連線'}</b><div class="muted">${GD.last?'上次同步：'+new Date(GD.last).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'還沒同步過'}${GD.err?'・'+esc(GD.err):''}</div></div></div></div>
+      <div class="row" style="margin-top:10px"><button class="sec" data-act="gdNow">${GD.busy?'同步中…':'立即同步'}</button><button class="ghost sm" data-act="gdOff">停止同步</button></div>
+      <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。</p>`
+    :`<p style="margin:0 0 10px">用 Google 帳號登入，手機和電腦的紀錄就會自動同步，也等於隨時都有一份雲端備份。</p>
+      <button class="sec" data-act="gdOn">用 Google 帳號開始同步</button>
+      <p class="muted" style="margin:8px 0 0">資料只存到你自己的 Google 雲端硬碟（隱藏的 App 資料夾），日課沒有伺服器，也看不到你的紀錄。${GD.err?'<br>'+esc(GD.err):''}</p>`}
+  </section>`;
+}
+let WSTEP=0;
+const WELCOME=()=>[
+  ['歡迎來到日課','每天一點，日積月累。這裡有番茄鐘、論文地圖、考試衝刺、靜心與覺察日記。用不到的頁面，可以在「設定」裡藏起來。'],
+  ['從「今日」開始','寫下今天最重要的三件事，按下番茄鐘開始專注。結束後花十秒記下做了什麼，月曆和統計會自動累積。'],
+  STANDALONE?['讓日課成為你的 App','把日課加到手機主畫面，用起來就像一般 App，計時結束也比較不會漏掉提醒。紀錄存在這台裝置，記得到「設定 → 資料保護」每週備份一次。']
+    :['你的紀錄很安全','紀錄存在你的私人空間，分享這個頁面給別人，他們也看不到你的資料。']];
+function openWelcome(){const W=WELCOME(),w=W[WSTEP],last=WSTEP===W.length-1;
+  $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="wT"><div class="box welcome">
+    <p class="eyebrow">${WSTEP+1} / ${W.length}</p><h2 id="wT" style="font-family:var(--f-display);font-size:calc(22px * var(--fs,1))">${w[0]}</h2><p>${w[1]}</p>
+    ${last&&STANDALONE?'<p><a href="guide.html" target="_blank" rel="noopener">怎麼加到主畫面？看圖文說明</a></p>':''}
+    <div class="wdots">${W.map((_,i)=>`<i class="${i===WSTEP?'on':''}"></i>`).join('')}</div>
+    <div class="row sb"><button class="ghost" data-act="wSkip">${last?'':'略過'}</button><button class="pri" data-act="wNext">${last?'開始今天':'下一步'}</button></div></div></div>`}
+function maybeWelcome(){if(lsGet('sd-welcome',false))return;if(Object.keys(S.days).length||Object.keys(S.projects).length){lsSet('sd-welcome',true);return}setTimeout(()=>{if(!$('#modal').innerHTML&&!document.getElementById('splash')){WSTEP=0;openWelcome()}else setTimeout(maybeWelcome,800)},300)}
 function dataCardHTML(){
   const cloud=backend==='db',last=lsGet('sd-lastexport',''),age=last?diffDays(last,today()):null,ss=snaps().slice().reverse();
   const canShare=!!(navigator.canShare&&window.File&&(()=>{try{return navigator.canShare({files:[new File(['x'],'a.json',{type:'application/json'})]})}catch{return false}})());
@@ -652,6 +735,7 @@ function goLocal(why){
   if(!S.meta.main)save('meta','main',clone(DEF));else persistLocal();
   setNote(NOTES[why]);
   askPersist().then(()=>{if(R==='prefs')render()});takeSnap();
+  setTimeout(()=>{renderSyncChip();if(gdAvail()&&GD.on&&gdReady())gdSync()},800);
   render();
 }
 function switchToLocal(){
@@ -711,11 +795,12 @@ window.addEventListener('hashchange',route);
 function editing(){const a=document.activeElement;return a&&$('#main').contains(a)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)}
 function softRender(){if(editing()){pendingRender=true;return}render()}
 document.addEventListener('focusout',()=>{if(pendingRender)setTimeout(()=>{if(!editing()&&pendingRender){pendingRender=false;render()}},250)});
-let lastR=null;
+let lastR=null,welcomed=false;
 function render(){
   const m=$('#main');const sy=window.scrollY;const sw=lastR!==null&&lastR!==R;lastR=R;
   m.innerHTML=localBanner()+(R.startsWith('page-')?vPage(R.slice(5)):VIEWS[R!=='today'&&R!=='prefs'&&!isOn(R)?'today':R]());
   renderNav();
+  if(!welcomed&&backend!=='loading'){welcomed=true;setTimeout(maybeWelcome,2900)}
   if(sw){m.classList.remove('enter');void m.offsetWidth;m.classList.add('enter');const lg=document.querySelector('.blogo');if(lg){lg.classList.remove('turn');void lg.offsetWidth;lg.classList.add('turn')}window.scrollTo(0,0)}else window.scrollTo(0,sy);
   tick(true);
 }
@@ -1549,8 +1634,9 @@ function vPrefs(){
     <div class="vis">${Object.entries(OPTIONAL).sort((x,y)=>NAV.findIndex(n=>n[0]===x[0])-NAV.findIndex(n=>n[0]===y[0])).map(([r,d])=>`<button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div></section>
   ${fbAdminHTML()}
+  <section class="card" style="margin-bottom:16px"><div class="row sb"><div><h2 style="margin:0">使用說明</h2><p class="muted" style="margin:4px 0 0">第一次使用的簡介，以及怎麼把日課加到手機主畫面。</p></div><div class="row"><button class="sm" data-act="wAgain">再看一次簡介</button>${STANDALONE?'<a class="btn sm" href="guide.html" target="_blank" rel="noopener">完整說明</a>':''}</div></div></section>
   <section class="card" style="margin-bottom:16px"><h2>分享給讀書夥伴</h2><p class="muted">每個人打開都是自己的私人工作台，彼此看不到紀錄。</p><button class="pri" data-act="share">複製連結・分享設定</button></section>
-  ${dataCardHTML()}`;
+  ${dataCardHTML()}${syncCardHTML()}`;
 }
 function parseSegs(str){return str.split(/[,，、]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*?)\s*(\d+)(?::(\d{1,2}))?$/);if(!m)return null;return {n:m[1].trim()||'計時',s:(+m[2])*60+(+(m[3]||0))}}).filter(s=>s&&s.s>0)}
 
@@ -1634,8 +1720,15 @@ const A={
   csAdd:()=>{const cs=A.csRead();cs.secs.push({id:'c'+rid(),n:'新項目'});editCfg(c=>{c.customScore=cs});render()},
   csDel:el=>{const cs=A.csRead();cs.secs.splice(+el.dataset.i,1);editCfg(c=>{c.customScore=cs});render()},
   csSave:()=>{const cs=A.csRead();editCfg(c=>{c.customScore=cs;c.scale='custom'});scaleEditing=false;toast('已儲存計分方式');render()},
+  gdOn:()=>gdConnect(true),
+  gdNow:()=>{if(gdReady())gdSync();else gdConnect(false)},
+  gdOff:el=>{if(!twoStep(el))return;gdDisconnect()},
+  syncChip:()=>{if(gdReady())gdSync();else gdConnect(false)},
+  wNext:()=>{if(WSTEP>=WELCOME().length-1){lsSet('sd-welcome',true);closeModal();location.hash='today';return}WSTEP++;openWelcome()},
+  wSkip:()=>{lsSet('sd-welcome',true);closeModal()},
+  wAgain:()=>{WSTEP=0;openWelcome()},
   shareBackup:async()=>{try{const f=new File([backupJSON()],`daily-practice-backup-${today()}.json`,{type:'application/json'});await navigator.share({files:[f],title:'日課備份 '+today()});lsSet('sd-lastexport',today());toast('已備份');render()}catch(e){if(!(e&&e.name==='AbortError'))toast('無法分享，請改用「下載備份檔」')}},
-  snapRestore:el=>{if(el.dataset.armed!=='1'){el.dataset.armed='1';el.textContent='確定？會取代目前的資料';setTimeout(()=>{if(el.isConnected){el.dataset.armed='';el.textContent='回到這天'}},4000);return}const x=snaps().find(y=>y.d===el.dataset.d);if(!x)return;try{const d=JSON.parse(x.data);COLLS.forEach(c=>{S[c]=d[c]||{}});persistLocal();toast('已回到 '+fmtMD(x.d)+' 的狀態');render()}catch{toast('這份快照無法讀取')}},
+  snapRestore:el=>{if(el.dataset.armed!=='1'){el.dataset.armed='1';el.textContent='確定？會取代目前的資料';setTimeout(()=>{if(el.isConnected){el.dataset.armed='';el.textContent='回到這天'}},4000);return}const x=snaps().find(y=>y.d===el.dataset.d);if(!x)return;try{const d=JSON.parse(x.data);COLLS.forEach(c=>{S[c]=d[c]||{}});persistLocal();stampAll();toast('已回到 '+fmtMD(x.d)+' 的狀態');render()}catch{toast('這份快照無法讀取')}},
   export:async()=>{const data=backupJSON();
     if(await saveFile(`日課備份-${today()}.json`,data,'application/json',`daily-practice-backup-${today()}.json`)){lsSet('sd-lastexport',today());toast('已匯出備份');render()}},
 };
@@ -1654,7 +1747,7 @@ const C={
   pomo:el=>{editCfg(c=>{c.pomo[el.dataset.f]=Math.max(1,+el.value||1)});if(!P.running){P.left=null;savP()}},
   ctr:el=>{const f=el.dataset.f;editCfg(c=>{c.counters[+el.dataset.i][f]=f==='name'?el.value:Math.max(0,+el.value||0)})},
   tmr:el=>{const f=el.dataset.f;if(f==='segs'){const s=parseSegs(el.value);if(!s.length)return toast('格式不對，例：閱讀 30:00, 聽力 29:00');editCfg(c=>{c.timers[+el.dataset.i].segs=s;c.tv=2})}else editCfg(c=>{c.timers[+el.dataset.i].name=el.value});render()},
-  import:async el=>{const f=el.files&&el.files[0];if(!f)return;try{const o=JSON.parse(await f.text());const d=o&&o.data;if(!d||typeof d!=='object')throw 0;let n=0;for(const c of COLLS){for(const [id,v] of Object.entries(d[c]||{})){if(v&&typeof v==='object'){if(backend==='db'){S[c][id]=v;try{await base.collection(c).doc(id).set(v)}catch{}}else S[c][id]=v;n++}}}if(backend!=='db')persistLocal();impMsg=`已匯入 ${n} 筆資料`;}catch{impMsg='檔案無法讀取，請確認是這個工作台匯出的 JSON'}render()},
+  import:async el=>{const f=el.files&&el.files[0];if(!f)return;try{const o=JSON.parse(await f.text());const d=o&&o.data;if(!d||typeof d!=='object')throw 0;let n=0;for(const c of COLLS){for(const [id,v] of Object.entries(d[c]||{})){if(v&&typeof v==='object'){if(backend==='db'){S[c][id]=v;try{await base.collection(c).doc(id).set(v)}catch{}}else S[c][id]=v;n++}}}if(backend!=='db'){persistLocal();stampAll()}impMsg=`已匯入 ${n} 筆資料`;}catch{impMsg='檔案無法讀取，請確認是這個工作台匯出的 JSON'}render()},
 };
 const IN={
   top3:el=>{const i=+el.dataset.i;editDay(el.dataset.k,d=>{const t=d.j.top3=d.j.top3||[];t[i]=Object.assign({done:false},t[i],{t:el.value})},true)},
@@ -2731,7 +2824,7 @@ document.addEventListener('keydown',e=>{
   if(e.key===' '&&R==='today'){e.preventDefault();P.running?pPause():pStart();render()}
   const n=+e.key;if(n>=1&&n<=9&&!e.metaKey&&!e.ctrlKey&&!e.altKey){const it=navItems()[n-1];if(it)location.hash=it[0]}
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick(true)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick(true);if(gdAvail()&&GD.on&&gdReady()&&Date.now()-Date.parse(GD.last||0)>60000)gdSync();renderSyncChip()}});
 init();
 })();
 </script>

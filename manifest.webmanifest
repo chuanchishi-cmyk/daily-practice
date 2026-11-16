@@ -1,7 +1,7 @@
 {
   "name": "日課 Daily Practice",
   "short_name": "日課",
-  "description": "番茄鐘、月曆、統計、論文地圖、覺察日記與靜心。每天一點，日積月累。資料只存在你的瀏覽器。",
+  "description": "番茄鐘、月曆、統計、計畫地圖、覺察日記與靜心。每天一點，日積月累。資料只存在你的瀏覽器。",
   "lang": "zh-Hant",
   "start_url": "./",
   "scope": "./",

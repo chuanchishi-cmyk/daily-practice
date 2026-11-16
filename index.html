@@ -304,6 +304,26 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .visline .ord button:disabled{opacity:.25}
 .sdirs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 8px}
 .sdirs .muted{margin-right:2px}
+.ostrow{display:flex;gap:6px;align-items:center}
+.ostrow .ostage{flex:1;min-width:0}
+.ostrow.on .ostage{background:color-mix(in srgb,var(--focus) 8%,transparent)}
+.ostrow .ord{display:flex;gap:2px}
+.ostrow .ord button{padding:0 8px;min-height:26px}
+.ostrow .ord button:disabled{opacity:.25}
+details.others>summary{cursor:pointer;list-style:none;align-items:center}
+details.others>summary::-webkit-details-marker{display:none}
+details.others .sumhint{font-size:calc(12px * var(--fs,1))}
+.winmode{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:center;animation:winIn .45s cubic-bezier(.2,.7,.2,1) both}
+.wincheck svg{width:52px;height:52px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.wincheck circle{stroke:var(--focus);stroke-width:2.5;fill:color-mix(in srgb,var(--focus) 10%,transparent);stroke-dasharray:151;stroke-dashoffset:151;animation:winDraw .6s .05s ease forwards}
+.wincheck path{stroke:var(--focus);stroke-width:3.5;stroke-dasharray:34;stroke-dashoffset:34;animation:winDraw .35s .55s ease forwards}
+.wincards{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:12px}
+.wincards>div{background:var(--sunk);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.wincards b{font-family:var(--f-mono);font-size:calc(20px * var(--fs,1));line-height:1.2}
+.wincards span{font-size:calc(11.5px * var(--fs,1));color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.winact{grid-column:1/-1;margin-top:10px;justify-content:space-between}
+@keyframes winDraw{to{stroke-dashoffset:0}}
+@keyframes winIn{from{opacity:0;transform:scale(.97)}}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -529,12 +549,14 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
   .seg button{min-height:36px}
   .xlink{display:inline-block;padding:6px 0}
   .tdel,.mood button,.likert button,.hcell,.cal .cell,nav.rail button,nav.rail a{min-height:0}
-  .visline .ord button{min-height:34px}
+  .visline .ord button,.ostrow .ord button{min-height:34px}
+  .wincards{grid-template-columns:1fr 1fr}
+  .winact{flex-direction:column;align-items:flex-start;gap:6px}
   .modal{align-items:flex-end;padding:0}
   .modal .box{width:100%;border-radius:20px 20px 0 0;max-height:92vh;padding:22px 18px calc(18px + env(safe-area-inset-bottom,0px))}
   .modal .box.welcome{border-radius:20px;margin:16px;width:calc(100% - 32px)!important;align-self:center}
-  .ostage{grid-template-columns:22px minmax(0,1fr) 40px}
-  .ostage .bar,.ostage>span.muted:not(.num){display:none}
+  .ostage{grid-template-columns:22px minmax(0,1fr) auto 40px}
+  .ostage .bar{display:none}
   body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sunk)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -758,7 +780,7 @@ let WSTEP=0;
 function WELCOME(){
   const W=[['歡迎來到日課','每天一點，日積月累。這是一個陪你專注、推進長期計畫、照顧身心的練習空間。接下來用幾張卡片，帶你認識最重要的用法。']];
   W.push(['每天從「今日」開始','寫下今天最重要的三件事，按下番茄鐘開始專注。暫停時可以記下停在哪裡；冒出雜念就丟進「雜念停車場」。每段結束花十秒記下做了什麼，月曆和統計會自動累積。']);
-  if(isOn('plan'))W.push(['論文地圖：把大計畫拆小','建立專案後，會依完成日排好階段和小步驟，每天只要做「最小的一步」。「會談」可以預約指導教授（直接在 Google 日曆確認後送出），會談結束後自動跳出紀錄表，老師的建議會變成待辦。']);
+  if(isOn('plan'))W.push(['計畫地圖：把大計畫拆小','建立計畫後（論文、研究、考證照、作品集都可以），會依完成日排好階段和小步驟，每天只要做「最小的一步」。「會談」可以預約指導教授或主管（直接在 Google 日曆確認後送出），會談結束後自動跳出紀錄表，對方的建議會變成待辦。']);
   if(isOn('quiz'))W.push(['找出你的高效時段','「我的節奏」用大約 12 分鐘的問答，找出你一天中的精力高峰和低谷，以及最能推動你的動力，排出建議的一天。可以分段做，每段完成都會先給你結果。']);
   W.push(['打造你自己的日課','到「設定」可以決定要顯示哪些頁面（用不到的先藏起來，資料都會保留），也能調整字體大小、畫面縮放、鈴聲音量，以及螢幕關掉時是否仍要響鈴。']);
   if(!STANDALONE)W.push(['你的紀錄很安全','紀錄存在你自己的私人空間，換裝置登入同一個帳號就能接著用。分享這個頁面給別人，他們也看不到你的資料。']);
@@ -942,7 +964,7 @@ function pomoHTML(){
   <div class="pform">
     <div class="wide tagpick"><div class="row sb"><span class="muted" style="font-size:calc(12px * var(--fs,1))">記錄到</span><button class="ghost sm" data-act="ptagEditT" style="padding:1px 6px;font-size:calc(12px * var(--fs,1))">${tagEdit?'完成':'編輯'}</button></div>
       <div class="tags">${allTags().map(t=>tagEdit?(t.proj?'':`<span class="tagc editing" style="--tc:var(--c${t.c})">${esc(t.name)}<button class="tdel" data-act="ptagDel" data-id="${esc(t.id)}" aria-label="刪除「${esc(t.name)}」">×</button></span>`):`<button class="tagc${P.sub===t.id?' on':''}" data-act="ptag" data-id="${esc(t.id)}" style="--tc:var(--c${t.c})">${t.proj?'<span class="pj">專案</span>':''}${esc(t.name)}</button>`).join('')}${tagEdit?'':`<button class="tagc add" data-act="ptagNew">${tagAdding?'取消':'＋ 自填'}</button>`}</div>
-      ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。研究專案的標籤請到論文地圖管理。</span>':''}
+      ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。研究專案的標籤請到計畫地圖管理。</span>':''}
       ${tagAdding?`<div class="row" style="margin-top:6px"><input id="ptagName" type="text" placeholder="例：日文、健身、備課、讀書會" style="flex:1"><button class="sm sec" data-act="ptagSave">加入</button></div>`:''}
     </div>
     <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
@@ -1174,7 +1196,7 @@ function widgetBody(w,k){
   if(w==='counters')return [`計數 ${XL('調整計數器','prefs')}`,countersHTML(k)];
   if(w==='mind')return [`靜心 ${XL('靜心頁','mind')}`,todayMindHTML()];
   if(w==='due')return [`待複習錯題 ${XL('考試衝刺','exam')}`,dueHTML()];
-  if(w==='next')return [`研究專案的下一步 ${XL('論文地圖','plan')}`,nextStepsHTML()];
+  if(w==='next')return [`計畫的下一步 ${XL('計畫地圖','plan')}`,nextStepsHTML()];
   if(w==='exams'){const ex=cfg().exams;return [`考試倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有考試日期。</p>'];}
   if(w==='mood'){const j=day(k).j||{};return [`今日心境 ${XL('覺察日記','journal')}`,`<div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="mood" data-n="${n}" aria-pressed="${j.mood===n}">${n}</button>`).join('')}</div><p class="muted" style="margin:8px 0 0">1 低落，5 明亮。會同步到覺察日記。</p>`];}
   if(w==='week'){const s0=weekStart(k),ks=Array.from({length:7},(_,i)=>addDays(s0,i));const rows=ks.map(x=>({key:x,label:'週'+wdName(x),parts:[{c:0,v:(day(x).sessions||[]).reduce((a,y)=>a+(+y.min||0),0),n:fmtMD(x)}]}));return [`本週專注 ${XL('統計','stats','data-m="week"')}`,stackBars(rows,{h:150,marker:k})];}
@@ -1471,7 +1493,7 @@ function starters(){const c=cfg();return Array.isArray(c.starters)?c.starters:WI
 let starterEdit=false;
 const winLabel=k=>(starters().find(w=>w[0]===k)||WIN_KINDS.find(w=>w[0]===k)||[k,k==='pomo'?'番茄鐘':'小成果'])[1];
 const NOTE_KINDS=['待辦','想法','問題','提醒'];
-let curProj=null,planNew=false,planTab='notes',starter=null,noteFilter='',quoteQ='';
+let stagesOpen=false,curProj=null,planNew=false,planTab='notes',starter=null,noteFilter='',quoteQ='';
 let curStageMap=lsGet('sd-curstage',{});
 function normProj(p){
   if(!p||p.stages)return p;
@@ -1485,6 +1507,14 @@ function stagesOf(p){return (normProj(p)||{}).stages||[]}
 const stageDone=st=>st.status==='done'||(st.steps.length>0&&st.steps.every(x=>x.done));
 function curPhase(p){p=normProj(p);return p?(stagesOf(p).find(s=>!stageDone(s))||null):null}
 function curStageOf(pid){const p=proj(pid);if(!p)return null;const sel=p.stages.find(s=>s.id===curStageMap[pid]);return sel||p.stages.find(s=>!stageDone(s))||p.stages[p.stages.length-1]||null}
+function planWin(){const w=lsGet('sd-planwin',null);return w&&w.d===today()?w:null}
+function planStreak(p){const has=k=>p.stages.some(s=>s.steps.some(x=>x.doneAt===k))||(p.wins||[]).some(w=>w.d===k);let n=0,k=today();if(!has(k))k=addDays(k,-1);while(has(k)&&n<400){n++;k=addDays(k,-1)}return n}
+function planWinHTML(p){const w=planWin();if(!w||w.proj!==curProj)return '';
+  const wk=weekStart(today()),wkSteps=p.stages.reduce((a,s)=>a+s.steps.filter(x=>x.doneAt&&x.doneAt>=wk).length,0),todayN=p.stages.reduce((a,s)=>a+s.steps.filter(x=>x.doneAt===today()).length,0),st=p.stages.find(s=>s.id===w.st),sd=st?st.steps.filter(x=>x.done).length:0,sn=st?st.steps.length:0,streak=planStreak(p),ns=nextStep(curProj);
+  return `<div class="winmode"><div class="wincheck" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
+    <div class="wintext"><p class="eyebrow" style="margin:0">今天的最小一步・完成</p><div class="bigstep" style="margin:2px 0 0">${esc(w.t)}</div></div>
+    <div class="wincards"><div><b>${todayN}</b><span>今天完成</span></div><div><b>${wkSteps}</b><span>本週完成</span></div><div><b>${streak}</b><span>連續推進天數</span></div>${st?`<div><b>${sd}/${sn}</b><span>${esc(st.name)}</span></div>`:''}</div>
+    <div class="row winact"><button class="ghost sm" data-act="winMore">${ns?'再來一步：'+esc(ns.s.t.length>14?ns.s.t.slice(0,14)+'…':ns.s.t):'看看接下來'}</button><span class="muted">今天這樣就很好了。</span></div></div>`}
 function nextStep(pid){const st=curStageOf(pid);if(!st)return null;const s=st.steps.find(x=>!x.done);return s?{st,s}:null}
 function projProgress(p){let t=0,d=0;p.stages.forEach(s=>{if(s.status==='done'&&s.steps.length===0){t++;d++}else{t+=s.steps.length;d+=s.steps.filter(x=>x.done||s.status==='done').length}});return t?d/t:0}
 function editProj(fn){const p=clone(proj(curProj));fn(p);save('projects',curProj,p)}
@@ -1511,7 +1541,7 @@ function gcalUrlN(p,n){
   if(!n.date)return '';
   const st=new Date(`${n.date}T${n.time||'10:00'}`),en=new Date(st.getTime()+(+n.dur||60)*60000);
   const f=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||'指導教授'}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p)||'（日課・論文地圖建立）')+(n.email?'&add='+encodeURIComponent(n.email):'')+(n.mode==='面談'&&n.place?'&location='+encodeURIComponent(n.place):'');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||'指導教授'}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p)||'（日課・計畫地圖建立）')+(n.email?'&add='+encodeURIComponent(n.email):'')+(n.mode==='面談'&&n.place?'&location='+encodeURIComponent(n.place):'');
 }
 function gcalUrl(p){
   const n=p.next||{};if(!n.date)return '';
@@ -1531,7 +1561,7 @@ function vPlan(){
   if(curProj&&!S.projects[curProj])curProj=null;
   if(!curProj&&ids.length)curProj=ids[0];
   const chips=ids.length?`<div class="projchips">${ids.map(id=>{const p=proj(id),pr=projProgress(p);return `<button class="pchip${id===curProj&&!planNew?' on':''}" data-act="projSel" data-id="${id}"><span class="pn">${esc(p.name)}</span><span class="muted">${esc(typeName(p))}・${Math.round(pr*100)}%</span></button>`}).join('')}<button class="pchip add" data-act="projSel" data-id="">＋ 新專案</button></div>`:'';
-  if(planNew||!curProj)return `<header class="ph"><div><p class="eyebrow">論文地圖</p><h1>新增研究專案</h1></div></header>${chips}
+  if(planNew||!curProj)return `<header class="ph"><div><p class="eyebrow">計畫地圖</p><h1>新增計畫</h1></div></header>${chips}
   <section class="card" style="max-width:680px"><h2>從哪一種研究開始？</h2>
     <p class="muted">選好類型和完成日，就會從今天排到那天，切成幾個階段和許多小步驟。每一步都小到可以在一兩次番茄鐘內完成。日期、步驟之後都能改。</p>
     <div class="fields" style="grid-template-columns:1fr 1fr;margin:12px 0">
@@ -1548,31 +1578,33 @@ function vPlan(){
   const wkMin=wkDays.reduce((a,k)=>a+(day(k).sessions||[]).filter(s=>s.proj===curProj).reduce((x,s)=>x+(+s.min||0),0),0);
   const days30=Array.from({length:35},(_,i)=>addDays(today(),i-34));
   const others=p.stages.filter(s=>!cur||s.id!==cur.id);
-  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">論文地圖・${esc(typeName(p))}${p.method?'・'+esc(methodName(p)):''}</p><input class="pgtitle" id="pjTitle" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}" aria-label="專案名稱（點一下可以改）" title="點一下可以改名稱"></div>
+  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">計畫地圖・${esc(typeName(p))}${p.method?'・'+esc(methodName(p)):''}</p><input class="pgtitle" id="pjTitle" type="text" data-ch="pjF" data-f="name" value="${esc(p.name)}" aria-label="專案名稱（點一下可以改）" title="點一下可以改名稱"></div>
     <div class="chips"><span class="chip">完成 <b>${Math.round(pr*100)}</b>%</span><span class="chip${left<=30?' hot':''}">距離 ${fmtMD(p.deadline)} 還有 <b>${left}</b> 天</span></div></header>
   ${chips}
   <section class="card" style="margin-bottom:16px">${stageTrack(p,cur)}</section>
   <div class="plan-grid">
     <div class="stack">
       <section class="card focus">
-        <p class="eyebrow">今天的最小一步</p>
+        ${planWinHTML(p)||`<p class="eyebrow">今天的最小一步</p>
         ${ns?`<div class="row sb"><div class="bigstep">${esc(ns.s.t)}<div class="muted" style="font-size:calc(12px * var(--fs,1));font-weight:400">${esc(ns.st.name)}</div></div><div class="row"><button class="sec" data-act="stepPomo" data-id="${ns.s.id}" data-st="${ns.st.id}">用番茄鐘開始</button><button data-act="stepDone" data-st="${ns.st.id}" data-id="${ns.s.id}">完成了</button></div></div>`:'<p>這個階段的步驟都完成了。選下一個階段，或新增步驟。</p>'}
         <div class="row sb"><h3>沒有動力？選一件 15 分鐘內能完成的事</h3><button class="ghost sm" data-act="starterEditT">${starterEdit?'完成':'編輯'}</button></div>
         <div class="starters">${starters().map(([k,n,d])=>starterEdit?`<div class="starter editing"><b>${esc(n)}</b><span>${esc(d)}</span><button class="ghost sm stdel" data-act="starterDel" data-k="${esc(k)}" aria-label="刪除「${esc(n)}」">×</button></div>`:`<button class="starter" data-act="starter" data-k="${esc(k)}" aria-pressed="${starter===k}"><b>${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
         ${starterEdit?`<div class="row" style="margin-top:10px"><input id="stNewN" type="text" placeholder="名稱，例：整理註腳" style="width:150px"><input id="stNewD" type="text" placeholder="說明，例：只整理一頁的註腳" style="flex:1"><button class="sm sec" data-act="starterAdd">加入</button><button class="ghost sm" data-act="starterReset">恢復預設</button></div>`:''}
-        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}
+        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}`}
       </section>
       ${cur?`<section class="card stagecard">
-        <div class="row sb"><div><p class="eyebrow">目前階段 ${p.stages.indexOf(cur)+1} / ${p.stages.length}</p><input class="stname" id="stn${cur.id}" type="text" data-ch="stF" data-f="name" data-id="${cur.id}" value="${esc(cur.name)}" aria-label="階段名稱"></div>
+        <div class="row sb"><div><p class="eyebrow">目前階段 ${p.stages.indexOf(cur)+1} / ${p.stages.length}</p><input class="stname" id="stn${cur.id}" type="text" data-ch="stF" data-f="name" data-id="${cur.id}" value="${esc(cur.name)}" aria-label="階段名稱（點一下可以改）" title="點一下可以改名稱"></div>
           <div class="row daterow"><input type="date" id="sts${cur.id}" data-ch="stF" data-f="start" data-id="${cur.id}" value="${esc(cur.start)}" aria-label="開始"><span class="muted">→</span><input type="date" id="ste${cur.id}" data-ch="stF" data-f="end" data-id="${cur.id}" value="${esc(cur.end)}" aria-label="結束"></div></div>
         <div class="steps">${cur.steps.map((x,i)=>`<div class="step${x.done?' done':''}"><input type="checkbox" data-ch="stepChk" data-st="${cur.id}" data-id="${x.id}" ${x.done?'checked':''} aria-label="完成"><input class="stt" type="text" id="stt${x.id}" data-ch="stepT" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.t)}"><input type="date" id="std${x.id}" data-ch="stepDue" data-st="${cur.id}" data-id="${x.id}" value="${esc(x.due)}" aria-label="預計日期"><button class="ghost sm" data-act="stepMv" data-st="${cur.id}" data-id="${x.id}" data-d="-1" aria-label="上移"${i===0?' disabled':''}>↑</button><button class="ghost sm" data-act="stepDel" data-st="${cur.id}" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">還沒有步驟。</p>'}</div>
         <div class="row" style="margin-top:8px"><input id="newStep" type="text" placeholder="新增小步驟：一兩次番茄鐘能完成的事" style="flex:1"><button class="sm sec" data-act="stepAdd" data-st="${cur.id}">加入</button></div>
         <label class="f" style="margin-top:14px">階段手記<textarea id="stnote${cur.id}" data-in="stNote" data-id="${cur.id}" rows="3" placeholder="這個階段的想法、卡住的地方、下次從哪裡接著做">${esc(cur.note)}</textarea></label>
         <div class="row sb" style="margin-top:10px"><label class="row" style="font-size:calc(13px * var(--fs,1))"><input type="checkbox" data-ch="stDone" data-id="${cur.id}" ${cur.status==='done'?'checked':''}> 這個階段完成了</label><button class="ghost sm" data-act="stDel" data-id="${cur.id}">刪除階段</button></div>
       </section>`:''}
-      <section class="card others"><div class="row sb"><h2 style="margin:0">其他階段</h2><button class="ghost sm" data-act="stAdd">＋ 新增階段</button></div>
-        <div class="list">${others.map(s=>{const n=s.steps.length,d=s.steps.filter(x=>x.done).length;return `<button class="ostage${stageDone(s)?' done':''}" data-act="stSel" data-id="${s.id}"><span class="num muted">${p.stages.indexOf(s)+1}</span><span class="grow">${esc(s.name)}</span><span class="muted num">${s.start?fmtMD(s.start):''}–${s.end?fmtMD(s.end):''}</span><span class="bar"><i style="width:${n?d/n*100:stageDone(s)?100:0}%"></i></span><span class="num muted">${d}/${n}</span></button>`}).join('')}</div>
-      </section>
+      <details class="card others"${stagesOpen?' open':''}><summary class="row sb"><h2 style="margin:0">所有階段 <span class="muted">${p.stages.length} 個・排序、改名、新增</span></h2><span class="muted sumhint">${stagesOpen?'收起':'展開'}</span></summary>
+        <p class="muted" style="margin:8px 0 6px">點階段名稱就能打開它，在上方卡片改名稱、日期和步驟；用 ↑ ↓ 調整先後順序。</p>
+        <div class="list">${p.stages.map((s,i)=>{const n=s.steps.length,d=s.steps.filter(x=>x.done).length,on=cur&&s.id===cur.id;return `<div class="ostrow${on?' on':''}"><button class="ostage${stageDone(s)?' done':''}" data-act="stSel" data-id="${s.id}" aria-current="${on}"><span class="num muted">${i+1}</span><span class="grow">${esc(s.name)}${on?' <span class="pill good">目前</span>':''}</span><span class="muted num">${s.start?fmtMD(s.start):''}–${s.end?fmtMD(s.end):''}</span><span class="bar"><i style="width:${n?d/n*100:stageDone(s)?100:0}%"></i></span><span class="num muted">${d}/${n}</span></button><span class="ord"><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="-1" aria-label="往前移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="stMove" data-id="${s.id}" data-d="1" aria-label="往後移" ${i===p.stages.length-1?'disabled':''}>↓</button></span></div>`}).join('')}</div>
+        <button class="ghost sm" data-act="stAdd" style="margin-top:8px">＋ 新增階段</button>
+      </details>
     </div>
     <aside class="stack side">
       <section class="card"><h2>本週成果 ${XL('統計','stats','data-m="week"')}</h2>
@@ -1861,14 +1893,14 @@ const IN={
 };
 /* ---------- share ---------- */
 const SHARE_URL=STANDALONE?location.href.split('#')[0]:'https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe';
-const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'考試衝刺',plan:'論文地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
+const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'考試衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
 function fbPageName(){return R.startsWith('page-')?'我的頁面':(PAGE_NAMES[R]||R)}
 function openFeedback(){
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fbT"><div class="box">
     <h2 id="fbT">問題回報</h2>
     <p class="muted" style="margin:0">遇到問題、或有想加入的功能，都歡迎告訴我們。會一併附上你目前所在的頁面（${esc(fbPageName())}），不會附上你的紀錄內容。</p>
     <div class="seg" id="fbCat">${['問題','建議','其他'].map((x,i)=>`<button data-act="fbCat" data-v="${x}" aria-pressed="${i===0}">${x}</button>`).join('')}</div>
-    <label class="f">問題描述<textarea id="fbText" rows="5" placeholder="發生了什麼？在哪一頁、做了什麼操作？例：在論文地圖新增步驟後，畫面沒有更新。"></textarea></label>
+    <label class="f">問題描述<textarea id="fbText" rows="5" placeholder="發生了什麼？在哪一頁、做了什麼操作？例：在計畫地圖新增步驟後，畫面沒有更新。"></textarea></label>
     <label class="f">聯絡方式（選填）<input id="fbContact" type="text" placeholder="想收到回覆的話，留下 Email 或稱呼"></label>
     <p class="muted" id="fbMsg" style="margin:0"></p>
     <div class="row sb"><button class="ghost" data-act="recCancel">取消</button><button class="pri" data-act="fbSend">送出</button></div>
@@ -2711,7 +2743,7 @@ async function addToGCal(){
   if(!mcp)return fallback('這裡無法直接連到 Google 日曆。');
   const st=new Date(`${n.date}T${n.time}`),en=new Date(st.getTime()+n.dur*60000);
   const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-  const input={summary:`${p.name}｜與${n.who}會談`,startTime:iso(st),endTime:iso(en),description:meetPrepText(p)||'（論文地圖建立）'};
+  const input={summary:`${p.name}｜與${n.who}會談`,startTime:iso(st),endTime:iso(en),description:meetPrepText(p)||'（計畫地圖建立）'};
   if(n.meetOn)input.addGoogleMeetUrl=true;
   if($('#nxRem').checked)input.overrideReminders=[{method:'popup',minutes:1440},{method:'popup',minutes:60}];
   if(n.email)input.attendees=[{email:n.email}];
@@ -2731,13 +2763,15 @@ Object.assign(A,{
   projSel:el=>{planNew=!el.dataset.id;if(el.dataset.id)curProj=el.dataset.id;starter=null;render()},
   projNew:newProject,
   projDel:el=>{if(!twoStep(el))return;const id=el.dataset.id;remove('projects',id);Object.entries(S.quotes).forEach(([k,q])=>{if(q.proj===id)remove('quotes',k)});Object.entries(S.pnotes).forEach(([k,q])=>{if(q.proj===id)remove('pnotes',k)});curProj=null;render()},
+  stMove:el=>{const id=el.dataset.id,d=+el.dataset.d;editProj(p=>{const i=p.stages.findIndex(s=>s.id===id),j=i+d;if(i<0||j<0||j>=p.stages.length)return;[p.stages[i],p.stages[j]]=[p.stages[j],p.stages[i]]});stagesOpen=true;render()},
   stSel:el=>{curStageMap[curProj]=el.dataset.id;lsSet('sd-curstage',curStageMap);render()},
   stAdd:()=>{editProj(p=>{const last=p.stages[p.stages.length-1];const s=last&&last.end?addDays(last.end,1):today();const id=rid();p.stages.push({id,name:'新階段',start:s,end:addDays(s,30),status:'',note:'',steps:[]});curStageMap[curProj]=id;lsSet('sd-curstage',curStageMap)});render()},
   stDel:el=>{if(!twoStep(el))return;editProj(p=>{p.stages=p.stages.filter(s=>s.id!==el.dataset.id)});delete curStageMap[curProj];render()},
   stepAdd:el=>{const t=$('#newStep').value.trim();if(!t)return;editProj(p=>{p.stages.find(s=>s.id===el.dataset.st).steps.push({id:rid(),t,done:false,due:''})});render();setTimeout(()=>{const i=$('#newStep');i&&i.focus()},30)},
   stepDel:el=>{if(!twoStep(el))return;editProj(p=>{const s=p.stages.find(x=>x.id===el.dataset.st);s.steps=s.steps.filter(x=>x.id!==el.dataset.id)});render()},
   stepMv:el=>{editProj(p=>{const s=p.stages.find(x=>x.id===el.dataset.st);const i=s.steps.findIndex(x=>x.id===el.dataset.id);if(i>0)[s.steps[i-1],s.steps[i]]=[s.steps[i],s.steps[i-1]]});render()},
-  stepDone:el=>{editStep(el.dataset.st,el.dataset.id,x=>{x.done=true;x.doneAt=today()});toast('完成一步，往前推進了');render()},
+  stepDone:el=>{let t='';editStep(el.dataset.st,el.dataset.id,x=>{x.done=true;x.doneAt=today();t=x.t});lsSet('sd-planwin',{d:today(),proj:curProj,st:el.dataset.st,t});render()},
+  winMore:()=>{lsSet('sd-planwin',null);render()},
   stepPomo:el=>{const st=proj(curProj).stages.find(s=>s.id===el.dataset.st);const x=st.steps.find(y=>y.id===el.dataset.id);P.proj=curProj;P.phase=st.id;P.task=x.t;if(P.mode!=='work'&&!P.running)P.mode='work';savP();location.hash='today'},
   starter:el=>{starter=starter===el.dataset.k?null:el.dataset.k;render();setTimeout(()=>{const i=$('#winTxt');i&&i.focus()},30)},
   winAdd:()=>{const t=($('#winTxt')||{}).value||'';editProj(p=>{p.wins=p.wins||[];p.wins.push({id:rid(),d:today(),k:starter,t:t.trim()})});toast('記下了。今天也有進展。');starter=null;render()},
@@ -2798,8 +2832,8 @@ Object.assign(IN,{
 });
 
 /* ---------- navigation & visibility ---------- */
-const NAV=[['today','今日'],['plan','論文地圖'],['exam','考試衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
-const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'考試衝刺：測驗計時、考試倒數、模考、錯題本',plan:'論文地圖：研究專案、書摘、會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
+const NAV=[['today','今日'],['plan','計畫地圖'],['exam','考試衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
+const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'考試衝刺：測驗計時、考試倒數、模考、錯題本',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
 function navOrder(){const def=NAV.map(n=>n[0]).filter(r=>r!=='today'),o=(cfg().navOrder||[]).filter(r=>def.includes(r));return ['today'].concat(o,def.filter(r=>!o.includes(r)))}
 function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n]));return navOrder().map(r=>m[r]).filter(Boolean)}
@@ -2980,6 +3014,7 @@ Object.assign(IN,{blkF:el=>{editPage(el.dataset.p,p=>{blk(p,el.dataset.b)[el.dat
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.tagName==='A'&&el.getAttribute('href')&&el.getAttribute('href').startsWith('#')&&el.dataset.act!=='goReview'&&el.dataset.act!=='toJournal'){e.preventDefault()}f(el,e)});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ch]');if(el&&C[el.dataset.ch])C[el.dataset.ch](el,e)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
+document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('others'))stagesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='parkIn'&&!e.isComposing){e.preventDefault();A.parkAdd();return}
   if(e.target.closest('input,textarea,select,[contenteditable]'))return;

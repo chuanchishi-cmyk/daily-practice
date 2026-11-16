@@ -224,7 +224,7 @@ td.num,th.num{text-align:right}
 .qa{white-space:pre-wrap;overflow-wrap:anywhere}
 nav.rail .sharebtn{margin:12px 6px 0;background:var(--focus);border-color:var(--focus);color:var(--surface);font-weight:500}
 .quiz{max-width:760px}
-.qprog{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap}
+.qprog{display:flex;gap:14px 4px;margin-bottom:18px;flex-wrap:wrap}
 .qprog span{flex:1;min-width:64px;font-size:calc(12px * var(--fs,1));color:var(--muted);padding-top:6px;border-top:3px solid var(--line)}
 .qprog span.on{color:var(--ink);font-weight:700;border-color:var(--accent)}
 .qprog span.past{border-color:var(--focus)}
@@ -302,6 +302,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .visline .ord{display:flex;flex-direction:column;gap:2px;justify-content:center}
 .visline .ord button{padding:0 10px;min-height:26px;line-height:1}
 .visline .ord button:disabled{opacity:.25}
+.sdirs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 8px}
+.sdirs .muted{margin-right:2px}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -2027,6 +2029,11 @@ const SHORT=[
   ['procr','你最常拖延的是哪一類事？是其中哪個部分讓你抗拒？'],
   ['hope','完成目前最重要的目標之後，你最期待的是什麼？'],
   ['restore','狀態很差的時候，什麼最能讓你恢復？']];
+const SHORT_HELP={
+  flow:{ph:'例：做出一個自己的 App。因為好玩，在能力範圍內又有一點挑戰；做出來還能分享給別人用。',dirs:[['樂趣','它讓我覺得好玩，因為'],['難度剛好','難度剛好，不會難到想放棄，因為'],['為了別人','我想做給別人用／分享給'],['有人支持','有人陪我或督促我：'],['方法對了','我把它拆成小步驟：']]},
+  procr:{ph:'例：申請學校、準備模擬考這類影響很大的事。越重要越不敢開始，怕做不好。',dirs:[['怕結果','越重要越不敢開始，因為怕'],['不知從何開始','不知道第一步要做什麼，像是'],['太龐大','事情太大，看不到盡頭：'],['無趣','做起來很枯燥、沒成就感：'],['等完美時機','總想等到有完整的時間才開始：']]},
+  hope:{ph:'例：完成那一刻的成就感；成品能分享給別人用，大家的回饋又能讓我再進步。',dirs:[['感受','完成那一刻，我會感覺'],['分享','我想和這些人分享成果：'],['下一步','它能幫我打開下一步：'],['獎勵','完成後我要好好獎勵自己：']]},
+  restore:{ph:'例：出去走走、打電話找朋友聊聊。',dirs:[['動一動','動一動身體：'],['找人聊','找人說說話：'],['獨處','一個人安靜一下：'],['換環境','換個環境：'],['小事','做一件小事找回掌控感：']]}};
 const ORIENT=[
   {id:'or1',q:'整體來說，你比較希望生活維持現狀，還是變得更好、更不一樣？',o:[['非常希望維持現狀',-2],['偏向維持',-1],['差不多',0],['偏向改變',1],['非常希望改變',2]]},
   {id:'or2',q:'做決定時，你比較常先想到自己的目標，還是先想到別人的需要？',o:[['幾乎都先想自己',-2],['偏向自己',-1],['差不多',0],['偏向別人',1],['幾乎都先想別人',2]]}
@@ -2195,7 +2202,9 @@ function quizScreen(){
       <label class="f" style="margin-top:8px">補充一句（選填）<input type="text" id="sa_fu_${k}" data-in="qs" data-q="fu_${k}" value="${esc(QZ.a['s_fu_'+k])}" placeholder="${esc(FU_PH[k]||'寫一句你自己的情況')}"></label></div>`}).join(''):`<p class="muted">你前後的回答很一致，不需要追問。</p>`)+
       `<div class="qq"><label class="qt" for="sa_oth"><span class="num muted">${++n}</span> 除了這 12 個價值，還有什麼力量在推動你？寫下它，並說明原因。<span class="muted">（選填）</span></label><div class="ex">例：「家人的期待，因為我想讓他們放心。」</div><textarea id="sa_oth" data-in="qs" data-q="oth" rows="2">${esc(QZ.a.s_oth)}</textarea></div>`;
   }else if(st===7){
-    body=`<h2>簡答 <span class="muted">選填，但寫得越具體，報告越貼近你</span></h2>`+SHORT.map(([id,q],i)=>`<div class="qq"><label class="qt" for="sa_${id}"><span class="num muted">${i+1}</span> ${esc(q)}</label><textarea id="sa_${id}" data-in="qs" data-q="${id}" rows="2">${esc(QZ.a['s_'+id])}</textarea></div>`).join('');
+    body=`<h2>簡答 <span class="muted">選填，但寫得越具體，報告越貼近你</span></h2>`+SHORT.map(([id,q],i)=>{const h=SHORT_HELP[id]||{};return `<div class="qq"><label class="qt" for="sa_${id}"><span class="num muted">${i+1}</span> ${esc(q)}</label>
+      ${h.dirs?`<div class="sdirs"><span class="muted">沒有想法？從一個方向開始：</span>${h.dirs.map(([n,t])=>`<button class="opt sm" data-act="saDir" data-q="${id}" data-t="${esc(t)}">${esc(n)}</button>`).join('')}</div>`:''}
+      <textarea id="sa_${id}" data-in="qs" data-q="${id}" rows="3" placeholder="${esc(h.ph||'')}">${esc(QZ.a['s_'+id])}</textarea></div>`}).join('');
   }
   if(st>0)nav=`<button data-act="qzBack">上一步</button><button class="pri" data-act="qzNext">${st===7?'產生報告':'下一步'}</button>`;
   return `<section class="card quiz">${prog}${body}<div class="row sb" style="margin-top:18px"><button class="ghost" data-act="qzQuit">${st===0?'':'先離開，之後繼續'}</button><div class="row">${nav}</div></div></section>`+(st===0?theoryHTML():'');
@@ -2434,6 +2443,7 @@ Object.assign(A,{
     if(CP_NEXT[QZ.step]&&QZ.cp!==QZ.step){QZ.cp=QZ.step;savQZ();render();window.scrollTo(0,0);return}
     if(QZ.step===7){const r=computeResult();const id=rid();save('quiz',id,r);qzView=id;QZ={v:3,step:0,a:{},pairs:null};savQZ();render();window.scrollTo(0,0);toast('報告完成');return}
     QZ.step++;savQZ();render();window.scrollTo(0,0)},
+  saDir:el=>{const ta=$('#sa_'+el.dataset.q);if(!ta)return;const v=ta.value.replace(/\s+$/,'');ta.value=(v?v+'\n':'')+el.dataset.t;ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);ta.dispatchEvent(new Event('input',{bubbles:true}))},
   qzCont:()=>{QZ.cp=null;QZ.step++;savQZ();render();window.scrollTo(0,0)},
   qzCpBack:()=>{QZ.cp=null;savQZ();render();window.scrollTo(0,0)},
   qzPause:()=>{savQZ();location.hash='today';toast('進度已保存，回到「我的節奏」就能接著做')},

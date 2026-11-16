@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="日課">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<script>if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){var hadSW=!!navigator.serviceWorker.controller;addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){document.addEventListener('visibilitychange',function(){if(!document.hidden)r.update().catch(function(){})});setInterval(function(){r.update().catch(function(){})},36e5)}).catch(function(){})});navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadSW){try{sessionStorage.setItem('sd-updated','1')}catch(e){}var a=document.activeElement;if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName))location.reload()}})}</script>
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>日課</title>
 </head>
@@ -278,6 +278,11 @@ label.visrow{align-items:flex-start;margin-bottom:8px;cursor:pointer}
 .ph>div:first-child{flex:1 1 240px;min-width:0}
 @media (min-width:821px){body{--fs:calc(var(--fsu,1) * 1.07)}button,.btn{min-height:32px}button.sm,.btn.sm{min-height:28px}}
 @media (min-width:1500px){main{max-width:1360px}}
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 6px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:center;font-size:calc(11.5px * var(--fs,1));color:var(--muted);line-height:1.5}
+.qrbox[hidden]{display:none!important}
+.qrbtn{padding:0;border:0;background:#fff;border-radius:8px;min-height:0;line-height:0;cursor:zoom-in}
+.qrbtn img{width:112px;height:112px;border-radius:8px}
+@media (max-width:820px),(max-height:700px){.qrbox{display:none!important}}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -555,6 +560,7 @@ sp.addEventListener('click',go);setTimeout(go,rm?1200:2600);})();</script>
     <button class="ghost sm fbbtn langbtn" id="langBtn" data-act="langToggle" data-nt title="中文 / English" aria-label="Switch language / 切換語言">EN</button><script>(function(){var b=document.getElementById("langBtn");if(!window.APPLANG){b.hidden=true;return}b.textContent=window.APPLANG==="en"?"中文":"EN"})()</script>
     <button class="ghost sm syncchip" id="syncChip" data-act="syncChip" hidden></button>
     <div class="mini" id="miniClock"></div>
+    <div class="qrbox" id="qrBox" hidden><button class="qrbtn" data-act="qrBig" aria-label="放大手機版 QR code"><img src="qr.png" alt="日課手機版 QR code" width="112" height="112" loading="lazy"></button><span>用手機掃描開啟<br>再加到主畫面</span></div>
     <div class="foot" id="storeNote">連線中…</div>
   </nav>
   <main id="main"><p class="empty">載入中…</p></main>
@@ -792,6 +798,7 @@ function goLocal(why){
   const L=lsGet(LKEY,null);if(L)COLLS.forEach(c=>{S[c]=Object.assign({},L[c]||{},why==='viewonly'?S[c]:{})});
   if(!S.meta.main)save('meta','main',clone(DEF));else persistLocal();
   setNote(NOTES[why]);
+  setTimeout(()=>{try{if(sessionStorage.getItem('sd-updated')){sessionStorage.removeItem('sd-updated');toast('已更新到最新版')}}catch{}},3200);
   askPersist().then(()=>{if(R==='prefs')render()});{const pv=lsGet('sd-ver','');takeSnap(!!pv&&pv!==APP_VER);lsSet('sd-ver',APP_VER)}
   setTimeout(()=>{renderSyncChip();if(gdAvail()&&GD.on&&gdReady())gdSync()},800);
   render();
@@ -827,6 +834,7 @@ async function init(){
     });
   }else goLocal('nologin');
 }
+(function(){const q=document.getElementById('qrBox');if(q&&STANDALONE&&!matchMedia('(display-mode: standalone)').matches)q.hidden=false})();
 function inAppHint(){if(!STANDALONE||!/\bLine\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent))return '';const ios=/iPhone|iPad/.test(navigator.userAgent);
   return `<div class="banner" style="border-color:var(--accent)"><b>你正在 LINE 裡面開啟。</b>想把日課加到主畫面、讓資料穩定保存，請先點右下角（或右上角）的「⋯」，選「${ios?'用 Safari 開啟':'用預設瀏覽器開啟'}」。<a href="guide.html">看圖文說明</a></div>`}
 function localBanner(){
@@ -1791,6 +1799,7 @@ const A={
   wAgain:()=>{WSTEP=0;openWelcome()},
   colOpen:el=>{const i=+el.dataset.i;colOpen=colOpen===i?-1:i;render()},
   colSet:el=>{const i=+el.dataset.i,c=+el.dataset.c;editCfg(x=>{x.subjects[i].c=c});colOpen=-1;render()},
+  qrBig:()=>{$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="qrT"><div class="box" style="align-items:center;text-align:center;width:min(380px,100%)"><h2 id="qrT" style="display:block">在手機上打開日課</h2><img src="qr.png" alt="日課 QR code" width="260" height="260" style="border-radius:16px;border:1px solid var(--line)"><p class="muted" style="margin:0">用手機相機掃描，打開後點「分享 → 加入主畫面」（iPhone）或「⋮ → 安裝應用程式」（Android），就是一個 App。</p><p class="muted" style="margin:0">${esc(SHARE_URL)}</p><button data-act="recCancel">關閉</button></div></div>`},
   shareBackup:async()=>{try{const f=new File([backupJSON()],`daily-practice-backup-${today()}.json`,{type:'application/json'});await navigator.share({files:[f],title:'日課備份 '+today()});lsSet('sd-lastexport',today());toast('已備份');render()}catch(e){if(!(e&&e.name==='AbortError'))toast('無法分享，請改用「下載備份檔」')}},
   snapRestore:el=>{if(el.dataset.armed!=='1'){el.dataset.armed='1';el.textContent='確定？會取代目前的資料';setTimeout(()=>{if(el.isConnected){el.dataset.armed='';el.textContent='回到這天'}},4000);return}const x=snaps().find(y=>y.d===el.dataset.d);if(!x)return;try{const d=JSON.parse(x.data);COLLS.forEach(c=>{S[c]=d[c]||{}});persistLocal();stampAll();toast('已回到 '+fmtMD(x.d)+' 的狀態');render()}catch{toast('這份快照無法讀取')}},
   export:async()=>{const data=backupJSON();
@@ -1859,7 +1868,8 @@ function openShare(){
     <h2 id="shT">分享日課</h2>
     <p>把網址傳給朋友，對方打開就有一份<b>自己的</b>工作台，不需要註冊。每個人的紀錄都存在自己的瀏覽器裡，彼此看不到。</p>
     <div class="row"><input id="shUrl" type="text" readonly value="${esc(SHARE_URL)}" style="flex:1"><button class="pri" data-act="copyLink">複製網址</button></div>
-    <p class="muted">提醒對方：資料只存在那台電腦的瀏覽器，記得定期到「設定」匯出備份。</p>
+    <div class="row" style="gap:14px;align-items:center"><img src="qr.png" alt="日課 QR code" width="132" height="132" style="border-radius:12px;border:1px solid var(--line)"><p class="muted" style="margin:0;flex:1">面對面分享：請對方用手機相機掃描，打開後加到主畫面就是 App。</p></div>
+    <p class="muted">提醒對方：紀錄存在自己的裝置，可以到「設定 → 資料保護與同步」開啟 Google 同步或定期備份。</p>
     <div class="row sb"><span></span><button data-act="recCancel">關閉</button></div></div></div>`;return}
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="box">
     <h2 id="shT">分享日課</h2>

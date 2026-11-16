@@ -653,7 +653,7 @@ const soonT={};
 function saveSoon(c,id,data){S[c][id]=data;clearTimeout(soonT[c+id]);soonT[c+id]=setTimeout(()=>save(c,id,S[c][id]),600)}
 function editDay(k,fn,soon){const d=clone(day(k));d.date=k;d.sessions=d.sessions||[];d.j=d.j||{};d.counts=d.counts||{};fn(d);(soon?saveSoon:save)('days',k,d)}
 /* ---------- Google Drive sync (app data folder, per user) ---------- */
-const GDRIVE_CLIENT_ID='';
+const GDRIVE_CLIENT_ID='639910884576-g2mit90cn584j6ccp7hm9hef3t1ta73j.apps.googleusercontent.com';
 const GD_FILE='daily-practice-sync.json',GD_SCOPE='https://www.googleapis.com/auth/drive.appdata';
 let GD={on:lsGet('sd-gd-on',false)===true,tok:null,exp:0,busy:false,last:lsGet('sd-gd-last',''),err:'',dirtyT:null,client:null};
 try{const t=JSON.parse(sessionStorage.getItem('sd-gd-tok')||'null');if(t&&t.exp>Date.now()+60000){GD.tok=t.tok;GD.exp=t.exp}}catch{}

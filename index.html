@@ -6,6 +6,11 @@
 <meta name="description" content="日課：番茄鐘、月曆、統計、論文地圖、覺察日記與靜心，每天一點，日積月累。資料只存在你的瀏覽器。">
 <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="日課 Daily Practice">
+<meta property="og:description" content="番茄鐘、論文地圖、覺察日記與靜心。免下載、免註冊，加到手機主畫面就是 App。">
+<meta property="og:image" content="https://chuanchishi-cmyk.github.io/daily-practice/icon-512.png">
+<meta property="og:url" content="https://chuanchishi-cmyk.github.io/daily-practice/">
+<meta property="og:type" content="website">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -490,7 +495,7 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
 <script>(function(){var sp=document.getElementById('splash');var off=false;try{off=localStorage.getItem('sd-splash')==='"off"'||sessionStorage.getItem('sd-splash-seen')==='1'}catch(e){}
 if(off){sp.remove();return}
 try{sessionStorage.setItem('sd-splash-seen','1')}catch(e){}
-var L=['日日是好日','每天一點，日積月累','此刻，只做眼前這一件事','呼吸一下，再開始','心在哪裡，時間就在哪裡','走神了，溫柔地回來就好','一次一件事，一步一個腳印','把心安住在這一頁','慢慢來，比較快','當下，就是最好的開始','靜下來，答案會浮現','專注，是給自己最好的禮物','今天，只做好一件事','不急，一呼一吸之間'];var d=new Date(),n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);document.getElementById('spLine').textContent=L[n%L.length];
+var L=['日日是好日','每天一點，日積月累','此刻，只做眼前這一件事','呼吸一下，再開始','心在哪裡，時間就在哪裡','分心了，就回到這一頁','一次一件事，一步一個腳印','把心安住在這一頁','慢慢來，比較快','當下，就是最好的開始','靜下來，答案會浮現','專注，是給自己最好的禮物','今天，只做好一件事','不急，一呼一吸之間'];var d=new Date(),n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);document.getElementById('spLine').textContent=L[n%L.length];
 var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 function go(){if(!sp.parentNode)return;sp.classList.add('out');setTimeout(function(){sp.remove()},600)}
 sp.addEventListener('click',go);setTimeout(go,rm?1200:2600);})();</script>
@@ -680,11 +685,13 @@ async function init(){
     });
   }else goLocal('nologin');
 }
+function inAppHint(){if(!STANDALONE||!/\bLine\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent))return '';const ios=/iPhone|iPad/.test(navigator.userAgent);
+  return `<div class="banner" style="border-color:var(--accent)"><b>你正在 LINE 裡面開啟。</b>想把日課加到主畫面、讓資料穩定保存，請先點右下角（或右上角）的「⋯」，選「${ios?'用 Safari 開啟':'用預設瀏覽器開啟'}」。<a href="guide.html">看圖文說明</a></div>`}
 function localBanner(){
-  if(backend!=='local')return '';
+  if(backend!=='local')return inAppHint();
   const last=lsGet('sd-lastexport',''),hasData=Object.keys(S.days).length+Object.keys(S.projects).length>0,stale=hasData&&(!last||diffDays(last,today())>=7);
   const msg=localWhy==='viewonly'?'你目前沒有雲端儲存權限，紀錄會先存在這個瀏覽器。想在不同裝置同步，請分享這個頁面的人把你設為「可使用」。':localWhy==='standalone'?'你的資料存在這個瀏覽器裡，換電腦或清除瀏覽資料就會不見。':'資料目前只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。';
-  return `<div class="banner row sb"><span>${msg}${stale?` <b>${last?'上次備份是 '+fmtMD(last)+'，':'還沒備份過，'}建議現在備份一次。</b>`:''}</span>${stale?'<button class="sm sec" data-act="export">立即備份</button>':''}</div>`;
+  return inAppHint()+`<div class="banner row sb"><span>${msg}${stale?` <b>${last?'上次備份是 '+fmtMD(last)+'，':'還沒備份過，'}建議現在備份一次。</b>`:''}</span>${stale?'<button class="sm sec" data-act="export">立即備份</button>':''}</div>`;
 }
 function themePref(){return lsGet('sd-theme','auto')}
 const FS_OPTS=[['s','小',.9],['m','中',1],['l','大',1.15],['xl','特大',1.3]];

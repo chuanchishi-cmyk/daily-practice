@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>日課・使用說明</title>
+<meta name="description" content="番茄鐘、論文地圖、覺察日記與靜心。免下載、免註冊，加到手機主畫面就是 App。">
+<meta property="og:title" content="日課 Daily Practice・使用說明">
+<meta property="og:description" content="免下載、免註冊，30 秒加到手機主畫面就是 App。">
+<meta property="og:image" content="https://chuanchishi-cmyk.github.io/daily-practice/icon-512.png">
+<meta property="og:url" content="https://chuanchishi-cmyk.github.io/daily-practice/guide.html">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
+<style>
+:root{--bg:#f6f3ee;--surface:#fffdfa;--sunk:#f0ece5;--ink:#3b3631;--muted:#8a8178;--line:#e6e0d6;--accent:#b8643f;--sage:#5f8a74}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1a17;--surface:#26231f;--sunk:#211e1b;--ink:#eee7dc;--muted:#a89d90;--line:#3a352f;--accent:#d98a62;--sage:#86b09a}}
+:root[data-theme="dark"]{--bg:#1c1a17;--surface:#26231f;--sunk:#211e1b;--ink:#eee7dc;--muted:#a89d90;--line:#3a352f;--accent:#d98a62;--sage:#86b09a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;font-size:16px;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto;padding:28px 16px 60px}
+header{text-align:center;padding:12px 0 8px}
+header img{width:112px;height:112px;border-radius:26px;box-shadow:0 10px 30px rgba(90,60,30,.15)}
+h1{font-family:"Noto Serif TC",serif;font-size:32px;letter-spacing:.2em;margin:14px 0 0}
+.sub{color:var(--muted);margin:2px 0 0;letter-spacing:.05em}
+.cta{display:inline-block;margin:18px 0 0;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:12px 28px;border-radius:999px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-top:16px}
+h2{font-size:19px;margin:0 0 10px}
+h3{font-size:16px;margin:16px 0 6px}
+ul,ol{margin:0;padding-left:22px}
+li{margin:4px 0}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0;list-style:none}
+.feat li{background:var(--sunk);border-radius:12px;padding:10px 12px;margin:0}
+.feat b{display:block}
+.feat span{color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.tabs button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pane[hidden]{display:none}
+.tip{background:var(--sunk);border-left:3px solid var(--accent);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:15px}
+.ic{display:inline-block;vertical-align:-4px;width:20px;height:20px}
+.muted{color:var(--muted);font-size:14px}
+a{color:var(--sage)}
+footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
+@media (max-width:520px){.feat{grid-template-columns:1fr}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="icon-512.png" alt="日課 App 圖示" width="112" height="112">
+  <h1>日課</h1>
+  <p class="sub">Daily Practice・每天一點，日積月累</p>
+  <a class="cta" href="./">開始使用</a>
+</header>
+
+<section>
+  <h2>日課是什麼？</h2>
+  <p style="margin:0 0 12px">給準備考試、寫論文、想好好專注的人的每日練習空間。免下載、免註冊、免費，手機和電腦都能用。</p>
+  <ul class="feat">
+    <li><b>番茄鐘</b><span>專注計時，暫停時記下停在哪裡，雜念先停車</span></li>
+    <li><b>論文地圖</b><span>把長期計畫切成小步驟，會談前後有引導</span></li>
+    <li><b>考試衝刺</b><span>測驗計時、模考分數、錯題本</span></li>
+    <li><b>靜心與覺察日記</b><span>計時靜坐，記錄情緒與每日回顧</span></li>
+    <li><b>月曆與統計</b><span>看見每天、每週、每月的累積</span></li>
+    <li><b>我的節奏</b><span>測出你的精力高峰與動力來源</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>加到手機主畫面，變成 App</h2>
+  <div class="tabs" role="group" aria-label="選擇裝置">
+    <button data-p="ios" aria-pressed="true">iPhone / iPad</button>
+    <button data-p="and" aria-pressed="false">Android</button>
+    <button data-p="pc" aria-pressed="false">電腦</button>
+  </div>
+
+  <div class="pane" id="ios">
+    <ol>
+      <li>用 <b>Safari</b> 打開 <a href="./">日課網址</a>。</li>
+      <li>點下方的「分享」按鈕 <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>（方框加向上箭頭）。</li>
+      <li>往下滑，選「<b>加入主畫面</b>」，再按右上角「加入」。</li>
+      <li>主畫面會出現日課圖示，之後從這裡打開，就像一般 App。</li>
+    </ol>
+    <p class="tip"><b>從 LINE 點開的話：</b>先點右下角「⋯」，選「用 Safari 開啟」，再照上面步驟。在 LINE 裡面沒辦法加到主畫面。</p>
+  </div>
+
+  <div class="pane" id="and" hidden>
+    <ol>
+      <li>用 <b>Chrome</b> 打開 <a href="./">日課網址</a>。</li>
+      <li>點右上角「⋮」。</li>
+      <li>選「<b>安裝應用程式</b>」或「<b>加到主畫面</b>」，再按「安裝」。</li>
+      <li>主畫面會出現日課圖示，之後從這裡打開就好。</li>
+    </ol>
+    <p class="tip"><b>從 LINE 點開的話：</b>先點右上角「⋮」，選「用預設瀏覽器開啟」（Chrome），再照上面步驟。</p>
+  </div>
+
+  <div class="pane" id="pc" hidden>
+    <ol>
+      <li>用 <b>Chrome</b> 或 <b>Edge</b> 打開 <a href="./">日課網址</a>。</li>
+      <li>網址列右側會出現「安裝」小圖示（螢幕加向下箭頭），點它再按「安裝」。</li>
+      <li>日課會變成獨立視窗的 App，也會出現在桌面或開始選單。</li>
+    </ol>
+    <p class="muted" style="margin:10px 0 0">Mac 的 Safari：上方選單「檔案」→「加入 Dock」。不想安裝的話，直接加入書籤也可以。</p>
+  </div>
+</section>
+
+<section>
+  <h2>三種用法，選一種就好</h2>
+  <ul>
+    <li><b>手機 App</b>：加到主畫面，最推薦。隨手開番茄鐘、記雜念，螢幕鎖定也會響鈴。</li>
+    <li><b>電腦 App</b>：安裝成獨立視窗，寫論文時放在旁邊。</li>
+    <li><b>網頁</b>：直接打開網址就能用，適合先試試看。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>資料存在哪裡？</h2>
+  <ul>
+    <li>紀錄只存在<b>你自己的裝置</b>，不會上傳，別人看不到。</li>
+    <li>手機和電腦的資料是分開的。想搬到新裝置，在「設定 → 資料保護」備份，再到新裝置還原。</li>
+    <li>建議<b>每週備份一次</b>，可以直接存到雲端硬碟或用 LINE 傳給自己。超過 7 天會提醒你。</li>
+  </ul>
+</section>
+
+<p style="text-align:center"><a class="cta" href="./">開始使用日課</a></p>
+<footer>日課 Daily Practice</footer>
+</div>
+<script>
+(function(){var ua=navigator.userAgent,def=/Android/i.test(ua)?'and':/iPhone|iPad|iPod/.test(ua)?'ios':(/Mobi/.test(ua)?'ios':'pc');
+function show(p){document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.p===p?'true':'false')});document.querySelectorAll('.pane').forEach(function(x){x.hidden=x.id!==p})}
+document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.p)})});show(def);})();
+</script>
+</body>
+</html>

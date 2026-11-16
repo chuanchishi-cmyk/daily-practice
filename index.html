@@ -1018,7 +1018,7 @@ function localBanner(){
   const msg=localWhy==='viewonly'?'你目前沒有雲端儲存權限，紀錄會先存在這個瀏覽器。想在不同裝置同步，請分享這個頁面的人把你設為「可使用」。':localWhy==='standalone'?'你的資料存在這個瀏覽器裡，換電腦或清除瀏覽資料就會不見。':'資料目前只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。';
   return inAppHint()+`<div class="banner row sb"><span>${msg}${stale?` <b>${last?'上次備份是 '+fmtMD(last)+'，':'還沒備份過，'}建議現在備份一次。</b>`:''}</span>${stale?'<button class="sm sec" data-act="export">立即備份</button>':''}</div>`;
 }
-function themePref(){return lsGet('sd-theme','auto')}
+function themePref(){let ph=false;try{ph=Math.min(screen.width,screen.height)<=600&&matchMedia('(pointer:coarse)').matches}catch{}return lsGet('sd-theme',ph?'light':'auto')}
 const FS_OPTS=[['s','小',.9],['m','中',1],['l','大',1.15],['xl','特大',1.3]];
 function fsPref(){return lsGet('sd-fs','m')}
 const IS_PHONE=(()=>{try{return Math.min(screen.width,screen.height)<=600&&matchMedia('(pointer:coarse)').matches}catch{return false}})();

@@ -1,0 +1,326 @@
+0	Daily Practice: Pomodoro timer, calendar, stats, thesis map, awareness journal and meditation. A little every day adds up. Your data stays in your browser.
+1	Daily Practice
+2	Pomodoro, thesis map, awareness journal and meditation. No download, no sign-up — add it to your home screen and it works like an app.
+3	Daily Practice
+4	Not like me
+5	Very like me
+6	Foggy
+7	Sharp
+8	Daily Practice splash screen
+9	A little every day adds up
+10	Tap anywhere to enter
+11	Every day is a good day
+12	Right now, just this one thing
+13	Take a breath, then begin
+14	Where your mind goes, your time goes
+15	Distracted? Come back to this page
+16	One thing at a time, one step at a time
+17	Let your mind settle on this page
+18	Slow is smooth, smooth is fast
+19	This moment is the best place to start
+20	Be still, and the answer will surface
+21	Focus is the best gift you can give yourself
+22	Today, do one thing well
+23	No rush — one breath at a time
+24	Main sections
+25	Copy link · Share
+26	Report a problem
+27	Connecting…
+28	Loading…
+29	Mon
+30	Tue
+31	Wed
+32	Thu
+33	Fri
+34	Sat
+35	Sun
+40	min
+41	h
+42	hours
+43	Thesis
+44	pages
+45	Project progress
+46	Reading
+47	Focus & meditation
+48	Exercise
+49	Errors corrected
+50	Practice questions done
+51	Practice goals met
+52	TOEFL
+53	Listening
+54	Writing
+55	Speaking
+56	Full mock test
+57	Concept
+58	Vocabulary
+59	Careless
+60	Ran out of time
+61	Unfamiliar question type
+62	Couldn't hear clearly
+63	Part 1
+64	Part 2
+65	Sum
+66	Average
+67	No total
+68	Custom: each item 0–
+69	Total is the
+70	1–6 band scale
+71	0–30 per section, 120 total
+72	Choose the items to record, each item's maximum score, and how the total is calculated.
+73	Item name
+74	Delete this item
+75	Add item
+76	Max per item
+77	Score step
+78	Whole numbers
+79	0.5 points
+80	0.1 points
+81	Total
+82	Scores already recorded are kept; deleted items are no longer shown.
+83	Save scoring
+84	Reading section
+85	Listening section
+86	Writing task
+87	One speaking task
+88	Prep
+89	Answer
+90	Cloud storage is full. Export and delete old data first.
+91	This entry isn't saved yet — it will retry automatically.
+92	Couldn't delete. Please try again.
+93	Can't reach Google. Check your connection.
+94	Google sign-in wasn't completed.
+95	The sign-in window was closed or blocked. Please try again.
+96	Synced the latest data from your other devices
+97	Google sign-in expired. Tap “Sync now” to reconnect.
+98	Sync failed. Will try again shortly.
+99	Syncing…
+100	⟳ Tap to sync
+101	⟳ Waiting to sync
+102	✓ Synced
+103	Google Drive sync
+104	Connected
+105	Needs reconnecting
+106	Last synced:
+107	Never synced
+108	Sync now
+109	Stop syncing
+110	Turn on sync with the same Google account on each device and your records merge automatically. Data lives in a hidden app folder in your own Google Drive — only Daily Practice can read it, and it doesn't use the file space you see.
+111	Sign in with Google and your phone and computer stay in sync automatically — you'll always have a cloud backup, too.
+112	Start syncing with Google
+113	Data is saved only to your own Google Drive (a hidden app folder). Daily Practice has no server and can't see your records.
+114	Welcome to Daily Practice
+115	A little every day adds up. You'll find a Pomodoro timer, a thesis map, exam prep, meditation and an awareness journal. Pages you don't need can be hidden in Settings.
+116	Start with “Today”
+117	Write down today's three most important tasks, then start a Pomodoro. Afterwards, take ten seconds to note what you did — the calendar and stats build up on their own.
+118	Make Daily Practice your app
+119	Add Daily Practice to your home screen and it works like a regular app — you're also less likely to miss the timer alert.
+120	Go to “Settings → Data protection & sync” and turn on Google sync, so switching phones is no worry.
+121	Records are stored on this device — remember to back up weekly in “Settings → Data protection”.
+122	Your records are safe
+123	Records are stored in your private space. If you share this page, others still can't see your data.
+124	How to add it to the home screen →
+125	Skip
+126	Start today
+127	Next
+128	Celadon
+129	Amber
+130	Wisteria
+131	Sky blue
+132	Terracotta
+133	Moss
+134	Lotus
+135	Olive
+136	Chestnut
+137	Pine
+138	Begonia
+139	Indigo
+140	Data protection & sync
+141	Data protection
+142	Synced to your Google Drive
+143	Google sync needs attention
+144	On a new device, turn on sync with the same Google account to pick up where you left off. This device keeps a copy too, so you can keep recording offline.
+145	Last synced
+146	days ago
+147	Not synced yet
+148	— tap “Sync now” above to reconnect.
+149	Stored in your private cloud
+150	Stored in this device's browser
+151	Sign in with the same account on another device to see it; others who open this page can't see your records.
+152	If you switch devices or clear browsing data, your records will be gone. That's why the two items below matter.
+153	Browser asked to keep your data
+154	The browser may clear data automatically
+155	The browser won't delete your records to free up space.
+156	Add Daily Practice to your home screen and use it from there — that's the best protection (iPhone Safari clears data for sites not opened in 7 days, but home-screen apps are exempt).
+157	This environment can't guarantee it — please back up regularly.
+158	Last backup:
+159	Today
+160	No backup yet
+161	The cloud already has a copy; a backup file is extra insurance — once a month is enough.
+162	A weekly backup is enough. After 7 days you'll get a reminder at the top of the page.
+163	Save to cloud drive or send to yourself
+164	Download backup file
+165	Send to yourself
+166	Restore from backup
+167	The cloud already has a copy. A backup file is extra insurance — download one a month and keep it somewhere other than Google. If you delete something by mistake, the automatic snapshots below can bring it back (sync carries deletions to every device).
+168	“Save to cloud drive” opens the share menu — choose iCloud Drive, Google Drive, LINE Keep, or email it to yourself.
+169	The backup is a small .json file; save it to a cloud drive or email it to yourself.
+170	On a new device, tap “Restore from backup” to carry on.
+171	Automatic snapshots (last
+172	days)
+173	The first time you open the app each day, a snapshot is saved on this device. If you delete something by mistake, you can go back to that day. (Snapshots are erased along with browsing data, so you still need backups.)
+174	State when opened that day · total
+175	days of records
+176	Go back to this day
+177	Can't download files here — the content has been copied to your clipboard
+178	Can't download here — please copy it manually
+179	Your data is stored in your private cloud space; only you can see it.
+180	No cloud storage permission right now — records are saved in this browser for now.
+181	Data is stored only in this browser. Open it while signed in to claude.ai to sync to the cloud.
+182	Data is stored in this browser. Remember to export a backup in Settings regularly.
+183	You don't have cloud storage permission; new records will be saved in this browser
+184	Can't reach the cloud right now — what you see may not be the latest.
+185	Can't read cloud data right now. Please reload the page.
+186	You're opening this inside LINE.
+187	To add Daily Practice to your home screen and keep your data safe, tap “⋯” at the bottom right (or top right) and choose “
+188	Open in Safari
+189	Open in default browser
+190	See the illustrated guide
+191	Google sync is paused (
+192	not synced yet
+193	); new records are only on this device for now.
+194	You don't have cloud storage permission, so records are saved in this browser for now. To sync across devices, ask the person who shared this page to set you as “Can use”.
+195	Your data is stored in this browser — switching computers or clearing browsing data will erase it.
+196	Data is currently stored only in this browser. Open it while signed in to claude.ai to sync to the cloud.
+197	Last backup was
+198	No backup yet —
+199	back up now.
+200	Back up now
+201	Small
+202	Medium
+203	Large
+204	Extra large
+205	TOEFL Reading
+206	TOEFL Listening
+207	TOEFL Speaking
+208	TOEFL Writing
+209	Uncategorized
+210	Research project
+211	(None)
+212	Start
+213	Reset
+214	Meditated today:
+215	min — well done.
+216	It doesn't need to be long; sitting for a moment today is enough.
+217	Pick a duration, press Start, and slowly come back to your breath.
+218	Set exam date
+219	Finished
+220	In
+221	days
+222	Mode
+223	Focus
+224	Short break
+225	Long break
+226	Done today:
+227	∅
+228	Every
+229	Pomodoros, take a long break
+230	Log to
+231	Done
+232	Edit
+233	Delete “
+234	Project
+235	Cancel
+236	+ Custom
+237	After deleting, past records are kept and shown with the original name. Manage research project tags in the Thesis map.
+238	e.g. Japanese, gym, lesson prep, reading group
+239	Add
+240	What's this Pomodoro for?
+241	e.g. finish chapter 3, do one reading practice set
+242	Stage
+243	Paused · Where did you get to?
+244	e.g. section 2, paragraph 3 — next sentence needs a citation
+245	Just one line. When you come back, read it and pick up right away.
+246	Last stopped at:
+247	Pause
+248	End early and log
+249	Skip break
+250	Space: start / pause
+251	Distraction parking lot
+252	items pending
+253	When a stray thought or to-do pops up while focusing, park it here. Once it's written down, your head can let go; deal with it after the Pomodoro.
+254	e.g. reply to my advisor, find that article's source, buy toothpaste
+255	Park it
+256	Handled
+257	Delete
+258	Pomodoro done!
+259	Note what you did in this session, then take a break.
+260	Break's over
+261	Get ready for the next Pomodoro.
+262	Break's over — get ready for the next Pomodoro
+263	Timer
+264	Next:
+265	Time's up
+266	Break
+267	Test
+268	Meditate
+269	Pomodoro · Focusing
+270	Pomodoro · On break
+271	Test timer running
+272	Meditating
+273	Add a focus session manually
+274	Ended early: note what you did
+275	Pomodoro complete! Note what you did
+276	Date
+277	Start time
+278	min
+279	What I did
+280	Output
+281	Unit
+282	Log as a “
+283	” win
+284	Energy during this session
+285	Why it ended early
+286	e.g. interrupted by a message, finished sooner than expected
+287	Interrupted
+288	Finished early
+289	Too tired
+290	Stuck
+291	Had to leave
+292	Note the reason — after a few times you'll see where you usually get interrupted and can prepare next time.
+293	Notes (where I got stuck, where to start next time)
+294	e.g. halfway through ch. 3 §2 — next time, finish that citation first
+295	Don't log
+296	Save
+297	Logged
+298	Done #
+299	∅
+300	The most important thing
+301	Second
+302	Third
+303	No counters yet. Add some in Settings.
+304	Goal
+305	· per tap
+306	Decrease
+307	Increase
+308	No focus records for this day.
+309	· output
+310	· ended early:
+311	Delete this entry
+312	No errors to review today.
+313	Add an error
+314	Overdue
+315	Total
+316	questions
+317	Start review
+318	No research projects yet.
+319	Create the first one
+320	Next step:
+321	All steps in this stage are done
+322	Next meeting:
+323	Today's focus log
+324	What each Pomodoro was for today
+325	Counters
+326	Daily counts like errors corrected and practice questions
+327	Pick a duration and sit quietly for a while
+328	Errors to review
+329	Errors due for review today

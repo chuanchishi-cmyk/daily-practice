@@ -283,6 +283,14 @@ label.visrow{align-items:flex-start;margin-bottom:8px;cursor:pointer}
 .qrbtn{padding:0;border:0;background:#fff;border-radius:8px;min-height:0;line-height:0;cursor:zoom-in}
 .qrbtn img{width:112px;height:112px;border-radius:8px}
 @media (max-width:820px),(max-height:700px){.qrbox{display:none!important}}
+@media (min-width:821px){
+  nav.rail .sharebtn,nav.rail .fbbtn,nav.rail .syncchip{display:flex;align-items:center;justify-content:flex-start;text-align:left;width:auto;align-self:stretch;margin-left:0;margin-right:0;padding:7px 10px}
+  nav.rail .fbbtn,nav.rail .syncchip{border-color:transparent;background:transparent}
+  nav.rail .fbbtn:hover,nav.rail .syncchip:hover{background:var(--sunk)}
+  nav.rail .sharebtn{margin-top:12px}
+  nav.rail .fbbtn{margin-top:2px}
+  .qrbox{margin-left:0;margin-right:0}
+}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}

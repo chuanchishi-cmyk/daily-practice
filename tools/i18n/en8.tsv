@@ -397,3 +397,11 @@
 =30 天	30 days
 =90 天	90 days
 =自由書寫	Free writing
+=平均	avg
+=・最近	· latest
+=資料還不夠	Not enough data yet
+=需要你授權一次，日課才能讀取行程（只讀，不會修改）。	Please authorize once so Daily Practice can read your events (read-only, nothing is changed).
+=連接 Google 日曆	Connect Google Calendar
+=沒有完成 Google 授權。	Google authorization wasn’t completed.
+=授權視窗被關閉或擋下了，請再試一次。	The authorization window was closed or blocked. Please try again.
+=連不上 Google，請確認網路。	Can’t reach Google. Check your connection.

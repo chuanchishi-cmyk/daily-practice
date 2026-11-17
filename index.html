@@ -921,7 +921,7 @@ function WELCOME(){
   W.push(['每天從「今日」開始','寫下今天最重要的三件事，按下番茄鐘開始專注。暫停時可以記下停在哪裡；冒出雜念就丟進「雜念停車場」。每段結束花十秒記下做了什麼，月曆和統計會自動累積。']);
   if(isOn('plan'))W.push(['計畫地圖：把大計畫拆小','建立計畫後（論文、研究、考證照、作品集都可以），會依完成日排好階段和小步驟，每天只要做「最小的一步」。「會談」可以預約指導教授或主管（直接在 Google 日曆確認後送出），會談結束後自動跳出紀錄表，對方的建議會變成待辦。']);
   if(isOn('quiz'))W.push(['找出你的高效時段','「我的節奏」用大約 12 分鐘的問答，找出你一天中的精力高峰和低谷，以及最能推動你的動力，排出建議的一天。可以分段做，每段完成都會先給你結果。']);
-  W.push(['打造你自己的日課','到「設定」可以決定要顯示哪些頁面（用不到的先藏起來，資料都會保留），也能調整字體大小、畫面縮放、鈴聲音量，以及螢幕關掉時是否仍要響鈴。']);
+  W.push(['打造你自己的日課','到「設定」可以決定要顯示哪些頁面（用不到的先藏起來，資料都會保留），也能調整字體大小、畫面縮放、靜心音量，以及螢幕關掉時是否仍要響鈴。']);
   if(!STANDALONE)W.push(['你的紀錄很安全','紀錄存在你自己的私人空間，換裝置登入同一個帳號就能接著用。分享這個頁面給別人，他們也看不到你的資料。']);
   else if(gdAvail())W.push(['資料保存與同步','紀錄先存在這台裝置。到「設定 → 資料保護與同步」用 Google 帳號登入，手機和電腦就會自動同步，也等於隨時有一份雲端備份。建議把日課加到手機主畫面使用。']);
   else W.push(['資料存在這台裝置','紀錄只存在這台裝置的瀏覽器，不會上傳。建議把日課加到手機主畫面使用，並到「設定 → 資料保護」每週備份一次，可以直接存到雲端硬碟。']);
@@ -1134,7 +1134,7 @@ function parkHTML(){
     ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
   </div>`;
 }
-function pStart(){unlockAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
+function pStart(){if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
 function pPause(){P.left=pLeft();P.running=false;savP()}
 function pReset(){P.running=false;P.left=null;P.startedAt=null;P.pauseNote='';savP()}
 function pSetMode(m){pReset();P.mode=m;savP()}
@@ -1148,11 +1148,11 @@ function pComplete(early){
     P.cycles++;P.cday=today();
     const next=P.cycles%cfg().pomo.every===0?'long':'short';
     P.mode=next;P.left=null;P.startedAt=null;savP();
-    if(!early)endSound('p',()=>bell(2),'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
+    if(!early)endSound('p',null,'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
     const pn=P.pauseNote||'';P.pauseNote='';savP();
     openRecord({min:early?Math.max(1,elapsed):Math.round(planned/60),t:started,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task,early:!!early,note:pn});
   }else{
-    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',()=>bell(1),'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
+    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',null,'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
   }
   render();
 }
@@ -1165,8 +1165,8 @@ function tSegSec(){const p=tPreset();return (p.segs[T.seg]||p.segs[0]||{s:0}).s}
 function tLeft(){return T.running?Math.max(0,(T.endAt-Date.now())/1000):(T.left??tSegSec())}
 function tAdvance(){
   const p=tPreset();
-  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',()=>bell(1),'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
-  else{T.running=false;T.left=0;endSound('t',()=>bell(2),'測驗時間到');toast('測驗時間到')}
+  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',null,'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
+  else{T.running=false;T.left=0;endSound('t',null,'測驗時間到');toast('測驗時間到')}
   savT();if(R==='exam')render();
 }
 
@@ -1210,10 +1210,10 @@ const dest=()=>CUR_BUS||MASTER||AC.destination;
 function schedule(key,offset,fn){cancelSched(key);if(!AC||offset<0)return;const bus=AC.createGain();bus.connect(MASTER||AC.destination);const r=reverb();if(r)bus.connect(r);
   CUR_BUS=bus;SOFF=offset;try{fn()}catch{}CUR_BUS=null;SOFF=0;SCH[key]={bus,at:AC.currentTime+offset,endAt:Date.now()+offset*1000}}
 function cancelSched(key){const x=SCH[key];if(x){try{x.bus.disconnect()}catch{}delete SCH[key]}}
-function endSound(key,fn,title,body){const x=SCH[key];if(x&&AC&&AC.currentTime>=x.at-.3){delete SCH[key]}else{cancelSched(key);fn()}
-  try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch{}notify(title,body)}
-async function notify(title,body){if(!title||!document.hidden||!('Notification' in window)||Notification.permission!=='granted')return;
-  try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();const o={body:body||'',tag:'rike-timer',renotify:true,icon:'icon-192.png'};if(reg&&reg.showNotification)reg.showNotification(title,o);else new Notification(title,o)}catch{}}
+function endSound(key,fn,title,body){const x=SCH[key];if(x&&AC&&AC.currentTime>=x.at-.3){delete SCH[key]}else{cancelSched(key);if(fn)fn()}
+  notify(title,body,!!fn)}
+async function notify(title,body,sound){if(!title||!document.hidden||!('Notification' in window)||Notification.permission!=='granted')return;
+  try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();const o={body:body||'',tag:'rike-timer',renotify:true,silent:!sound,icon:'icon-192.png'};if(reg&&reg.showNotification)reg.showNotification(title,o);else new Notification(title,o)}catch{}}
 let KA=null;
 function silentWav(){const n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>[...s].forEach((c,i)=>b[o+i]=c.charCodeAt(0));
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
@@ -1225,13 +1225,12 @@ function mediaMeta(t){try{if('mediaSession' in navigator&&window.MediaMetadata){
 // keep scheduled end sounds in step with the timers
 function syncSched(){
   const want={};
-  if(P.running)want.p={end:P.endAt,fn:()=>bell(P.mode==='work'?2:1)};
-  if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:()=>bell(last?2:1)}}
   if(MT.running)want.m={end:MT.endAt,fn:()=>yinqing(1,0)};
-  ['p','t','m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
+  cancelSched('p');cancelSched('t');
+  ['m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
   const any=P.running||T.running||MT.running;
-  if(!any)keepAlive(false);
+  if(!MT.running)keepAlive(false);
   wakeLock(any&&wakePref());
   mediaMeta(any?(P.running?(P.mode==='work'?'番茄鐘・專注中':'番茄鐘・休息中'):T.running?'測驗計時中':'靜心中'):null);
 }
@@ -1551,7 +1550,7 @@ function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:
 function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_DEF.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
 const mkDot=id=>`<span class="dot" style="background:var(--c${mkSub(id).c})" title="${esc(mkSub(id).n)}"></span>`;
 const ENC=['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'];
-function encLine(p){if(T.running)return '專心作答中，每段結束都會響鈴提醒你。';if(T.left===0)return '完成了！給自己一點肯定，記得在下方記錄分數或錯題。';const d=Math.floor(Date.now()/864e5);return ENC[(d+T.seg)%ENC.length]}
+function encLine(p){if(T.running)return '專心作答中，每段結束會在畫面上提示，不會出聲。';if(T.left===0)return '完成了！給自己一點肯定，記得在下方記錄分數或錯題。';const d=Math.floor(Date.now()/864e5);return ENC[(d+T.seg)%ENC.length]}
 /* ---------- exam countdown coaching ---------- */
 const EXK_LANG=/托福|TOEFL|雅思|IELTS|多益|TOEIC|GRE|GMAT|SAT|日檢|JLPT|英檢|GEPT|DELF|TOPIK|HSK|Duolingo/i;
 const EXK_EXAM=/考|試|檢定|證照|筆試|面試|國考|會考|學測|指考|分科|測驗|exam|test/i;
@@ -1628,7 +1627,7 @@ function vExam(){
       <div class="ctrl"><button class="pri" style="background:var(--focus);border-color:var(--focus);color:var(--surface)" data-act="tToggle">${T.running?'暫停':'開始'}</button><button data-act="tPlus">+1 分鐘</button><button data-act="tNext"${T.seg>=p.segs.length-1?' disabled':''}>下一段</button><button data-act="tReset">重設</button></div>
       <p class="enc">${encLine(p)}</p>
       <div style="text-align:center;margin-top:4px"><button class="ghost sm" data-act="tEdit">${tEditing?'收起':'自訂「'+esc(p.name)+'」'}</button></div>
-      ${tEditing?`<div class="tedit"><label class="f">計時名稱<input id="tName" type="text" value="${esc(p.name)}"></label><span class="muted" style="font-size:calc(12px * var(--fs,1))">每一段結束會響鈴，並自動進入下一段。</span>${p.segs.map((sg,i)=>`<div class="row"><input id="tsn${i}" type="text" value="${esc(sg.n)}" style="flex:1" aria-label="段落名稱"><input id="tsm${i}" type="number" min="0" max="300" value="${Math.floor(sg.s/60)}" aria-label="分"><span class="muted">分</span><input id="tss${i}" type="number" min="0" max="59" value="${sg.s%60}" style="width:64px" aria-label="秒"><span class="muted">秒</span><button class="ghost sm" data-act="tSegDel" data-i="${i}" aria-label="刪除這段"${p.segs.length<2?' disabled':''}>×</button></div>`).join('')}
+      ${tEditing?`<div class="tedit"><label class="f">計時名稱<input id="tName" type="text" value="${esc(p.name)}"></label><span class="muted" style="font-size:calc(12px * var(--fs,1))">每一段結束會在畫面上提示（不出聲），並自動進入下一段。</span>${p.segs.map((sg,i)=>`<div class="row"><input id="tsn${i}" type="text" value="${esc(sg.n)}" style="flex:1" aria-label="段落名稱"><input id="tsm${i}" type="number" min="0" max="300" value="${Math.floor(sg.s/60)}" aria-label="分"><span class="muted">分</span><input id="tss${i}" type="number" min="0" max="59" value="${sg.s%60}" style="width:64px" aria-label="秒"><span class="muted">秒</span><button class="ghost sm" data-act="tSegDel" data-i="${i}" aria-label="刪除這段"${p.segs.length<2?' disabled':''}>×</button></div>`).join('')}
         <div class="row sb" style="margin-top:8px"><div class="row"><button class="sm" data-act="tSegAdd">新增一段</button>${DEF.timers.some(x=>x.id===p.id)?'<button class="ghost sm" data-act="tDefault">恢復預設時間</button>':''}${c.timers.length>1?'<button class="ghost sm" data-act="tDelP">刪除這個計時</button>':''}</div><button class="sec sm" data-act="tSave">儲存</button></div></div>`:''}
     </section>
     <section class="card"><h2>考試日期 ${XL('在月曆上看','calendar')}</h2>
@@ -1971,9 +1970,9 @@ function vPrefs(){
   </div>
   <h3 class="setgrp">提醒</h3>
   <section class="card" style="margin-bottom:16px"><h2>聲音與提醒</h2>
-    <div class="row sb"><div><h3 style="margin:0">音量 <span class="num" id="volVal">${volPref()}%</span></h3><p class="muted" style="margin:4px 0 0">番茄鐘、測驗計時和靜心的鈴聲都用這個音量。</p></div>
+    <div class="row sb"><div><h3 style="margin:0">音量 <span class="num" id="volVal">${volPref()}%</span></h3><p class="muted" style="margin:4px 0 0">只用於靜心的木魚與引磬。番茄鐘與測驗計時一律靜音。</p></div>
       <div class="row"><input type="range" id="volR" data-in="vol" min="0" max="100" step="5" value="${volPref()}" aria-label="音量" style="width:180px"><button class="sm" data-act="volTest">試聽</button></div></div>
-    <label class="visrow" style="margin-top:12px"><input type="checkbox" data-ch="bgSet" ${bgPref()?'checked':''}><span><b>螢幕關掉也響鈴</b><span class="muted">計時中把手機鎖定、電腦螢幕關掉，時間到仍會響。可能會暫停你正在聽的音樂；邊讀書邊聽歌的話可以關掉。</span></span></label>
+    <label class="visrow" style="margin-top:12px"><input type="checkbox" data-ch="bgSet" ${bgPref()?'checked':''}><span><b>螢幕關掉也敲引磬</b><span class="muted">靜心中把手機鎖定、電腦螢幕關掉，結束時仍會敲引磬。可能會暫停你正在聽的音樂；邊讀書邊聽歌的話可以關掉。</span></span></label>
     <label class="visrow"><input type="checkbox" data-ch="wakeSet" ${wakePref()?'checked':''}><span><b>計時時保持螢幕亮著</b><span class="muted">最保險的做法，適合手機放在桌上計時。比較耗電。</span></span></label>
     <div class="row sb" style="margin-top:10px"><div><b style="font-size:calc(13px * var(--fs,1))">系統通知</b><div class="muted">${'Notification' in window?(Notification.permission==='granted'?'已開啟。在別的分頁或 App 時，時間到會跳出通知。':Notification.permission==='denied'?'已被瀏覽器封鎖，要到瀏覽器的網站設定裡開啟。':'在別的分頁或 App 時，時間到跳出通知。'):'這個瀏覽器不支援通知。'}</div></div>${'Notification' in window&&Notification.permission==='default'?'<button class="sm" data-act="notifyOn">開啟通知</button>':''}</div>
     <p class="muted" style="margin:10px 0 0">iPhone 小提醒：先把日課加到主畫面再使用，並記得開始計時前把音量調大。若鎖定後仍沒有聲音，請開啟「保持螢幕亮著」。</p>
@@ -2034,7 +2033,7 @@ const A={
   stMode:el=>{stMode=el.dataset.m;render()},
   stNav:el=>{const d=+el.dataset.d;if(!d)stAnchor=today();else if(stMode==='day')stAnchor=addDays(stAnchor,d);else if(stMode==='week')stAnchor=addDays(stAnchor,7*d);else{const x=parseD(stAnchor.slice(0,7)+'-01');x.setMonth(x.getMonth()+d);stAnchor=ymd(x)}render()},
   tPick:el=>{if(T.running)return toast('計時進行中，先暫停或重設');T={pid:el.dataset.id,seg:0,running:false,endAt:0,left:null};savT();render()},
-  tToggle:()=>{unlockAudio();if(T.running){T.left=tLeft();T.running=false}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true}savT();render()},
+  tToggle:()=>{if(T.running){T.left=tLeft();T.running=false}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true}savT();render()},
   tPlus:()=>{if(T.running)T.endAt+=60000;else T.left=tLeft()+60;savT();tick(true)},
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
   tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
@@ -2696,7 +2695,7 @@ Object.assign(A,{
   fbSend:sendFeedback,
   fbCopy:async()=>{const t=`[${($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題'}] ${$('#fbText').value}\n頁面：${fbPageName()}`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
   fbDone:async el=>{const u=el.dataset.u,id=el.dataset.id,d=clone(FB[u]||{items:[]});const it=(d.items||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;FB[u]=d;render();try{await DBX.doc('feedback/'+u).set(d)}catch{toast('沒有更新成功，請再試一次')}},
-  volTest:()=>{unlockAudio();whenAudio(()=>bell(1))},
+  volTest:()=>{unlockAudio();whenAudio(()=>smallWoodfish(1,0))},
   notifyOn:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'通知已開啟':'沒有開啟通知')}catch{}render()},
   landSet:el=>{lsSet('sd-land',el.dataset.v);applyScale();render()},
   theme:el=>{lsSet('sd-theme',el.dataset.v);applyTheme();render()},

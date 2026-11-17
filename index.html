@@ -445,6 +445,17 @@ main .grid2+.setgrp{margin-top:26px}
 .minedit{color:var(--muted)}
 .minadd{justify-content:center;margin-top:8px;gap:6px}
 .prcard+.prcard{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.mtoday{display:flex;flex-direction:column;gap:2px;margin:0 0 10px}
+.prlist{display:flex;flex-direction:column;gap:8px}
+.prrow{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:0 12px}
+.prrow>summary{display:flex;gap:10px;align-items:center;padding:10px 0;cursor:pointer;list-style:none}
+.prrow>summary::-webkit-details-marker{display:none}
+.prrow>summary .prn{font-weight:700;white-space:nowrap}
+.prrow>summary .prq{font-size:calc(12px * var(--fs,1))}
+.prrow>summary .grow{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prrow>summary .prq,.prrow>summary .pill,.prrow>summary .num{white-space:nowrap;flex:none}
+.prrow[open]>summary{border-bottom:1px solid var(--line)}
+.prrow .prcard{padding:10px 0 12px}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1137,11 +1148,11 @@ function pComplete(early){
     P.cycles++;P.cday=today();
     const next=P.cycles%cfg().pomo.every===0?'long':'short';
     P.mode=next;P.left=null;P.startedAt=null;savP();
-    if(!early)endSound('p',()=>beep(3),'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
+    if(!early)endSound('p',()=>bell(2),'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
     const pn=P.pauseNote||'';P.pauseNote='';savP();
     openRecord({min:early?Math.max(1,elapsed):Math.round(planned/60),t:started,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task,early:!!early,note:pn});
   }else{
-    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',()=>beep(2),'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
+    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',()=>bell(1),'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
   }
   render();
 }
@@ -1154,8 +1165,8 @@ function tSegSec(){const p=tPreset();return (p.segs[T.seg]||p.segs[0]||{s:0}).s}
 function tLeft(){return T.running?Math.max(0,(T.endAt-Date.now())/1000):(T.left??tSegSec())}
 function tAdvance(){
   const p=tPreset();
-  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',()=>beep(2),'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
-  else{T.running=false;T.left=0;endSound('t',()=>beep(4),'測驗時間到');toast('測驗時間到')}
+  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',()=>bell(1),'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
+  else{T.running=false;T.left=0;endSound('t',()=>bell(2),'測驗時間到');toast('測驗時間到')}
   savT();if(R==='exam')render();
 }
 
@@ -1188,11 +1199,12 @@ function wakePref(){return lsGet('sd-wake',false)===true}
 function applyVol(){if(MASTER)MASTER.gain.value=Math.pow(volPref()/100,1.6)*1.4}
 function unlockAudio(){try{
   if(navigator.audioSession&&bgPref())try{navigator.audioSession.type='playback'}catch{}
-  AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state!=='running')AC.resume().catch(()=>{});
   if(!MASTER){MASTER=AC.createGain();MASTER.connect(AC.destination);applyVol()}
   if(bgPref())keepAlive(true);
 }catch{}}
 const T0=()=>AC.currentTime+SOFF;
+function whenAudio(fn){if(!AC)return;if(AC.state==='running')fn();else AC.resume().then(fn).catch(()=>{try{fn()}catch{}})}
 const dest=()=>CUR_BUS||MASTER||AC.destination;
 // play a sound in the future on the audio clock, so it still rings when timers in the page are throttled
 function schedule(key,offset,fn){cancelSched(key);if(!AC||offset<0)return;const bus=AC.createGain();bus.connect(MASTER||AC.destination);const r=reverb();if(r)bus.connect(r);
@@ -1213,9 +1225,9 @@ function mediaMeta(t){try{if('mediaSession' in navigator&&window.MediaMetadata){
 // keep scheduled end sounds in step with the timers
 function syncSched(){
   const want={};
-  if(P.running)want.p={end:P.endAt,fn:()=>beep(P.mode==='work'?3:2)};
-  if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:()=>beep(last?4:2)}}
-  if(MT.running)want.m={end:MT.endAt,fn:()=>yinqing(3,6.5)};
+  if(P.running)want.p={end:P.endAt,fn:()=>bell(P.mode==='work'?2:1)};
+  if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:()=>bell(last?2:1)}}
+  if(MT.running)want.m={end:MT.endAt,fn:()=>yinqing(1,0)};
   ['p','t','m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
   const any=P.running||T.running||MT.running;
@@ -2684,7 +2696,7 @@ Object.assign(A,{
   fbSend:sendFeedback,
   fbCopy:async()=>{const t=`[${($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題'}] ${$('#fbText').value}\n頁面：${fbPageName()}`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
   fbDone:async el=>{const u=el.dataset.u,id=el.dataset.id,d=clone(FB[u]||{items:[]});const it=(d.items||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;FB[u]=d;render();try{await DBX.doc('feedback/'+u).set(d)}catch{toast('沒有更新成功，請再試一次')}},
-  volTest:()=>{unlockAudio();beep(3)},
+  volTest:()=>{unlockAudio();whenAudio(()=>bell(1))},
   notifyOn:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'通知已開啟':'沒有開啟通知')}catch{}render()},
   landSet:el=>{lsSet('sd-land',el.dataset.v);applyScale();render()},
   theme:el=>{lsSet('sd-theme',el.dataset.v);applyTheme();render()},
@@ -2786,10 +2798,10 @@ const emoName=k=>(emoList().find(e=>e.k===k)||EMO_DEF.find(e=>e.k===k)||{n:k}).n
 let MT=lsGet('sd-mtimer',null)||{min:10,method:'呼吸覺察',running:false,endAt:0,left:null};
 const savMT=()=>lsSet('sd-mtimer',MT);
 function mLeft(){return MT.running?Math.max(0,(MT.endAt-Date.now())/1000):(MT.left??MT.min*60)}
-function bell(n){if(!AC)return;try{for(let i=0;i<n;i++){const t=T0()+i*2.2;[528,792,1056].forEach((f,j)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(dest());g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18/(j+1),t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+4);o.start(t);o.stop(t+4.1)})}}catch{}}
+function bell(n){if(!AC)return;try{const out=outNode();for(let i=0;i<n;i++){const t=T0()+.05+i*2.2;[528,792,1056].forEach((f,j)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18/(j+1),t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+4);o.start(t);o.stop(t+4.1)})}}catch{}}
 function mComplete(){
   const min=Math.round((MT.min*60-(MT.left??0))/60)||MT.min;
-  MT.running=false;MT.left=null;savMT();endSound('m',()=>yinqing(3,6.5),'靜心結束','慢慢睜開眼睛，回到這裡。');
+  MT.running=false;MT.left=null;savMT();endSound('m',()=>yinqing(1,0),'靜心結束','慢慢睜開眼睛，回到這裡。');
   editDay(today(),d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:MT.min,method:MT.method,q:null,note:'',t:(()=>{const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes())})()})});
   toast('靜心 '+MT.min+' 分鐘，已記錄');if(R==='journal'||R==='today'||R==='mind')render();
 }
@@ -2844,24 +2856,26 @@ function minChips(){const ms=medMins();
 function mindTimerHTML(){
   return `<div class="mclock-wrap" style="border:0;padding-bottom:0"><div class="mclock" id="mTime">--:--</div>
     <div class="row" style="justify-content:center">${minChips()}</div>
-    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,'開始')}</button><button data-act="mReset">重設</button></div>
-    <p class="muted" style="text-align:center;margin:8px 0 0">找一個舒服的姿勢，選好時間就開始。鐘聲響起時，輕輕回到呼吸；結束後會自動記下這次練習。</p></div>`;
+    <div class="row" style="justify-content:center;margin-top:8px">${methodSelect('mMethod')}<button class="sec" data-act="mToggle">${playLbl(MT.running,((day(today()).j||{}).practice||[]).length&&MT.left==null?'再靜心一次':'開始')}</button><button data-act="mReset">重設</button></div>
+    <p class="muted" style="text-align:center;margin:8px 0 0">${(()=>{const n=((day(today()).j||{}).practice||[]).length;return n?`今天已經靜心 ${n} 次。想再坐一會兒，選好時間按「再靜心一次」，三聲木魚後開始。`:'找一個舒服的姿勢，選好時間就開始。三聲木魚後開始，一聲引磬結束，會自動記下這次練習。'})()}</p></div>`;
 }
 function methodTally(){const o={};Object.keys(S.days).forEach(d=>((day(d).j||{}).practice||[]).forEach(x=>{const m=x.method||'其他';o[m]=o[m]||{n:0,min:0};o[m].n++;o[m].min+=+x.min||0}));return Object.entries(o).sort((a,b)=>b[1].n-a[1].n)}
 function tallyHTML(){const t=methodTally();if(!t.length)return '';return `<div class="mtally"><h3>各方法累計</h3><div class="chips">${t.map(([m,v])=>`<span class="chip">${esc(m)} <b>${v.n}</b> 次・${fmtMin(v.min)}</span>`).join('')}</div></div>`}
-function practiceCard(d,x){return `<div class="prcard"><div class="row sb"><div><div class="bigstep">${x.min} 分鐘・${esc(x.method)}</div>${x.t?`<div class="muted">${esc(x.t)}</div>`:''}</div><button class="ghost sm" data-act="prDel" data-k="${d}" data-id="${x.id}">刪除這筆</button></div>
+function practiceCard(d,x){return `<div class="prcard">
     <div class="mrec2">
       <div><h3>安住程度 <span class="muted">1 散亂，5 很安定</span></h3><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="prQ" data-k="${d}" data-id="${x.id}" data-n="${n}" aria-pressed="${x.q===n}">${n}</button>`).join('')}</div></div>
       <div><h3>主要的干擾</h3><div class="opts">${['念頭','昏沈','掉舉','身體不適','聲音','情緒','幾乎沒有'].map(t=>`<button class="opt sm" data-act="prDist" data-k="${d}" data-id="${x.id}" data-v="${t}" aria-pressed="${(x.dist||[]).includes(t)}">${t}</button>`).join('')}</div></div>
     </div>
-    <label class="f" style="margin-top:10px">觀察筆記<textarea id="prn${x.id}" data-in="prNote" data-k="${d}" data-id="${x.id}" rows="3" placeholder="這次注意到什麼？念頭、身體、聲音、呼吸的變化">${esc(x.note)}</textarea></label></div>`}
+    <label class="f" style="margin-top:10px">觀察筆記<textarea id="prn${x.id}" data-in="prNote" data-k="${d}" data-id="${x.id}" rows="3" placeholder="這次注意到什麼？念頭、身體、聲音、呼吸的變化">${esc(x.note)}</textarea></label><div style="text-align:right;margin-top:6px"><button class="ghost sm" data-act="prDel" data-k="${d}" data-id="${x.id}">刪除這筆</button></div></div>`}
 function mindRecordHTML(){
-  const k=today(),ps=((day(k).j||{}).practice||[]).slice().reverse(),L=lastPractice();
+  const k=today(),ps=((day(k).j||{}).practice||[]),L=lastPractice();
   const add=`<details class="madd"><summary class="muted">補登一次練習</summary><div class="row" style="margin-top:8px"><input id="prDate" type="date" value="${k}"><input id="prMin" type="number" min="1" value="10" aria-label="分鐘" style="width:70px"><span class="muted">分</span><select id="prM" aria-label="方法">${medMethods().map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="sm" data-act="prAdd2">補登</button></div></details>`;
   const TL=tallyHTML();
   if(!ps.length)return `<p class="empty">今天還沒有靜心紀錄。完成一次練習後，這裡會出現今天的紀錄欄。</p>${L?`<p class="muted" style="margin:0">上一次：${fmtMD(L.d)}（週${wdName(L.d)}）${L.p.min} 分鐘・${esc(L.p.method)}${L.p.q?`・安住 ${L.p.q}`:''}</p>`:''}${TL}${add}`;
-  return `${ps.map(x=>practiceCard(k,x)).join('')}
-    <p class="muted" style="margin:6px 0 0">輸入後會自動儲存。每一次的安住程度、干擾和筆記，都會整理到「統計」的靜心區。</p>${TL}${add}`;
+  const tot=ps.reduce((a,x)=>a+(+x.min||0),0);
+  return `<p class="mtoday"><b>今天 ${ps.length} 次・${tot} 分鐘</b><span class="muted">點一筆可以展開，寫下安住程度和觀察。</span></p>
+    <div class="prlist">${ps.map((x,i)=>({x,i})).reverse().map(({x,i},j)=>`<details class="prrow"${j===0?' open':''}><summary><span class="prn">第 ${i+1} 次</span><span class="num muted">${esc(x.t||'')}</span><span class="grow">${x.min} 分・${esc(x.method)}</span>${x.q?`<span class="pill good">安住 ${x.q}</span>`:'<span class="muted prq">未填</span>'}</summary>${practiceCard(k,x)}</details>`).join('')}</div>
+    <p class="muted" style="margin:8px 0 0">輸入後會自動儲存，也會整理到「統計」的靜心區。</p>${TL}${add}`;
 }
 function vMind(){
   const k=today();
@@ -2979,7 +2993,7 @@ Object.assign(A,{
   minAdd:()=>{const v=Math.round(+$('#minNew').value);if(!v||v<1||v>240)return toast('請輸入 1–240 分鐘');const ms=medMins();if(ms.includes(v))return toast('已經有這個時間了');if(ms.length>=10)return toast('最多 10 個時間');editCfg(c=>{c.medMins=ms.concat([v])});render();setTimeout(()=>{const i=$('#minNew');i&&i.focus()},30)},
   minReset:()=>{editCfg(c=>{delete c.medMins});render()},
   mMin:el=>{if(MT.running)return toast('練習進行中，先暫停或重設');MT.min=+el.dataset.m;MT.left=null;savMT();render()},
-  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{if(MT.left==null)smallWoodfish(3,6);MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
+  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{const fresh=MT.left==null||MT.left>=MT.min*60-1;if(fresh){MT.left=null;whenAudio(()=>smallWoodfish(3,6))}MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
   mReset:()=>{MT.running=false;MT.left=null;savMT();render()},
   prQ:el=>{const n=+el.dataset.n;editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.q=p.q===n?null:n});render()},
   prDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.practice=(d.j.practice||[]).filter(x=>x.id!==el.dataset.id)});render()},

@@ -1256,7 +1256,7 @@ function drawRecord(){
       <label class="f">分鐘<input id="rMin" type="number" min="1" max="600" value="${r.min}"></label>
     </div>
     <div class="fields" style="grid-template-columns:1fr 1fr">
-      <label class="f" style="grid-column:1/-1">記錄到<select id="rSub" data-ch="recf" data-k="sub">${tagOptions(r.sub)}</select></label>
+      <label class="f" style="grid-column:1/-1">記錄到<select id="rSub" data-ch="recf" data-k="sub">${tagOptions(r.sub)}<option value="__new">＋ 新增項目…</option></select></label>
       ${r.proj?`<label class="f" style="grid-column:1/-1">階段<select id="rPhase" data-ch="recf" data-k="phase">${phaseOptions(r.proj,r.phase)}</select></label>`:''}
     </div>
     <label class="f">做了什麼<input id="rTask" type="text" value="${esc(r.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
@@ -2011,7 +2011,7 @@ const armed=new WeakSet();
 function twoStep(el){if(armed.has(el))return true;armed.add(el);const o=el.textContent;el.textContent='確定刪除？';el.classList.remove('ghost');setTimeout(()=>{armed.delete(el);if(el.isConnected){el.textContent=o;el.classList.add('ghost')}},3000);return false}
 const A={
   pmode:el=>{pSetMode(el.dataset.m);render()},
-  ptoggle:()=>{const was=P.running;was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
+  ptoggle:()=>{const was=P.running;const pend=$('#ptagName');if(!was&&pend&&pend.value.trim())A.ptagSave();was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
   parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false})});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
   parkDel:el=>{editDay(today(),d=>{d.j.park=(d.j.park||[]).filter(x=>x.id!==el.dataset.id)});render()},
   preset:()=>{pReset();render()},
@@ -2106,7 +2106,7 @@ const A={
 const C={
   parkDone:el=>{editDay(today(),d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.done=el.checked});render()},
   pfield:el=>{P[el.dataset.k]=el.value;if(el.dataset.k==='proj')P.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';savP();if(el.dataset.k!=='task'&&el.dataset.k!=='pauseNote')render()},
-  recf:el=>{readRecordForm();REC[el.dataset.k]=el.value;if(el.dataset.k==='sub'){const tg=allTags().find(x=>x.id===el.value);REC.proj=tg&&tg.proj?tg.proj:'';REC.phase=REC.proj?(curPhase(S.projects[REC.proj])||{}).id||'':''}if(el.dataset.k==='proj')REC.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';if(el.dataset.k==='sub'||el.dataset.k==='proj'||el.dataset.k==='phase')drawRecord()},
+  recf:el=>{readRecordForm();if(el.dataset.k==='sub'&&el.value==='__new'){const n=(prompt('新增的項目名稱（例：上班、日文、備課）')||'').trim();if(!n){drawRecord();return}let ex=allTags().find(x=>x.name===n);if(!ex){const id=rid();editCfg(c=>{c.subjects.push({id,name:n,c:c.subjects.length%12,unit:''})});ex={id}}REC.sub=ex.id;REC.proj=ex.proj||'';drawRecord();return}REC[el.dataset.k]=el.value;if(el.dataset.k==='sub'){const tg=allTags().find(x=>x.id===el.value);REC.proj=tg&&tg.proj?tg.proj:'';REC.phase=REC.proj?(curPhase(S.projects[REC.proj])||{}).id||'':''}if(el.dataset.k==='proj')REC.phase=(curPhase(S.projects[el.value]||{})||{}).id||'';if(el.dataset.k==='sub'||el.dataset.k==='proj'||el.dataset.k==='phase')drawRecord()},
   top3done:el=>{const i=+el.dataset.i;editDay(el.dataset.k,d=>{const t=d.j.top3=d.j.top3||[];t[i]=Object.assign({t:''},t[i],{done:el.checked})});el.closest('.t3').classList.toggle('done',el.checked)},
   exam:el=>{editCfg(c=>{const e=c.exams[+el.dataset.i];e[el.dataset.f]=el.value;if(el.dataset.f==='date')e.setAt=today()});render()},
   proj:el=>{editProj(p=>{p[el.dataset.f]=el.value});render()},
@@ -3011,7 +3011,7 @@ Object.assign(A,{
   ptagEditT:()=>{tagEdit=!tagEdit;tagAdding=false;render()},
   ptagDel:el=>{const id=el.dataset.id;const t=cfg().subjects.find(x=>x.id===id);if(!t)return;if(cfg().subjects.length<=1)return toast('至少保留一個標籤');editCfg(c=>{c.subjects=c.subjects.filter(x=>x.id!==id);c.subjectsArchived=(c.subjectsArchived||[]).concat([t])});if(P.sub===id){P.sub=cfg().subjects[0].id;savP()}toast('已刪除「'+t.name+'」');render()},
   ptagNew:()=>{tagAdding=!tagAdding;render();setTimeout(()=>{const i=$('#ptagName');i&&i.focus()},30)},
-  ptagSave:()=>{const n=$('#ptagName').value.trim();if(!n)return toast('先寫名稱');if(cfg().subjects.some(x=>x.name===n))return toast('已經有「'+n+'」');const id=rid();editCfg(c=>{c.subjects.push({id,name:n,c:c.subjects.length%12,unit:''})});P.sub=id;P.proj='';savP();tagAdding=false;toast('已加入「'+n+'」，統計會分開計算');render()},
+  ptagSave:()=>{const n=$('#ptagName').value.trim();if(!n)return toast('先寫名稱');const ex=allTags().find(x=>x.name===n);if(ex){P.sub=ex.id;P.proj=ex.proj||'';savP();tagAdding=false;toast('已選「'+n+'」');render();return}const id=rid();editCfg(c=>{c.subjects.push({id,name:n,c:c.subjects.length%12,unit:''})});P.sub=id;P.proj='';savP();tagAdding=false;toast('已加入「'+n+'」，統計會分開計算');render()},
   medAdd:()=>{const n=$('#mMethodNew').value.trim();if(!n)return toast('先寫方法名稱');if(!medMethods().includes(n))editCfg(c=>{c.medMethods=(c.medMethods||[]).concat([n])});MT.method=n;savMT();medAdding=false;render()}
 });
 Object.assign(A,{
@@ -3344,6 +3344,7 @@ document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(
 document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('others'))stagesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='parkIn'&&!e.isComposing){e.preventDefault();A.parkAdd();return}
+  if(e.key==='Enter'&&e.target.id==='ptagName'&&!e.isComposing){e.preventDefault();A.ptagSave();return}
   if(e.target.closest('input,textarea,select,[contenteditable]'))return;
   if($('#modal').innerHTML){if(e.key==='Escape')closeModal();return}
   if(e.key===' '&&R==='today'){e.preventDefault();P.running?pPause():pStart();render()}

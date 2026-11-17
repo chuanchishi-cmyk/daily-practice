@@ -1204,6 +1204,8 @@ function unlockAudio(){try{
   if(bgPref())keepAlive(true);
 }catch{}}
 const T0=()=>AC.currentTime+SOFF;
+// iOS can leave an AudioContext silently stalled after a session ends; start each meditation on a fresh one (inside the tap)
+function freshAudio(){try{Object.keys(SCH).forEach(cancelSched);if(AC&&AC.close)AC.close().catch(()=>{})}catch{}AC=null;MASTER=null;REVERB=null;unlockAudio()}
 function whenAudio(fn){if(!AC)return;if(AC.state==='running')fn();else AC.resume().then(fn).catch(()=>{try{fn()}catch{}})}
 const dest=()=>CUR_BUS||MASTER||AC.destination;
 // play a sound in the future on the audio clock, so it still rings when timers in the page are throttled
@@ -1214,7 +1216,7 @@ function endSound(key,fn,title,body){const x=SCH[key];if(x&&AC&&AC.currentTime>=
   try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch{}notify(title,body)}
 async function notify(title,body){if(!title||!document.hidden||!('Notification' in window)||Notification.permission!=='granted')return;
   try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();const o={body:body||'',tag:'rike-timer',renotify:true,icon:'icon-192.png'};if(reg&&reg.showNotification)reg.showNotification(title,o);else new Notification(title,o)}catch{}}
-let KA=null;
+let KA=null,KAOFF=null;
 function silentWav(){const n=8000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>[...s].forEach((c,i)=>b[o+i]=c.charCodeAt(0));
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
   for(let i=0;i<n;i++)b[44+i]=128;let s='';b.forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s)}
@@ -1231,7 +1233,7 @@ function syncSched(){
   ['p','t','m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
   const any=P.running||T.running||MT.running;
-  if(!any)keepAlive(false);
+  if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!(P.running||T.running||MT.running))keepAlive(false)},20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
   wakeLock(any&&wakePref());
   mediaMeta(any?(P.running?(P.mode==='work'?'番茄鐘・專注中':'番茄鐘・休息中'):T.running?'測驗計時中':'靜心中'):null);
 }
@@ -2993,7 +2995,7 @@ Object.assign(A,{
   minAdd:()=>{const v=Math.round(+$('#minNew').value);if(!v||v<1||v>240)return toast('請輸入 1–240 分鐘');const ms=medMins();if(ms.includes(v))return toast('已經有這個時間了');if(ms.length>=10)return toast('最多 10 個時間');editCfg(c=>{c.medMins=ms.concat([v])});render();setTimeout(()=>{const i=$('#minNew');i&&i.focus()},30)},
   minReset:()=>{editCfg(c=>{delete c.medMins});render()},
   mMin:el=>{if(MT.running)return toast('練習進行中，先暫停或重設');MT.min=+el.dataset.m;MT.left=null;savMT();render()},
-  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{const fresh=MT.left==null||MT.left>=MT.min*60-1;if(fresh){MT.left=null;whenAudio(()=>smallWoodfish(3,6))}MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
+  mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false}else{const fresh=MT.left==null||MT.left>=MT.min*60-1;if(fresh){MT.left=null;freshAudio();smallWoodfish(3,6)}MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
   mReset:()=>{MT.running=false;MT.left=null;savMT();render()},
   prQ:el=>{const n=+el.dataset.n;editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.q=p.q===n?null:n});render()},
   prDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.practice=(d.j.practice||[]).filter(x=>x.id!==el.dataset.id)});render()},

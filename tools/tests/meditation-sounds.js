@@ -1,0 +1,18 @@
+const {chromium,devices}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];
+fs.writeFileSync(SP+'t71.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const c=await b.newContext(devices['iPhone 13']);
+await c.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');window.__off=0;const D=Date;class FD extends D{constructor(...a){if(a.length)super(...a);else super(D.now()+window.__off)}static now(){return D.now()+window.__off}};window.Date=FD;
+ window.__st=[];const o=OscillatorNode.prototype.start;OscillatorNode.prototype.start=function(t){window.__st.push({f:Math.round(this.frequency.value),dt:Math.round(((t||0)-this.context.currentTime)*10)/10});return o.apply(this,arguments)}});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+SP+'t71.html#mind');await pg.waitForTimeout(600);
+const grab=async()=>{const s=await pg.evaluate(()=>{const s=window.__st;window.__st=[];return s});const near=s.filter(x=>x.dt<20),hitsW=new Set(near.map(x=>Math.round(x.dt))).size;const far=s.filter(x=>x.dt>=20);return {woodfishHits:hitsW,beepLike:s.filter(x=>x.f===880||x.f===660).length,scheduledEndOsc:far.length,endKinds:[...new Set(far.map(x=>x.f))].slice(0,4)}};
+await pg.click('[data-act=mMin][data-m="3"]');await pg.click('[data-act=mToggle]');await pg.waitForTimeout(500);console.log('start #1:',JSON.stringify(await grab()));
+await pg.click('[data-act=mReset]');await pg.waitForTimeout(200);await pg.click('[data-act=mToggle]');await pg.waitForTimeout(500);console.log('after reset start:',JSON.stringify(await grab()));
+await pg.evaluate(()=>window.__off=4*60000);await pg.waitForTimeout(800);console.log('completed; button:',await pg.textContent('.mclock-wrap [data-act=mToggle]'));await grab();
+await pg.click('[data-act=mToggle]');await pg.waitForTimeout(500);console.log('again start:',JSON.stringify(await grab()));
+await pg.evaluate(()=>window.__off=8*60000+60000);await pg.waitForTimeout(800);
+console.log('record:',(await pg.textContent('section.card:has(h2:has-text("紀錄區"))')).replace(/\s+/g,' ').slice(0,140));
+await pg.locator('section.card:has(h2:has-text("紀錄區"))').screenshot({path:SP+'multi.png'});
+await pg.evaluate(()=>location.hash='today');await pg.waitForTimeout(300);await pg.click('#pToggle');await pg.waitForTimeout(400);console.log('pomodoro start:',JSON.stringify(await grab()));
+console.log('errors',errs);await b.close()})();

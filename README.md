@@ -13,3 +13,7 @@ https://chuanchishi-cmyk.github.io/daily-practice/
 ## 問題回報
 
 請到 [Issues](https://github.com/chuanchishi-cmyk/daily-practice/issues) 留言。
+
+## 維護者
+
+原始碼在 `src/studydesk.html`，設定、發版流程與交接說明見 [docs/APP-SETTINGS.md](docs/APP-SETTINGS.md)。

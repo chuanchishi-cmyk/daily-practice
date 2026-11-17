@@ -1134,7 +1134,7 @@ function parkHTML(){
     ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
   </div>`;
 }
-function pStart(){unlockAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
+function pStart(){MT.running?unlockAudio():freshAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
 function pPause(){P.left=pLeft();P.running=false;savP()}
 function pReset(){P.running=false;P.left=null;P.startedAt=null;P.pauseNote='';savP()}
 function pSetMode(m){pReset();P.mode=m;savP()}
@@ -1148,11 +1148,11 @@ function pComplete(early){
     P.cycles++;P.cday=today();
     const next=P.cycles%cfg().pomo.every===0?'long':'short';
     P.mode=next;P.left=null;P.startedAt=null;savP();
-    if(!early)endSound('p',()=>bell(2),'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
+    if(!early)endSound('p',()=>bell(3),'番茄完成！','記下這段做了什麼，然後休息一下。');else cancelSched('p');
     const pn=P.pauseNote||'';P.pauseNote='';savP();
     openRecord({min:early?Math.max(1,elapsed):Math.round(planned/60),t:started,sub:P.sub,proj:P.proj,phase:P.phase,task:P.task,early:!!early,note:pn});
   }else{
-    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',()=>bell(1),'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
+    P.mode='work';P.left=null;P.startedAt=null;savP();if(!early)endSound('p',()=>bell(2),'休息結束','準備開始下一個番茄。');else cancelSched('p');toast('休息結束，準備下一個番茄');
   }
   render();
 }
@@ -1165,8 +1165,8 @@ function tSegSec(){const p=tPreset();return (p.segs[T.seg]||p.segs[0]||{s:0}).s}
 function tLeft(){return T.running?Math.max(0,(T.endAt-Date.now())/1000):(T.left??tSegSec())}
 function tAdvance(){
   const p=tPreset();
-  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',()=>bell(1),'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
-  else{T.running=false;T.left=0;endSound('t',()=>bell(2),'測驗時間到');toast('測驗時間到')}
+  if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',()=>bell(2),'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
+  else{T.running=false;T.left=0;endSound('t',()=>bell(3),'測驗時間到');toast('測驗時間到')}
   savT();if(R==='exam')render();
 }
 
@@ -1227,8 +1227,8 @@ function mediaMeta(t){try{if('mediaSession' in navigator&&window.MediaMetadata){
 // keep scheduled end sounds in step with the timers
 function syncSched(){
   const want={};
-  if(P.running)want.p={end:P.endAt,fn:()=>bell(P.mode==='work'?2:1)};
-  if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:()=>bell(last?2:1)}}
+  if(P.running)want.p={end:P.endAt,fn:()=>bell(P.mode==='work'?3:2)};
+  if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:()=>bell(last?3:2)}}
   if(MT.running)want.m={end:MT.endAt,fn:()=>yinqing(1,0)};
   ['p','t','m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
@@ -2036,7 +2036,7 @@ const A={
   stMode:el=>{stMode=el.dataset.m;render()},
   stNav:el=>{const d=+el.dataset.d;if(!d)stAnchor=today();else if(stMode==='day')stAnchor=addDays(stAnchor,d);else if(stMode==='week')stAnchor=addDays(stAnchor,7*d);else{const x=parseD(stAnchor.slice(0,7)+'-01');x.setMonth(x.getMonth()+d);stAnchor=ymd(x)}render()},
   tPick:el=>{if(T.running)return toast('計時進行中，先暫停或重設');T={pid:el.dataset.id,seg:0,running:false,endAt:0,left:null};savT();render()},
-  tToggle:()=>{unlockAudio();if(T.running){T.left=tLeft();T.running=false}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true}savT();render()},
+  tToggle:()=>{if(!T.running)MT.running?unlockAudio():freshAudio();else unlockAudio();if(T.running){T.left=tLeft();T.running=false}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true}savT();render()},
   tPlus:()=>{if(T.running)T.endAt+=60000;else T.left=tLeft()+60;savT();tick(true)},
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
   tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
@@ -2698,7 +2698,7 @@ Object.assign(A,{
   fbSend:sendFeedback,
   fbCopy:async()=>{const t=`[${($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題'}] ${$('#fbText').value}\n頁面：${fbPageName()}`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
   fbDone:async el=>{const u=el.dataset.u,id=el.dataset.id,d=clone(FB[u]||{items:[]});const it=(d.items||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;FB[u]=d;render();try{await DBX.doc('feedback/'+u).set(d)}catch{toast('沒有更新成功，請再試一次')}},
-  volTest:()=>{unlockAudio();whenAudio(()=>bell(1))},
+  volTest:()=>{unlockAudio();whenAudio(()=>bell(2))},
   notifyOn:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'通知已開啟':'沒有開啟通知')}catch{}render()},
   landSet:el=>{lsSet('sd-land',el.dataset.v);applyScale();render()},
   theme:el=>{lsSet('sd-theme',el.dataset.v);applyTheme();render()},
@@ -2800,7 +2800,8 @@ const emoName=k=>(emoList().find(e=>e.k===k)||EMO_DEF.find(e=>e.k===k)||{n:k}).n
 let MT=lsGet('sd-mtimer',null)||{min:10,method:'呼吸覺察',running:false,endAt:0,left:null};
 const savMT=()=>lsSet('sd-mtimer',MT);
 function mLeft(){return MT.running?Math.max(0,(MT.endAt-Date.now())/1000):(MT.left??MT.min*60)}
-function bell(n){if(!AC)return;try{const out=outNode();for(let i=0;i<n;i++){const t=T0()+.05+i*2.2;[528,792,1056].forEach((f,j)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18/(j+1),t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+4);o.start(t);o.stop(t+4.1)})}}catch{}}
+function bell(n){if(!AC)return;try{const out=outNode();for(let i=0;i<n;i++){const t=T0()+.05+i*1.0,f0=i%2===0?784:659;
+  [[f0,.34,2.8],[f0*2,.12,1.8],[f0*3,.05,1.0]].forEach(([f,a,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.01);g.gain.exponentialRampToValueAtTime(a*.4,t+.35);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)})}}catch{}}
 function mComplete(){
   const min=Math.round((MT.min*60-(MT.left??0))/60)||MT.min;
   MT.running=false;MT.left=null;savMT();endSound('m',()=>yinqing(1,0),'靜心結束','慢慢睜開眼睛，回到這裡。');

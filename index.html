@@ -525,6 +525,11 @@ main .grid2+.setgrp{margin-top:26px}
 .addwid{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;margin:6px 0 16px;padding:14px 16px;border:1px dashed var(--line);border-radius:var(--r);background:transparent;text-align:left;color:var(--ink)}
 .addwid span{color:var(--muted);font-size:calc(12.5px * var(--fs,1))}
 .addwid:hover{background:var(--sunk)}
+.tipcard{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:12px 16px;border:1px solid var(--line);border-left:3px solid var(--focus);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);animation:foldin .3s ease}
+.tipcard.isnew{border-left-color:var(--accent)}
+.tipcard .grow{flex:1 1 240px;min-width:0}
+.tipcard p{margin:3px 0 0;font-size:calc(13px * var(--fs,1))}
+.tipact{display:flex;gap:6px;flex:none}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1079,7 +1084,7 @@ function rmGoogle(r){const k=rmStart(r),[h,m]=r.t.split(':').map(Number),e=new D
 function remindHTML(){const L=rmList(),on=L.filter(r=>r.on);
   return `<p class="muted" style="margin-top:0">日課是網頁 App，關掉之後沒辦法自己發通知。把提醒加到手機的行事曆，就由行事曆準時通知你；iPhone、Android 和電腦都適用。</p>
   <div class="rmlist">${L.map(r=>`<div class="rmrow${r.on?'':' off'}"><label class="rmchk"><input type="checkbox" data-ch="rmOn" data-id="${r.id}" ${r.on?'checked':''}><span><b>${r.n}</b><span class="muted">${r.d}</span></span></label>
-    <div class="rmctl"><select data-ch="rmF" data-id="${r.id}" aria-label="頻率">${Object.entries(RM_F).map(([v,n])=>`<option value="${v}"${r.f===v?' selected':''}>${n}</option>`).join('')}</select><input type="time" data-ch="rmT" data-id="${r.id}" value="${r.t}" aria-label="時間"><a class="ghost sm btn" href="${esc(rmGoogle(r))}" target="_blank" rel="noopener" title="在 Google 日曆新增這個提醒">Google</a></div></div>`).join('')}</div>
+    <div class="rmctl"><select data-ch="rmF" data-id="${r.id}" aria-label="頻率">${Object.entries(RM_F).map(([v,n])=>`<option value="${v}"${r.f===v?' selected':''}>${n}</option>`).join('')}</select><input type="time" data-ch="rmT" data-id="${r.id}" value="${r.t}" aria-label="時間"><a class="ghost sm btn" href="${esc(rmGoogle(r))}" target="_blank" rel="noopener" onclick="try{localStorage.setItem('sd-rmics','true')}catch(e){}" title="在 Google 日曆新增這個提醒">Google</a></div></div>`).join('')}</div>
   <div class="row" style="margin-top:12px"><button class="pri" data-act="rmIcs"${on.length?'':' disabled'}>把勾選的 ${on.length} 個加到行事曆</button></div>
   <p class="muted" style="margin:8px 0 0">會下載一個行事曆檔（.ics），打開後選「全部加入」；iPhone 會直接出現加入行事曆的畫面。只用 Google 日曆的話，按每一行右邊的「Google」。之後想改時間，在行事曆裡直接改就好。</p>`}
 function goalIcs(e){const t=today(),n=diffDays(t,e.date),k=exKind(e.name),evs=[];
@@ -1099,7 +1104,7 @@ function goLocal(why){
   const L=lsGet(LKEY,null);if(L)COLLS.forEach(c=>{S[c]=Object.assign({},L[c]||{},why==='viewonly'?S[c]:{})});
   if(!S.meta.main)save('meta','main',clone(DEF));else persistLocal();
   setNote(NOTES[why]);
-  setTimeout(()=>{try{if(sessionStorage.getItem('sd-updated')){sessionStorage.removeItem('sd-updated');toast('已更新到最新版')}}catch{}},3200);
+  try{sessionStorage.removeItem('sd-updated')}catch{} // updates are silent; new features introduce themselves via WHATSNEW on 今日
   askPersist().then(()=>{if(R==='prefs')render()});{const pv=lsGet('sd-ver','');takeSnap(!!pv&&pv!==APP_VER);lsSet('sd-ver',APP_VER)}
   setTimeout(()=>{renderSyncChip();if(gdAvail()&&GD.on&&gdReady())gdSync()},800);
   render();
@@ -1466,11 +1471,45 @@ function widgetBody(w,k){
 }
 function meetDueHTML(){if(!isOn('plan'))return '';const due=Object.keys(S.projects||{}).map(id=>({id,p:proj(id)})).filter(x=>meetEnded(x.p));
   return due.map(({id,p})=>`<section class="card mdue"><div class="row sb"><div><b>和${esc(p.next.who||'指導教授')}的會談結束了</b><div class="muted">${esc(p.name)}・${fmtMD(p.next.date)} ${esc(p.next.time||'')}。趁記憶清楚，花五分鐘記下重點和下一步。</div></div><button class="sec" data-act="goMeet" data-id="${esc(id)}">記錄會談</button></div></section>`).join('')}
+/* ---------- gentle discovery: one suggestion at a time, based on what the person actually does ---------- */
+// What's new: shown once to people who were already using Rike before the feature shipped. Add new entries at the TOP.
+const WHATSNEW=[
+ {id:'n-remind',d:'2026-11-18',t:'新功能：每日提醒',b:'把早晨意向、靜心、日記等提醒加到手機行事曆，由行事曆準時通知你。',go:'remind',btn:'設定提醒'},
+ {id:'n-scene',d:'2026-11-18',t:'新功能：目標衝刺',b:'原本的「考試衝刺」現在也能用在比賽、演出、發表，用語和每日提醒會一起換。',go:'exam',btn:'去看看'},
+ {id:'n-noise',d:'2026-11-18',t:'新功能：白噪音',b:'番茄鐘專注時可以播放夜晚蟲鳴或潮汐，幫你隔開周圍的雜音。',go:'sound',btn:'試聽'}];
+function tipsState(){const v=lsGet('sd-tips',null);return v&&typeof v==='object'?v:{done:{},last:'',cur:null}}
+const tipsSave=v=>lsSet('sd-tips',v);
+function firstUse(){let f=lsGet('sd-first','');if(!f&&backend==='loading')return today();if(!f){const ks=Object.keys(S.days).filter(k=>/^\d{4}-\d\d-\d\d$/.test(k)).sort();f=ks[0]&&ks[0]<today()?ks[0]:today();lsSet('sd-first',f)}return f}
+function recentDays(n,fn){let c=0;for(let i=0;i<n;i++)if(fn(day(addDays(today(),-i))))c++;return c}
+function tipList(){const hid=cfg().hidden||[],ss7=Array.from({length:7},(_,i)=>(day(addDays(today(),-i)).sessions||[]).length).reduce((a,b)=>a+b,0),allSs=Object.values(S.days).reduce((a,d)=>a+(d.sessions||[]).length,0),age=diffDays(firstUse(),today());
+  return [
+   {id:'mind',ok:!isOn('mind')&&ss7>=4,t:`這週已經專注 ${ss7} 個番茄了`,b:'休息時靜心 3 分鐘，讓頭腦真正放鬆，下一顆番茄更好進入狀態。',btn:'打開靜心',page:'mind'},
+   {id:'journal',ok:!isOn('journal')&&recentDays(7,d=>(((d.j||{}).top3)||[]).some(x=>x&&x.t))>=3,t:'你常寫下今天的三件事',b:'「覺察日記」可以再記下心情、情緒和晚上的回顧，一段時間後能看見自己的節奏。',btn:'打開覺察日記',page:'journal'},
+   {id:'goalcal',ok:isOn('exam')&&!lsGet('sd-goalics',false)&&(cfg().exams||[]).some(e=>e.date&&diffDays(today(),e.date)>7),t:'目標日越來越近了',b:'把 D-30、D-7、D-1 的提醒加到手機行事曆，每個階段都會提醒你該準備什麼。',btn:'加到行事曆',go:'exam'},
+   {id:'quiz',ok:allSs>=10&&Object.keys((QZ&&QZ.a)||{}).length<10,t:'找出你一天中的高效時段',b:'「我的節奏」用大約 12 分鐘的問答，找出你的精力高峰和低谷，排出建議的一天。',btn:'開始測驗',page:'quiz'},
+   {id:'remind',ok:age>=4&&!lsGet('sd-rmics',false),t:'讓手機提醒你',b:'日課關掉後沒辦法通知你。把早晨意向、靜心或日記的提醒加到手機行事曆，就不會忘記。',btn:'設定提醒',go:'remind'},
+   {id:'widgets',ok:age>=5&&!todayWidgets().length,t:'「今日」可以放你常用的小卡片',b:'例如今天的專注紀錄、本週專注、計數或心境，需要的再放上來。',btn:'加入小卡片',go:'widgets'},
+   {id:'plan',ok:!isOn('plan')&&age>=10,t:'有一個比較大的目標嗎？',b:'「計畫地圖」把論文、作品集或任何長期計畫拆成階段和小步驟，每天只要做最小的一步。',btn:'打開計畫地圖',page:'plan'},
+   {id:'nav',ok:age>=7&&hid.length>0&&!(cfg().navOrder||[]).length,t:'選單可以照你的習慣調整',b:'在「設定 → 要顯示哪些頁面」打開其他頁面，或調整選單順序。',btn:'去設定',go:'pages'}].filter(x=>x.ok)}
+function pickTip(){if(backend==='loading')return null;const st=tipsState(),t=today(),f=firstUse(),seenTip=x=>st.done[x.id];if(st.quiet===t)return null;
+  // keep today's card stable for the whole day
+  if(st.cur&&st.cur.d===t){const all=WHATSNEW.map(x=>Object.assign({kind:'new'},x)).concat(tipList().map(x=>Object.assign({kind:'tip'},x)));const c=all.find(x=>x.id===st.cur.id);if(c&&!seenTip(c))return c}
+  if(st.cur&&st.cur.d!==t){st.done[st.cur.id]=st.done[st.cur.id]||'shown';st.cur=null;tipsSave(st)}
+  const nw=WHATSNEW.find(x=>!st.done[x.id]&&f<x.d);
+  if(nw){st.cur={id:nw.id,d:t};tipsSave(st);return Object.assign({kind:'new'},nw)}
+  if(diffDays(f,t)<3)return null;
+  if(st.last&&diffDays(st.last,t)<3)return null;
+  const tp=tipList().find(x=>!st.done[x.id]);if(!tp)return null;
+  st.cur={id:tp.id,d:t};st.last=t;tipsSave(st);return Object.assign({kind:'tip'},tp)}
+function tipCardHTML(){let c;try{c=pickTip()}catch{return ''}if(!c)return '';
+  return `<section class="tipcard${c.kind==='new'?' isnew':''}" aria-label="${c.kind==='new'?'新功能':'小建議'}"><div class="grow"><b>${c.kind==='new'?'<span class="pill good">NEW</span> ':'💡 '}${esc(c.t)}</b><p class="muted">${esc(c.b)}</p></div>
+    <div class="tipact"><button class="sm sec" data-act="tipGo" data-id="${c.id}">${esc(c.btn)}</button><button class="ghost sm" data-act="tipNo" data-id="${c.id}">${c.kind==='new'?'知道了':'不用了'}</button></div></section>`}
 function vToday(){
   const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0),ws=todayWidgets();
   const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
   ${meetDueHTML()}
+  ${tipCardHTML()}
   ${examTodayHTML()}
   <div class="grid2">
     <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}</section>
@@ -2231,9 +2270,17 @@ const A={
   purOpen:()=>openPurpose(),
   close:()=>closeModal(),
   rmIcs:async()=>{const L=rmList().filter(r=>r.on);if(!L.length)return toast('先勾選要加入的提醒');const ics=icsFile(L.map(r=>({uid:'rm-'+r.id+'-'+r.f+'-'+r.t.replace(':',''),date:rmStart(r),t:r.t,min:10,rrule:RRULE[r.f],title:'日課・'+r.n,desc:r.d})));
-    if(await saveFile('日課提醒.ics',ics,'text/calendar','rike-reminders.ics'))toast('已下載行事曆檔，打開後選「全部加入」')},
-  exIcs:async el=>{const e=(cfg().exams||[])[+el.dataset.i];if(!e||!e.date)return;const evs=goalIcs(e);if(!evs.length)return toast('日期已經過了');if(await saveFile((e.name||'目標')+'倒數提醒.ics',icsFile(evs),'text/calendar','rike-goal.ics'))toast('已下載，打開後選「全部加入」')},
+    if(await saveFile('日課提醒.ics',ics,'text/calendar','rike-reminders.ics')){lsSet('sd-rmics',true);toast('已下載行事曆檔，打開後選「全部加入」')}},
+  exIcs:async el=>{const e=(cfg().exams||[])[+el.dataset.i];if(!e||!e.date)return;const evs=goalIcs(e);if(!evs.length)return toast('日期已經過了');if(await saveFile((e.name||'目標')+'倒數提醒.ics',icsFile(evs),'text/calendar','rike-goal.ics')){lsSet('sd-goalics',true);toast('已下載，打開後選「全部加入」')}},
   purApply:()=>{if(!applyPurpose())return toast('至少選一個');closeModal();toast('已依用途調整頁面');render()},
+  tipNo:el=>{const st=tipsState();st.done[el.dataset.id]='no';st.cur=null;st.quiet=today();tipsSave(st);render()},
+  tipGo:el=>{const id=el.dataset.id,st=tipsState();st.done[id]='yes';st.cur=null;st.quiet=today();tipsSave(st);
+    const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||{};
+    if(c.page){if(!isOn(c.page))editCfg(cc=>{cc.hidden=(cc.hidden||[]).filter(r=>r!==c.page)});location.hash=c.page;return}
+    const go=c.go;if(go==='exam'){location.hash='exam';return}
+    if(go==='widgets'){todayEdit=true;render();return}
+    if(go==='remind'||go==='sound'||go==='pages'){FOLD_OPEN.add(go);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')));location.hash='prefs';setTimeout(()=>{const d=document.querySelector(`details[data-fold="${go}"]`);if(d)d.scrollIntoView({behavior:'smooth',block:'start'})},250);return}
+    render()},
   tListT:()=>{tListEdit=!tListEdit;render()},
   tDelId:el=>{const id=el.dataset.id,ts=cfg().timers;if(ts.length<2)return toast('至少保留 1 個計時');if(T.running&&T.pid===id)return toast('這個計時進行中，先暫停或重設');const t=ts.find(x=>x.id===id);editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==id);c.tv=2});if(T.pid===id){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false}toast('已刪除「'+(t?t.name:'')+'」');render()},
   tRestore:()=>{const sc=exScene();editCfg(c=>{sceneTimers(sc==='custom'?'exam':sc).forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},

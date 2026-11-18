@@ -492,6 +492,12 @@ main .grid2+.setgrp{margin-top:26px}
 .rmctl select{padding-left:10px;padding-right:4px}
 .rmctl input[type=time]{padding-left:10px;padding-right:6px}
 .excal{margin-top:6px}
+.mofields{grid-template-columns:minmax(0,9.5em) minmax(0,1fr)}
+.mofields input,.mofields select{width:100%;min-width:0}
+@media (max-width:420px){.mofields{grid-template-columns:1fr}}
+.addwid{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;margin:6px 0 16px;padding:14px 16px;border:1px dashed var(--line);border-radius:var(--r);background:transparent;text-align:left;color:var(--ink)}
+.addwid span{color:var(--muted);font-size:calc(12.5px * var(--fs,1))}
+.addwid:hover{background:var(--sunk)}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -819,17 +825,16 @@ const DEF={
     {id:'T',name:'論文',c:4,unit:'頁'},{id:'P',name:'專案進度',c:5,unit:''},{id:'B',name:'閱讀',c:10,unit:'頁'},
     {id:'M',name:'專注靜心',c:9,unit:'分'},{id:'E',name:'運動',c:8,unit:'分'}],
   pomo:{work:25,short:5,long:15,every:4},
-  counters:[{id:'fix',name:'訂正錯題',goal:5,step:1},{id:'drill',name:'完成練習題',goal:20,step:5},{id:'hit',name:'練習達標次數',goal:3,step:1}],
-  exams:[{id:'toefl',name:'托福 TOEFL',date:''}],
+  counters:[{id:'c1',name:'練習題',goal:20,step:5},{id:'c2',name:'讀書頁數',goal:30,step:5},{id:'c3',name:'喝水（杯）',goal:8,step:1}],
+  exams:[{id:'g1',name:'',date:''}],
   timers:[
-    {id:'n1',name:'閱讀',segs:[{n:'閱讀',s:1800}]},
-    {id:'n2',name:'聽力',segs:[{n:'聽力',s:1740}]},
-    {id:'n3',name:'寫作',segs:[{n:'寫作',s:1380}]},
-    {id:'n4',name:'口說',segs:[{n:'口說',s:480}]},
-    {id:'n5',name:'整場模考',segs:[{n:'閱讀',s:1800},{n:'聽力',s:1740},{n:'寫作',s:1380},{n:'口說',s:480}]}],
+    {id:'e1',name:'單科練習',segs:[{n:'作答',s:3000}]},
+    {id:'e2',name:'限時小考',segs:[{n:'作答',s:1200}]},
+    {id:'e3',name:'整場模擬考',segs:[{n:'第一節',s:3000},{n:'休息',s:600},{n:'第二節',s:3000}]}],
   tv:2,
-  scale:'30'
+  scale:'custom'
 };
+const TOEFL_TIMERS=JSON.stringify([{id:'n1',name:'閱讀',segs:[{n:'閱讀',s:1800}]},{id:'n2',name:'聽力',segs:[{n:'聽力',s:1740}]},{id:'n3',name:'寫作',segs:[{n:'寫作',s:1380}]},{id:'n4',name:'口說',segs:[{n:'口說',s:480}]},{id:'n5',name:'整場模考',segs:[{n:'閱讀',s:1800},{n:'聽力',s:1740},{n:'寫作',s:1380},{n:'口說',s:480}]}].map(t=>[t.id,t.name,t.segs]));
 const CAUSES=['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'];
 const SRS=[1,3,7,14,30];
 const SECS=[['r','閱讀','R'],['l','聽力','L'],['s','口說','S'],['w','寫作','W']];
@@ -861,7 +866,9 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[],DBX=null,UIDX=null,IS_OWNER=false,FB={},fbUnsub=null;
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘')c.counters=clone(DEF.counters);return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘'||(cn==='訂正錯題|完成練習題|練習達標次數'&&!oldCtrUsed())||!m.counters)c.counters=clone(DEF.counters);if(!m.exams||(m.exams.length===1&&m.exams[0].id==='toefl'&&!m.exams[0].date))c.exams=clone(DEF.exams);if(m.timers&&JSON.stringify(m.timers.map(t=>[t.id,t.name,t.segs]))===TOEFL_TIMERS&&exSceneRaw(m)==='exam')c.timers=clone(DEF.timers);if(!m.scale&&Object.values(S.mocks||{}).some(x=>(x.scale||'30')!=='custom'))c.scale='30';return c}
+const exSceneRaw=m=>m.exScene||'exam';
+let _ctr={n:-1,v:false};function oldCtrUsed(){const ks=Object.keys(S.days);if(_ctr.n!==ks.length){_ctr={n:ks.length,v:ks.some(k=>{const c=S.days[k].counts||{};return c.fix||c.drill||c.hit})}}return _ctr.v}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
 function persistLocal(){lsSet(LKEY,S)}
 let MT_=lsGet('sd-mtime',{})||{},TOMB=lsGet('sd-tomb',{})||{};
@@ -1149,7 +1156,7 @@ function render(){
 function allTags(){const t=cfg().subjects.map(x=>Object.assign({},x));if(isOn('plan'))Object.keys(S.projects).forEach((pid,i)=>{const pj=proj(pid);t.push({id:'p:'+pid,name:pj.name,c:(6+i)%12,unit:'',proj:pid})});return t}
 const LEGACY_TAGS=[{id:'R',name:'托福閱讀',c:0},{id:'L',name:'托福聽力',c:3},{id:'S',name:'托福口說',c:2},{id:'W',name:'托福寫作',c:1}];
 const subj=id=>allTags().find(s=>s.id===id)||(cfg().subjectsArchived||[]).find(s=>s.id===id)||LEGACY_TAGS.find(s=>s.id===id)||(S.projects[String(id||'').slice(2)]?{id,name:S.projects[String(id).slice(2)].name,c:6,unit:''}:{id,name:id||'未分類',c:7,unit:''});
-function tagOptions(sel){const t=allTags(),a=t.filter(x=>!x.proj),b=t.filter(x=>x.proj);return a.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')+(b.length?`<optgroup label="研究專案">${b.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}</optgroup>`:'')}
+function tagOptions(sel){const t=allTags(),a=t.filter(x=>!x.proj),b=t.filter(x=>x.proj);return a.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')+(b.length?`<optgroup label="計畫">${b.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}</optgroup>`:'')}
 let tagAdding=false,tagEdit=false;
 const sdot=id=>`<span class="dot" style="background:var(--c${subj(id).c})"></span>`;
 function subjOptions(sel){return cfg().subjects.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')}
@@ -1186,7 +1193,7 @@ function pomoHTML(){
   <div class="pform">
     <div class="wide tagpick"><div class="row sb"><span class="muted" style="font-size:calc(12px * var(--fs,1))">記錄到</span><button class="ghost sm" data-act="ptagEditT" style="padding:1px 6px;font-size:calc(12px * var(--fs,1))">${tagEdit?'完成':'編輯'}</button></div>
       <div class="tags">${allTags().map(t=>tagEdit?(t.proj?'':`<span class="tagc editing" style="--tc:var(--c${t.c})">${esc(t.name)}<button class="tdel" data-act="ptagDel" data-id="${esc(t.id)}" aria-label="刪除「${esc(t.name)}」">×</button></span>`):`<button class="tagc${P.sub===t.id?' on':''}" data-act="ptag" data-id="${esc(t.id)}" style="--tc:var(--c${t.c})">${t.proj?'<span class="pj">專案</span>':''}${esc(t.name)}</button>`).join('')}${tagEdit?'':`<button class="tagc add" data-act="ptagNew">${tagAdding?'取消':'＋ 自填'}</button>`}</div>
-      ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。研究專案的標籤請到計畫地圖管理。</span>':''}
+      ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。計畫的標籤請到計畫地圖管理。</span>':''}
       ${tagAdding?`<div class="row" style="margin-top:6px"><input id="ptagName" type="text" placeholder="例：日文、健身、備課、讀書會" style="flex:1"><button class="sm sec" data-act="ptagSave">加入</button></div>`:''}
     </div>
     <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
@@ -1400,30 +1407,32 @@ function dueHTML(){
 }
 function nextStepsHTML(){
   const ids=Object.keys(S.projects);
-  if(!ids.length)return `<p class="empty">還沒有研究專案。<a href="#plan">建立第一個</a></p>`;
+  if(!ids.length)return `<p class="empty">還沒有計畫。<a href="#plan">建立第一個</a></p>`;
   return `<div class="list">${ids.map(id=>{const p=proj(id),ns=nextStep(id),nx=p.next&&p.next.date>=today()?p.next:null;
     return `<div class="li"><div class="grow"><div><b>${esc(p.name)}</b>${ns?'・'+esc(ns.st.name):''}</div><div>${ns?'下一步：'+esc(ns.s.t):'<span class="muted">這個階段的步驟都完成了</span>'}</div>${nx?`<div class="muted">下次會談：${fmtMD(nx.date)} ${esc(nx.time||'')}</div>`:''}</div>${ns?`<button class="sm" data-act="todayStep" data-p="${id}" data-st="${ns.st.id}" data-id="${ns.s.id}">開始</button>`:''}</div>`}).join('')}</div>`;
 }
 const WIDGETS={
   sessions:{n:'今日專注紀錄',d:'今天每一顆番茄的內容'},
-  counters:{n:'計數',d:'訂正錯題、練習題等每日計數'},
+  energy:{n:'精力・專注度',d:'隨手記下現在的精力，用在「我的節奏」報告'},
+  counters:{n:'計數',d:'每天想累積的次數，例如練習題、頁數、喝水'},
   mind:{n:'靜心',d:'選好時間，靜靜坐一會兒',need:'mind'},
-  due:{n:'待複習錯題',d:'今天該複習的錯題',need:'exam'},
-  next:{n:'研究專案的下一步',d:'每個專案現在能做的一步',need:'plan'},
-  exams:{n:'考試倒數',d:'所有考試和截止日',need:'exam'},
+  due:{n:'待複習項目',d:'「目標衝刺」裡今天該複習的項目',need:'exam'},
+  next:{n:'計畫的下一步',d:'每個計畫現在能做的一步',need:'plan'},
+  exams:{n:'目標倒數',d:'所有目標日和截止日',need:'exam'},
   mood:{n:'今日心境',d:'一鍵記下心境，與覺察日記同步',need:'journal'},
   week:{n:'本週專注',d:'這週每天的專注分鐘'}};
-const WIDGET_DEF=['sessions','counters','mind','next','due','week'];
+const WIDGET_DEF=[];
 let todayEdit=false;
 function todayWidgets(){const c=cfg();return (Array.isArray(c.todayWidgets)?c.todayWidgets:WIDGET_DEF).filter(w=>WIDGETS[w]&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)))}
 function widgetBody(w,k){
   const ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0);
   if(w==='sessions')return [`今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span> ${XL('看本週統計','stats','data-m="week"')}`,`${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div>`];
   if(w==='counters')return [`計數 ${XL('調整計數器','prefs')}`,countersHTML(k)];
+  if(w==='energy')return [`精力・專注度 ${XL('用在「我的節奏」報告','quiz')}`,energyHTML(k)];
   if(w==='mind')return [`靜心 ${XL('靜心頁','mind')}`,todayMindHTML()];
   if(w==='due')return [`${esc(exL('due'))} ${XL(exPage(),'exam')}`,dueHTML()];
   if(w==='next')return [`計畫的下一步 ${XL('計畫地圖','plan')}`,nextStepsHTML()];
-  if(w==='exams'){const ex=cfg().exams;return [`考試倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有考試日期。</p>'];}
+  if(w==='exams'){const ex=cfg().exams;return [`目標倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有設定日期。</p>'];}
   if(w==='mood'){const j=day(k).j||{};return [`今日心境 ${XL('覺察日記','journal')}`,`<div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="mood" data-n="${n}" aria-pressed="${j.mood===n}">${n}</button>`).join('')}</div><p class="muted" style="margin:8px 0 0">1 低落，5 明亮。會同步到覺察日記。</p>`];}
   if(w==='week'){const s0=weekStart(k),ks=Array.from({length:7},(_,i)=>addDays(s0,i));const rows=ks.map(x=>({key:x,label:'週'+wdName(x),parts:[{c:0,v:(day(x).sessions||[]).reduce((a,y)=>a+(+y.min||0),0),n:fmtMD(x)}]}));return [`本週專注 ${XL('統計','stats','data-m="week"')}`,stackBars(rows,{h:150,marker:k})];}
   return ['',''];
@@ -1440,12 +1449,11 @@ function vToday(){
     <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}</section>
     <div class="stack">
       <section class="card"><h2>今天最重要的三件事 ${XL('寫今天的覺察日記','journal')}</h2>${top3HTML(k)}</section>
-      <section class="card"><h2>精力・專注度 ${XL('用在「我的節奏」報告','quiz')}</h2>${energyHTML(k)}</section>
     </div>
   </div>
-  <div class="row sb" style="margin:6px 0 10px"><h2 style="margin:0;font-size:calc(14px * var(--fs,1));color:var(--muted)">我的窗格</h2><button class="${todayEdit?'sec':'ghost'} sm" data-act="todayEditT">${todayEdit?'完成':'編輯窗格'}</button></div>
-  ${todayEdit?`<section class="card" style="margin-bottom:14px"><h2>加入窗格 <span class="muted">按一下加入，在窗格右上角可以調整順序或移除</span></h2>${hidden.length?`<div class="tplgrid">${hidden.map(w=>`<button class="tpl" data-act="wAdd" data-w="${w}"><b>${WIDGETS[w].n}</b><span>${WIDGETS[w].d}</span></button>`).join('')}</div>`:'<p class="empty">所有窗格都已經在首頁了。</p>'}<div style="margin-top:10px"><button class="ghost sm" data-act="wReset">恢復預設</button></div></section>`:''}
-  <div class="widgets">${ws.map((w,i)=>{const [h,body]=widgetBody(w,k);return `<section class="card widget${todayEdit?' editing':''}"><h2>${h}${todayEdit?`<span class="wtools"><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="-1" aria-label="往前"${i===0?' disabled':''}>←</button><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="1" aria-label="往後"${i===ws.length-1?' disabled':''}>→</button><button class="ghost sm" data-act="wDel" data-w="${w}" aria-label="移除">×</button></span>`:''}</h2>${body}</section>`}).join('')}${!ws.length?'<p class="empty">首頁沒有窗格。按「編輯窗格」加入。</p>':''}</div>`;
+  ${ws.length||todayEdit?`<div class="row sb" style="margin:6px 0 10px"><h2 style="margin:0;font-size:calc(14px * var(--fs,1));color:var(--muted)">我的小卡片</h2><button class="${todayEdit?'sec':'ghost'} sm" data-act="todayEditT">${todayEdit?'完成':'編輯小卡片'}</button></div>`:''}
+  ${todayEdit?`<section class="card" style="margin-bottom:14px"><h2>加入小卡片 <span class="muted">按一下加入，在卡片右上角可以調整順序或移除</span></h2>${hidden.length?`<div class="tplgrid">${hidden.map(w=>`<button class="tpl" data-act="wAdd" data-w="${w}"><b>${WIDGETS[w].n}</b><span>${WIDGETS[w].d}</span></button>`).join('')}</div>`:'<p class="empty">所有小卡片都已經在首頁了。</p>'}<div style="margin-top:10px"><button class="ghost sm" data-act="wReset">恢復預設</button></div></section>`:''}
+  <div class="widgets">${ws.map((w,i)=>{const [h,body]=widgetBody(w,k);return `<section class="card widget${todayEdit?' editing':''}"><h2>${h}${todayEdit?`<span class="wtools"><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="-1" aria-label="往前"${i===0?' disabled':''}>←</button><button class="ghost sm" data-act="wMv" data-w="${w}" data-d="1" aria-label="往後"${i===ws.length-1?' disabled':''}>→</button><button class="ghost sm" data-act="wDel" data-w="${w}" aria-label="移除">×</button></span>`:''}</h2>${body}</section>`}).join('')}</div>${!ws.length&&!todayEdit?`<button class="addwid" data-act="todayEditT"><b>＋ 加入小卡片</b><span>今日專注紀錄、精力、計數、靜心、本週專注…需要的再放上來</span></button>`:''}`;
 }
 
 /* ---------- calendar view ---------- */
@@ -1618,7 +1626,7 @@ function weekReview(keys,A,subs){
   const top=subs[0];
   return `<section class="card"><h2>週回顧 <span class="muted">回頭看看這一週，寫下下週想調整的事</span></h2>
   <div class="grid3">
-    <div><h3>這週的數字</h3><p>專注 ${fmtMin(A.mins)}、${A.n} 個番茄。${top?`花最多時間在「${esc(top.n)}」（${fmtMin(top.v)}）。`:''}</p>${projMoves?`<h3>研究專案推進</h3><ul style="margin:0;padding-left:18px">${projMoves}</ul>`:''}</div>
+    <div><h3>這週的數字</h3><p>專注 ${fmtMin(A.mins)}、${A.n} 個番茄。${top?`花最多時間在「${esc(top.n)}」（${fmtMin(top.v)}）。`:''}</p>${projMoves?`<h3>計畫推進</h3><ul style="margin:0;padding-left:18px">${projMoves}</ul>`:''}</div>
     <div><h3>這週做到的事 <span class="muted">${wins.length} 則</span></h3>${wins.length?`<ul style="margin:0;padding-left:18px">${wins.slice(0,12).map(x=>`<li><span class="muted">${fmtMD(x.k)}</span> ${esc(x.w)}</li>`).join('')}</ul>`:'<p class="empty">這週還沒寫回顧。</p>'}</div>
     <div><h3>下週要調整</h3><textarea id="rv${wk}" data-in="review" data-k="${wk}" rows="6" placeholder="例：口說練習排在早上；論文每天至少 1 個番茄">${esc(rv.text)}</textarea></div>
   </div></section>`;
@@ -1626,15 +1634,16 @@ function weekReview(keys,A,subs){
 
 /* ---------- exam view ---------- */
 let mkFilter='due',tEditing=false,tListEdit=false,mkSubEdit=false,mkSubAdding=false;
-const MK_DEF=[{id:'mk1',n:'閱讀',c:0},{id:'mk2',n:'聽力',c:3},{id:'mk3',n:'口說',c:2},{id:'mk4',n:'寫作',c:1},{id:'mk5',n:'其他',c:7}];
-function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:MK_DEF}
-function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_DEF.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
+const MK_OLD=[{id:'mk1',n:'閱讀',c:0},{id:'mk2',n:'聽力',c:3},{id:'mk3',n:'口說',c:2},{id:'mk4',n:'寫作',c:1},{id:'mk5',n:'其他',c:7}];
+const MK_DEF=[{id:'mk5',n:'其他',c:7}];
+function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:(Object.values(S.mistakes||{}).some(m=>/^mk[1-4]$/.test(m.sub))?MK_OLD:MK_DEF)}
+function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_OLD.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
 const mkDot=id=>`<span class="dot" style="background:var(--c${mkSub(id).c})" title="${esc(mkSub(id).n)}"></span>`;
 const ENC=['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'];
 function encLine(p){if(T.running)return exL('encRun');if(T.left===0)return exL('encDone');const d=Math.floor(Date.now()/864e5),E=exL('enc');return E[(d+T.seg)%E.length]}
 /* ---------- goal scenes: same page, different wording ---------- */
 const EXS={
- exam:{n:'考試',ev:'考試',pre:'考前',timer:'測驗計時',timerRun:'測驗計時中',dates:'考試日期',dateAdd:'新增考試或截止日',datesHint:'例如托福、研究所筆試、證照考試或申請截止日。',namePh:'例：托福、研究所筆試、申請截止',score:'模考紀錄',scoreShort:'模考',scorePh:'例：TPO 60、官方模考',book:'錯題本',bookAdd:'加入錯題本',due:'待複習錯題',item:'題目或摘要',itemPh:'例：TPO 48 R2 Q7 修辭目的題',cause:'錯因',causes:['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'],answer:'正解與學到什麼',answerPh:'下次看到這種題目要注意什麼',subj:'科目',titlePh:'開始你的考試',chip:'設定考試日期',
+ exam:{n:'考試',ev:'考試',pre:'考前',timer:'測驗計時',timerRun:'測驗計時中',dates:'考試日期',dateAdd:'新增考試或截止日',datesHint:'例如語言檢定、國家考試、研究所筆試、證照或申請截止日。',namePh:'例：多益、研究所筆試、申請截止',score:'模考紀錄',scoreShort:'模考',scorePh:'例：第 3 回模擬考、官方模考',book:'錯題本',bookAdd:'加入錯題本',due:'待複習錯題',item:'題目或摘要',itemPh:'例：第 12 題，推論題',cause:'錯因',causes:['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'],answer:'正解與學到什麼',answerPh:'下次看到這種題目要注意什麼',subj:'科目',titlePh:'開始你的考試',chip:'設定考試日期',
    enc:['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'],encRun:'專心作答中，每段結束都會響鈴提醒你。',encDone:'完成了！給自己一點肯定，記得在下方記錄分數或錯題。'},
  race:{n:'比賽',ev:'比賽',pre:'賽前',timer:'訓練計時',timerRun:'訓練計時中',dates:'比賽日期',dateAdd:'新增比賽或截止日',datesHint:'例如馬拉松、球賽、棋賽、程式競賽或報名截止日。',namePh:'例：台北馬拉松、全國賽、報名截止',score:'成績紀錄',scoreShort:'成績',scorePh:'例：10K 配速 5:30、隊內練習賽',book:'待加強',bookAdd:'加入待加強',due:'待加強項目',item:'項目或情況',itemPh:'例：後段體力下滑、起跑太快',cause:'原因',causes:['體能','技術','節奏','心理','準備不足','傷痛'],answer:'調整方法',answerPh:'下次怎麼練、怎麼調整',subj:'類別',titlePh:'開始你的比賽',chip:'設定比賽日期',
    enc:['暖身做足了再開始，身體會感謝你。','照今天的計畫練，不必一次拚到底。','注意呼吸和節奏，穩定比速度重要。','每一次訓練，都讓比賽那天更熟悉一點。','累了就調整，受傷才是最大的退步。','練完記得收操和補水。'],encRun:'專心訓練中，每段結束都會響鈴提醒你。',encDone:'完成了！記下今天的成績和身體感受。'},
@@ -1778,7 +1787,7 @@ function vExam(){
       <p class="muted">${esc(exL('datesHint'))}設好日期後，這裡和「今日」會每天給你一句提醒，越接近日期，重點會跟著換。</p>
     </section>
   </div>
-  <section class="card" style="margin-bottom:16px"><div class="row sb" style="margin-bottom:12px"><h2 style="margin:0">${esc(exL('score'))} <span class="muted">${esc(sp.label)}</span></h2><div class="row">${exScale()===cfg().scale&&(exScene()==='exam'||exScene()==='custom')?`<div class="seg">${[['30','0–30'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${scale===v}">${n}</button>`).join('')}</div>`:''}${scale==='custom'?`<button class="ghost sm" data-act="csEditT">${scaleEditing?'收起':'調整計分方式'}</button>`:''}</div></div>
+  <section class="card" style="margin-bottom:16px"><div class="row sb" style="margin-bottom:12px"><h2 style="margin:0">${esc(exL('score'))} <span class="muted">${esc(sp.label)}</span></h2><div class="row">${exScale()===cfg().scale&&(exScene()==='exam'||exScene()==='custom')?`<div class="seg">${[['custom','自訂項目'],['30','托福 0–30'],['band','托福 1–6']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${scale===v}">${n}</button>`).join('')}</div>`:''}${scale==='custom'?`<button class="ghost sm" data-act="csEditT">${scaleEditing?'收起':'調整計分方式'}</button>`:''}</div></div>
     ${scale==='custom'&&scaleEditing?`<div style="margin-bottom:14px">${scaleEditorHTML()}</div>`:''}
     <div class="row" style="margin-bottom:12px">
       <label class="f">日期<input id="mkD" type="date" value="${t}"></label>
@@ -1924,7 +1933,7 @@ function vPlan(){
   <section class="card" style="max-width:680px"><h2>從哪一種計畫開始？</h2>
     <p class="muted">選好類型和完成日，就會從今天排到那天，切成幾個階段和許多小步驟。每一步都小到可以在一兩次番茄鐘內完成。日期、步驟之後都能改。</p>
     <div class="fields" style="grid-template-columns:1fr 1fr;margin:12px 0">
-      <label class="f" style="grid-column:1/-1">計畫名稱<input id="npName" type="text" placeholder="例：碩士論文、研究所申請、作品集、托福 100 分"></label>
+      <label class="f" style="grid-column:1/-1">計畫名稱<input id="npName" type="text" placeholder="例：碩士論文、研究所申請、作品集、半程馬拉松"></label>
       <label class="f">類型<span class="combo"><select id="npType" data-ch="npType">${typeOpts('thesis')}</select><input id="npTypeX" type="text" placeholder="寫下類型，例：讀書會、健身計畫" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npType" hidden aria-label="改回選單">▾</button></span></label>
       <label class="f" id="npMethodWrap">主要研究方法<span class="combo"><select id="npMethod" data-ch="npMethod">${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}">${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select><input id="npMethodX" type="text" placeholder="寫下方法，例：語料庫分析、模擬實驗" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npMethod" hidden aria-label="改回選單">▾</button></span></label>
       <label class="f">預計完成日<input id="npDate" type="date" value="${addDays(today(),365)}" onchange="this.dataset.touched=1"></label>
@@ -2102,10 +2111,6 @@ function vPrefs(){
       <div style="margin-top:10px"><button data-act="subAdd">新增標籤</button></div>`)}
   <section class="card" style="margin-bottom:12px"><h2>番茄鐘（分鐘）</h2>
       <div class="row">${[['work','專注'],['short','短休'],['long','長休'],['every','每幾個番茄長休一次']].map(([k,n])=>`<label class="f">${n}<input id="po${k}" type="number" min="1" max="180" data-ch="pomo" data-f="${k}" value="${c.pomo[k]}"></label>`).join('')}</div>
-      <h2 style="margin-top:22px">模考計分</h2>
-      <div class="seg">${[['30','每科 0–30（總分 120）'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${c.scale===v}">${n}</button>`).join('')}</div>
-      ${c.scale==='custom'?scaleEditorHTML():''}
-      <p class="muted">依照你使用的模考成績單選擇就好，之後隨時可以切換。準備托福以外的考試，可以選「自訂」，自己設定項目、滿分和總分算法。</p>
     </section>
   ${fold('ctr','計數器',c.counters.length?`${c.counters.length} 個：${esc(c.counters.slice(0,3).map(x=>x.name).join('、'))}${c.counters.length>3?'…':''}`:'還沒有計數器',`
       <div class="list">${c.counters.map((x,i)=>`<div class="li ctrrow"><label class="f ctrname">名稱<input id="cn${i}" type="text" data-ch="ctr" data-i="${i}" data-f="name" value="${esc(x.name)}"></label><label class="f ctrnum">目標<input id="cg${i}" type="number" min="0" data-ch="ctr" data-i="${i}" data-f="goal" value="${x.goal}"></label><label class="f ctrnum">每次<input id="cs${i}" type="number" min="1" data-ch="ctr" data-i="${i}" data-f="step" value="${x.step}"></label><button class="ghost sm" data-act="ctrDel" data-i="${i}" aria-label="刪除">×</button></div>`).join('')}</div>
@@ -2215,9 +2220,9 @@ const A={
   exAdd:()=>{editCfg(c=>c.exams.push({id:rid(),name:'新的考試',date:''}));render()},
   exDel:el=>{if(!twoStep(el))return;editCfg(c=>c.exams.splice(+el.dataset.i,1));render()},
   mkSubEditT:()=>{mkSubEdit=!mkSubEdit;mkSubAdding=false;render()},
-  mkSubDel:el=>{const id=el.dataset.id,t=mkSubs().find(x=>x.id===id);if(!t)return;editCfg(c=>{c.mkSubjects=mkSubs().filter(x=>x.id!==id);c.mkArchived=(c.mkArchived||[]).concat([t])});toast('已刪除「'+t.n+'」，舊的錯題仍保留');render()},
+  mkSubDel:el=>{const id=el.dataset.id,t=mkSubs().find(x=>x.id===id);if(!t)return;editCfg(c=>{c.mkSubjects=mkSubs().filter(x=>x.id!==id);c.mkArchived=(c.mkArchived||[]).concat([t])});toast('已刪除「'+t.n+'」，舊的紀錄仍保留');render()},
   mkSubAdd:()=>{const n=$('#mkSubNew').value.trim();if(!n)return toast('先寫科目名稱');if(mkSubs().some(x=>x.n===n))return toast('已經有「'+n+'」');const id='mk'+rid();editCfg(c=>{c.mkSubjects=mkSubs().concat([{id,n,c:mkSubs().length%12}])});mkSubAdding=false;render();setTimeout(()=>{const sel=$('#msS');if(sel)sel.value=id},20)},
-  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:exScale(),note:$('#mkN').value.trim()};let any=false;scoreSpec(exScale()).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
+  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:exScale(),note:$('#mkN').value.trim()};let any=false;scoreSpec(exScale()).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增'+exL('score'));render()},
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
   msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:(($('#msS')||{}).value||'').replace('__add',''),q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
   msF:el=>{mkFilter=el.dataset.m;render()},
@@ -2971,7 +2976,7 @@ function ring(){if(!AC)return;try{const out=dest();for(let r=0;r<2;r++)for(let i
 function warnTone(){if(!AC)return;try{const out=dest(),t=T0()+.05;[[1175,.24],[2350,.05]].forEach(([f,a])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.35);o.start(t);o.stop(t+.4)})}catch{}}
 const xwarnOn=()=>lsGet('sd-xwarn',true)!==false;
 /* ---------- white noise (today's pomodoro, focus only) ---------- */
-const NOISE_K=[['insects','夜晚蟲鳴'],['ocean','潮汐'],['stream','流水'],['fire','燒柴']];
+const NOISE_K=[['insects','夜晚蟲鳴'],['ocean','潮汐']];
 const OCEAN_URL='ocean.mp3';
 const noiseOn=()=>lsGet('sd-noise-on',false)===true;
 const noiseKind=()=>{const k=lsGet('sd-noise-k','ocean');return NOISE_K.some(x=>x[0]===k)?k:'ocean'};
@@ -2996,31 +3001,7 @@ async function nzSynth(kind,sr){
   const dry=oc.createGain();dry.connect(oc.destination);
   const layer=(type,filt,f,q,gain,curve,toWet)=>{const m=oc.createChannelMerger(2);const src=()=>{const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,type);s.start(0);return s};const mid=src(),mg=oc.createGain();mg.gain.value=.75;mid.connect(mg);[0,1].forEach(c=>{const s=src(),sg=oc.createGain();sg.gain.value=.66;s.connect(sg);const bq=oc.createBiquadFilter();bq.type=filt;bq.frequency.value=f*(c?1.03:.97);bq.Q.value=q;sg.connect(bq);mg.connect(bq);bq.connect(m,0,c)});const g=oc.createGain();g.gain.value=gain;if(curve)g.gain.setValueCurveAtTime(curve,0,DUR);m.connect(g);g.connect(dry);if(toWet)g.connect(conv);return g};
   const mix=(bus,dryG,wetG)=>{const b=oc.createBuffer(2,N,sr);b.getChannelData(0).set(bus[0]);b.getChannelData(1).set(bus[1]);const s=oc.createBufferSource();s.buffer=b;const g1=oc.createGain(),g2=oc.createGain();g1.gain.value=dryG;g2.gain.value=wetG;s.connect(g1);g1.connect(oc.destination);s.connect(g2);g2.connect(conv);s.start(0)};
-  if(kind==='stream'){
-    // a brook = thousands of tiny resonating air bubbles (Minnaert), arriving in gurgling bursts
-    conv.buffer=nzIR(oc,1.1,.35);wet.gain.value=.5;
-    const gur=nzCurve(DUR,3,.25,1.6);
-    for(let t=0;t<DUR;){const gi=gur[Math.min(gur.length-1,Math.floor(t*3))];t+=-Math.log(1-R())/(260*gi);
-      const big=R()<.06,f0=big?140+R()*360:420*Math.pow(2400/420,Math.pow(R(),1.4)),tau=big?.012+R()*.03:.003+R()*.012,amp=(big?.5:.18)*(.3+R())*gi,rise=.6+R()*2.2,g=nzPan(R()*1.8-.9);
-      const i0=Math.floor(t*sr),len=Math.floor(tau*6*sr);let ph=R()*TAU;
-      for(let i=0;i<len;i++){const tt=i/sr,f=f0*(1+rise*Math.min(tt,tau*3)/tau*.25);ph+=TAU*f/sr;put(near,i0+i,amp*Math.exp(-tt/tau)*(1-Math.exp(-tt/.0006))*Math.sin(ph),g)}}
-    mix(near,.9,.35);
-    layer('pink','bandpass',700,.45,.22,nzCurve(DUR,.6,.14,.3),true);   // body of moving water
-    layer('white','highpass',4200,.5,.02,nzCurve(DUR,1,.012,.03),false); // fine spray
-  }else if(kind==='fire'){
-    // fireplace: soft roar that flickers, clustered crackles, a few big pops and hissing sap
-    conv.buffer=nzIR(oc,.9,.25);wet.gain.value=.35;
-    layer('brown','lowpass',190,.6,.9,nzCurve(DUR,6,.45,1),false);
-    layer('pink','bandpass',520,.8,.08,nzCurve(DUR,4,.03,.12),false);
-    const crack=(t,amp,g)=>{let tt0=t;const n=1+Math.floor(Math.pow(R(),2)*5);for(let k=0;k<n;k++){tt0+=.0004+R()*.006;const f=1600+R()*4800,d=.0004+R()*.0018,i0=Math.floor(tt0*sr),len=Math.floor(d*7*sr),a=amp*(.4+R()*.8);let ph=R()*TAU;
-        for(let i=0;i<len;i++){const tt=i/sr;ph+=TAU*f/sr;put(near,i0+i,a*Math.exp(-tt/d)*(.55*Math.sin(ph)+.45*(R()*2-1)),g)}}};
-    for(let t=.05;t<DUR;){t+=-Math.log(1-R())/2.6;const n=1+Math.floor(Math.pow(R(),1.6)*9),g=nzPan(R()*1.4-.7),base=.15+Math.pow(R(),2)*.6;let tt=t;for(let k=0;k<n;k++){tt+=Math.pow(R(),2)*.12;crack(tt,base*(.5+R()),g)}}
-    for(let t=.3;t<DUR;){t+=-Math.log(1-R())/.25;const g=nzPan(R()*1.2-.6),f=500+R()*900,d=.004+R()*.01,i0=Math.floor(t*sr),len=Math.floor(d*8*sr),a=.6+R()*.4;let ph=0;
-      for(let i=0;i<len;i++){const tt=i/sr;ph+=TAU*f*(1-tt*3)/sr;put(near,i0+i,a*Math.exp(-tt/d)*(.6*Math.sin(ph)+.4*(R()*2-1)),g)}}
-    const hiss=oc.createGain();hiss.gain.value=0;for(let t=2;t<DUR-2;t+=6+R()*10){const d=.5+R()*1.5;hiss.gain.setValueAtTime(0,t);hiss.gain.linearRampToValueAtTime(.03+R()*.03,t+.15);hiss.gain.linearRampToValueAtTime(0,t+d)}
-    {const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,'white');const bq=oc.createBiquadFilter();bq.type='bandpass';bq.frequency.value=5200;bq.Q.value=2.5;s.connect(bq);bq.connect(hiss);hiss.connect(dry);s.start(0)}
-    mix(near,1,.4);
-  }else{
+  {
     // summer night field: crickets at several distances, distant tree-cricket trills, a breath of wind
     conv.buffer=nzIR(oc,2.6,.2);wet.gain.value=.55;
     const cricket=(bus,f0,amp,g,per,np,pint,plen)=>{for(let t=R()*per;t<DUR-.3;){for(let k=0;k<np;k++){const t0=t+k*pint,i0=Math.floor(t0*sr),len=Math.floor(plen*sr),a=amp*(k===0?.8:1)*(.85+R()*.3);let ph=R()*TAU;
@@ -3081,11 +3062,11 @@ function emoGrid(k){
 }
 function momentsHTML(k){
   const ms=(day(k).j||{}).moments||[],n=new Date();
-  return `<div class="fields" style="grid-template-columns:110px 1fr">
+  return `<div class="fields mofields">
     <label class="f">時間<input id="moT" type="time" value="${pad(n.getHours())}:${pad(n.getMinutes())}"></label>
     <label class="f">當下的情緒<select id="moE"><option value="">（選一個）</option>${emoList().map(x=>`<option value="${esc(x.k)}">${esc(x.n)}</option>`).join('')}</select></label>
   </div>
-  <label class="f" style="margin-top:8px">發生了什麼<input id="moW" type="text" placeholder="只寫事實，例：模考聽力分數比上次低"></label>
+  <label class="f" style="margin-top:8px">發生了什麼<input id="moW" type="text" placeholder="只寫事實，例：會議上被打斷，沒說完想法"></label>
   <div class="fields" style="grid-template-columns:1fr 1fr;margin-top:8px">
     <label class="f">身體的感受<input id="moB" type="text" placeholder="例：胸口緊、肩膀僵硬"></label>
     <label class="f">我怎麼回應<input id="moR" type="text" placeholder="例：停下來呼吸、去散步"></label>

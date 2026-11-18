@@ -492,6 +492,8 @@ main .grid2+.setgrp{margin-top:26px}
 .rmctl select{padding-left:10px;padding-right:4px}
 .rmctl input[type=time]{padding-left:10px;padding-right:6px}
 .excal{margin-top:6px}
+@media (pointer:coarse){input[type=date],input[type=time],input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;display:block;text-align:left;min-height:42px}
+  input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}}
 .mofields{grid-template-columns:minmax(0,9.5em) minmax(0,1fr)}
 .mofields input,.mofields select{width:100%;min-width:0}
 @media (max-width:420px){.mofields{grid-template-columns:1fr}}
@@ -1118,10 +1120,19 @@ function inAppHint(){if(!STANDALONE||!/\bLine\/|FBAN|FBAV|Instagram/i.test(navig
 function localBanner(){
   if(backend!=='local')return inAppHint();
   if(gdAvail()&&GD.on){if(gdHealthy())return inAppHint();const a=gdAgeDays();return inAppHint()+`<div class="banner row sb"><span>Google 同步暫停了（${a!==null?'上次同步是 '+a+' 天前':'還沒同步成功'}），新的紀錄目前只在這台裝置。</span><button class="sm sec" data-act="gdNow">立即同步</button></div>`}
-  const last=lsGet('sd-lastexport',''),hasData=Object.keys(S.days).length+Object.keys(S.projects).length>0,stale=hasData&&(!last||diffDays(last,today())>=7);
-  const msg=localWhy==='viewonly'?'你目前沒有雲端儲存權限，紀錄會先存在這個瀏覽器。想在不同裝置同步，請分享這個頁面的人把你設為「可使用」。':localWhy==='standalone'?'你的資料存在這個瀏覽器裡，換電腦或清除瀏覽資料就會不見。':'資料目前只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。';
-  return inAppHint()+`<div class="banner row sb"><span>${msg}${stale?` <b>${last?'上次備份是 '+fmtMD(last)+'，':'還沒備份過，'}建議現在備份一次。</b>`:''}</span>${stale?'<button class="sm sec" data-act="export">立即備份</button>':''}</div>`;
+  if(localWhy==='viewonly'||localWhy==='nologin')return inAppHint()+`<div class="banner row sb"><span>${localWhy==='viewonly'?'你目前沒有雲端儲存權限，紀錄會先存在這個瀏覽器。想在不同裝置同步，請分享這個頁面的人把你設為「可使用」。':'資料目前只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。'}</span></div>`;
+  return inAppHint()+backupNudge();
 }
+// a quiet reminder every couple of weeks, only when nothing else protects the data
+const BK_EVERY=14,BK_SNOOZE=7;
+function backupNudge(){
+  const ks=Object.keys(S.days).sort(),hasData=ks.length+Object.keys(S.projects).length>0;if(!hasData)return '';
+  const t=today(),last=lsGet('sd-lastexport',''),snooze=lsGet('sd-bk-snooze',''),first=lsGet('sd-first','')||ks[0]||t;
+  if(snooze&&snooze>t)return '';
+  const due=last?diffDays(last,t)>=BK_EVERY:diffDays(first,t)>=3;if(!due)return '';
+  return `<div class="banner bknudge row sb"><span>${last?`距離上次備份已經 ${diffDays(last,t)} 天了。`:'你的紀錄只存在這台裝置，還沒備份過。'}花 10 秒存一份，換手機或清除瀏覽資料時就不怕遺失。</span><span class="row" style="gap:6px;flex:none;flex-wrap:wrap"><button class="sm sec" data-act="export">立即備份</button>${gdAvail()?'<button class="ghost sm" data-act="gdOn">改用 Google 自動同步</button>':''}<button class="ghost sm" data-act="bkLater">稍後提醒</button></span></div>`;
+}
+
 function themePref(){let ph=false;try{ph=Math.min(screen.width,screen.height)<=600&&matchMedia('(pointer:coarse)').matches}catch{}return lsGet('sd-theme',ph?'light':'auto')}
 const FS_OPTS=[['s','小',.9],['m','中',1],['l','大',1.15],['xl','特大',1.3]];
 function fsPref(){return lsGet('sd-fs','m')}
@@ -2254,6 +2265,7 @@ const A={
     if(go==='widgets'){todayEdit=true;render();return}
     if(go==='remind'||go==='sound'||go==='pages'){FOLD_OPEN.add(go);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')));location.hash='prefs';setTimeout(()=>{const d=document.querySelector(`details[data-fold="${go}"]`);if(d)d.scrollIntoView({behavior:'smooth',block:'start'})},250);return}
     render()},
+  bkLater:()=>{lsSet('sd-bk-snooze',addDays(today(),BK_SNOOZE));toast('好的，'+BK_SNOOZE+' 天後再提醒你');render()},
   tListT:()=>{tListEdit=!tListEdit;render()},
   tDelId:el=>{const id=el.dataset.id,ts=cfg().timers;if(ts.length<2)return toast('至少保留 1 個計時');if(T.running&&T.pid===id)return toast('這個計時進行中，先暫停或重設');const t=ts.find(x=>x.id===id);editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==id);c.tv=2});if(T.pid===id){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false}toast('已刪除「'+(t?t.name:'')+'」');render()},
   tRestore:()=>{const sc=exScene();editCfg(c=>{sceneTimers(sc==='custom'?'exam':sc).forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},
@@ -2829,9 +2841,9 @@ function reportHTML(id,r){
   if(M.ed.ok&&M.ed.studyTop&&M.ed.studyTop!==M.peak)notes.push(`你最常專注工作的時段是 <b>${blName(M.ed.studyTop)}</b>，但精力高峰在 <b>${blName(M.peak)}</b>。試著把最難的任務移到高峰。`);
   return `<div class="kpis">
     <div class="kpi"><div class="l">作息類型</div><div class="n" style="font-family:var(--f-display)">${T0.n}</div></div>
-    <div class="kpi"><div class="l">高峰時段</div><div class="n" style="font-size:calc(20px * var(--fs,1))">${blName(M.peak)}</div></div>
+    <div class="kpi"><div class="l">高峰時段</div><div class="n" style="font-size:calc(20px * var(--fs,1))">${(()=>{const t=blName(M.peak),m=String(t).match(/^([^\d]+?)\s*(\d.*)$/);return m?`<span style="font-family:var(--f-display);font-size:1.15em">${m[1]}</span> ${m[2]}`:esc(t)})()}</div></div>
     <div class="kpi"><div class="l">建議番茄長度</div><div class="n">${ps.w}<small>分 + 休息 ${ps.s} 分</small></div></div>
-    <div class="kpi"><div class="l">核心驅動</div><div class="n" style="font-family:var(--f-display)">${coreK.map(k=>DRV[k].n).join(' × ')}</div></div>
+    <div class="kpi"><div class="l">核心驅動</div><div class="n" style="font-family:var(--f-display);word-break:keep-all;line-height:1.3">${coreK.map(k=>DRV[k].n).join(' × ')}</div></div>
   </div>
   <div class="grid2">
     <section class="card"><h2>精力報告</h2>

@@ -2594,7 +2594,8 @@ function computeValues(a,fu){
   const v=valScores(a),fin={},layerOf={};
   DK.forEach(k=>{fin[k]=v.C[k];const ans=a['fu_'+k];if(fu.includes(k)&&ans){if(ans==='A')fin[k]=v.A[k];else if(ans==='S')fin[k]=v.S[k];else if(ans==='hi')fin[k]=Math.max(v.A[k],v.S[k]);else if(ans==='lo')fin[k]=Math.min(v.A[k],v.S[k]);else if(ans==='base'){fin[k]=Math.max(v.C[k],.6);layerOf[k]='base'}else if(ans==='want')layerOf[k]='want';else if(ans==='ctx')layerOf[k]='ctx'}});
   const rest=DK.filter(k=>!layerOf[k]).sort((x,y)=>fin[y]-fin[x]);
-  rest.forEach((k,i)=>{layerOf[k]=i<2?'core':i<5?'support':i>=rest.length-3?'low':'mid'});
+  // Bailey (Intentional): really consider your strongest three and weakest three values
+  rest.forEach((k,i)=>{layerOf[k]=i<3?'core':i<5?'support':i>=rest.length-3?'low':'mid'});
   const order=DK.slice().sort((x,y)=>fin[y]-fin[x]);
   const pct={};DK.forEach(k=>pct[k]=Math.round(Math.max(0,Math.min(1,fin[k]))*100));
   const keep=(v.C.SE+v.C.TR+v.C.CO)/3,open=(v.C.SD+v.C.ST)/2,selfE=(v.C.AC+v.C.PO)/2,trans=(v.C.UN+v.C.BE)/2;
@@ -3743,12 +3744,16 @@ const DRV_DAY={SD:'今天的做法由你決定，先挑一件你自己想推進�
 const DRV_EVE={SD:'今天有哪一件事，是你照自己的方式完成的？那就是你的力量。',ST:'今天有沒有一點新鮮的發現？明天可以再試一個不一樣的做法。',HE:'今天有好好享受某個片刻嗎？記得，休息和樂趣也是照顧自己。',AC:'把今天做到的寫下來，明天回頭看，會更清楚自己走了多遠。',PO:'回頭看看，今天你主導了哪些選擇？明天想先掌握哪一件？',FA:'今天不完美也沒關係，你已經穩穩地做了不少。',SE:'今天有什麼讓你覺得踏實？明天可以從那裡再出發。',TR:'今天的作息有照著你的節奏走嗎？穩定本身就是成果。',CO:'今天照著計畫走了多少？做到的部分，就是對自己的承諾。',HU:'今天平平淡淡地做好份內的事，就很值得肯定。',UN:'今天做的事，有沒有一點點讓世界更好？哪怕很小也算。',BE:'今天你照顧了誰？也別忘了，好好照顧自己。'};
 const DRV_SHORT={SD:'用你自己的方式就好。',ST:'可以換個新做法試試。',HE:'達標時記得犒賞自己。',AC:'看得見的進度，最能推動你。',PO:'由你決定下一步。',FA:'穩穩累積就很好。',SE:'一步一步，很踏實。',TR:'固定的節奏是你的力量。',CO:'照著計畫走就好。',HU:'安靜地做好就很好。',UN:'記得它的意義。',BE:'也想想它能幫到誰。'};
 function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=today(),ss=(day(k).sessions||[]),mins=ss.reduce((a,s)=>a+(+s.min||0),0),tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),done=tp.filter(x=>x.done).length;
+  const nowM=new Date().getHours()*60+new Date().getMinutes(),toSleep=R.sleep!=null?(((R.sleep-nowM)%1440)+1440)%1440:null,wind=toSleep!=null?(toSleep<=90||toSleep>1440-120):(new Date().getHours()>=21||new Date().getHours()<4);
   let a='';
-  if(b&&b===R.peak)a=`現在是你的高峰時段（${blName(R.peak)}），適合做最需要專注的事。`;
+  const past=toSleep!=null&&toSleep>1440-120,eve=!wind&&new Date().getHours()>=18;
+  if(wind)a=past?`已經過了你平常的休息時間，今天就先收尾，早點睡吧${mins?`（今天專注了 ${fmtMin(mins)}）`:''}。`:`快到你的休息時間了，今天就先收尾吧${mins?`（今天專注了 ${fmtMin(mins)}）`:''}，最重要的事留給明天的高峰時段。`;
+  else if(b&&b===R.peak)a=`現在是你的高峰時段（${blName(R.peak)}），適合做最需要專注的事。`;
   else if(b&&b===R.low)a=`現在是你精神較低的時段，適合處理例行瑣事，或起身走一走再回來。`;
   else if(b&&R.idea&&b===R.idea)a=`現在是你的靈感時段，適合發想、寫作，或想想卡住的問題。`;
-  else if(R.peak){const pb=BL.find(x=>x.k===R.peak),h=new Date().getHours();a=h>=21||h<4?`夜深了，今天就先收尾吧${mins?`（今天專注了 ${fmtMin(mins)}）`:''}，明天的高峰時段再處理最重要的事。`:pb&&h<pb.h?`你的高峰在${blName(R.peak)}，把最重要的事留給那段時間。`:(mins?`今天已經專注 ${fmtMin(mins)}，${tp.length&&done===tp.length?'三件事也都完成了，':''}節奏很好。`:'')}
-  const d=drvPick(R);const c=d?DRV_DAY[d]:'';
+  else if(R.peak){const pb=BL.find(x=>x.k===R.peak),h=new Date().getHours();a=pb&&h<pb.h?`你的高峰在${blName(R.peak)}，把最重要的事留給那段時間。`:(mins?`今天已經專注 ${fmtMin(mins)}，${tp.length&&done===tp.length?'三件事也都完成了，':''}節奏很好。`:'')}
+  if(!a&&eve)a='晚上了，可以慢慢放慢步調，留點時間給自己。';
+  const d=drvPick(R);const c=d?(wind||(eve&&b!==R.peak)?DRV_EVE[d]:DRV_DAY[d]):'';
   const t=(a+c).trim();return t?`<p class="coach"><span class="coach-k">今日小語</span>${esc(t)}</p>`:''}
 // journal feedback (time-of-day + content + driver)
 function jFeedback(k){const j=day(k).j||{},R=myRhythm(),h=new Date().getHours(),per=h<4?'late':h<11?'morning':h<17?'day':h<21?'evening':'night';

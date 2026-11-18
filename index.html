@@ -496,6 +496,7 @@ main .grid2+.setgrp{margin-top:26px}
 .jtick{font-size:calc(11px * var(--fs,1));vertical-align:2px;margin-left:6px}
 .exscene{margin:-6px 0 14px}
 .exsc-btn{font-size:calc(12.5px * var(--fs,1));padding:3px 10px;border:1px solid var(--line);border-radius:999px}
+.exsc-first{margin:0 0 8px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--focus) 10%,var(--surface));font-size:calc(13px * var(--fs,1))}
 .exsc-body{margin-top:8px;animation:foldin .2s ease}
 .exsc-body .seg{flex-wrap:wrap}
 .exsc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
@@ -1756,11 +1757,12 @@ const exScene=()=>{const v=cfg().exScene;return v==='custom'||EXS[v]?v:'exam'};
 function exL(k){const sc=exScene(),b=EXS[sc==='custom'?'exam':sc];if(sc==='custom'){const u=cfg().exLabels||{};if(u[k])return u[k]}return b[k]}
 const exPage=()=>(cfg().exPage||'').trim()||'目標衝刺';
 const exScale=()=>{const sc=exScene();return sc==='exam'||sc==='custom'?cfg().scale:'custom'};
-let exSceneOpen=false;
-function exScenePanel(){const sc=exScene();
+let exSceneOpen=null; // null = follow default: open until a scene has been chosen once
+const exSceneIsOpen=()=>exSceneOpen===null?!cfg().exScene:exSceneOpen;
+function exScenePanel(){const sc=exScene(),exSceneOpen=exSceneIsOpen(),first=!cfg().exScene;
   return `<div class="exscene${exSceneOpen?' open':''}"><button class="ghost sm exsc-btn" data-act="exSceneT" aria-expanded="${exSceneOpen}">情境：${sc==='custom'?'自訂':EXS[sc].n} <span aria-hidden="true">${exSceneOpen?'▴':'▾'}</span></button>
     ${exSceneOpen?`<div class="exsc-body card">
-      <p class="muted" style="margin:0 0 8px">同一套工具：倒數、每日提醒、分段計時、紀錄與複習。選一個最接近的情境，整頁用語和每日提醒會一起換；你的紀錄完全不變。</p>
+      ${first?'<p class="exsc-first"><b>先選一個最接近你的情境</b>，之後隨時可以從這裡更改。</p>':''}<p class="muted" style="margin:0 0 8px">同一套工具：倒數、每日提醒、分段計時、紀錄與複習。選一個最接近的情境，整頁用語和每日提醒會一起換；你的紀錄完全不變。</p>
       <div class="seg">${['exam','race','show','talk'].map(v=>`<button data-act="exScene" data-v="${v}" aria-pressed="${sc===v}">${EXS[v].n}</button>`).join('')}<button data-act="exScene" data-v="custom" aria-pressed="${sc==='custom'}">自訂</button></div>
       <label class="f" style="margin-top:12px">選單上的名稱<input type="text" id="exPageN" data-ch="exPage" value="${esc(cfg().exPage||'')}" placeholder="目標衝刺" maxlength="8"></label>
       ${sc==='custom'?`<div class="exsc-grid">${EXS_EDIT.map(([k,n])=>`<label class="f">${n}<input type="text" id="exl_${k}" data-ch="exLabel" data-k="${k}" value="${esc((cfg().exLabels||{})[k]||'')}" placeholder="${esc(EXS.exam[k])}"></label>`).join('')}</div><p class="muted" style="margin:6px 0 0">留白就用預設的說法。</p>`:''}
@@ -2291,8 +2293,8 @@ const A={
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
   tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
   tEdit:()=>{tEditing=!tEditing;render()},
-  exSceneT:()=>{exSceneOpen=!exSceneOpen;render()},
-  exScene:el=>{const from=exScene(),to=el.dataset.v;editCfg(c=>{const untouched=sameTimers(c.timers,sceneTimers(from==='custom'?'exam':from))||sameTimers(c.timers,DEF.timers);c.exScene=to;if(untouched&&!T.running){c.timers=sceneTimers(to==='custom'?'exam':to);c.tv=2}});if(!cfg().timers.some(x=>x.id===T.pid)&&!T.running){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT()}toast('已切換為「'+(el.dataset.v==='custom'?'自訂':EXS[el.dataset.v].n)+'」');render()},
+  exSceneT:()=>{exSceneOpen=!exSceneIsOpen();render()},
+  exScene:el=>{const from=exScene(),to=el.dataset.v;exSceneOpen=to==='custom';editCfg(c=>{const untouched=sameTimers(c.timers,sceneTimers(from==='custom'?'exam':from))||sameTimers(c.timers,DEF.timers);c.exScene=to;if(untouched&&!T.running){c.timers=sceneTimers(to==='custom'?'exam':to);c.tv=2}});if(!cfg().timers.some(x=>x.id===T.pid)&&!T.running){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT()}toast('已切換為「'+(el.dataset.v==='custom'?'自訂':EXS[el.dataset.v].n)+'」');render()},
   purPick:el=>{const k=el.dataset.k;if(k==='all'){WPUR=WPUR.has('all')?new Set():new Set(['all'])}else{WPUR.delete('all');WPUR.has(k)?WPUR.delete(k):WPUR.add(k)}
     document.querySelectorAll('.purp-o').forEach(b=>b.setAttribute('aria-pressed',WPUR.has(b.dataset.k)))},
   purOpen:()=>openPurpose(),

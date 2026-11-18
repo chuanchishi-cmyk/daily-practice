@@ -35,7 +35,7 @@ daily-practice/
 ├─ i18n-en.js                ← 英文翻譯（由 tools/i18n/build-i18n.py 產生）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png
 ├─ qr.png                    ← 網站 QR code（設定頁、分享視窗使用）
-├─ ocean.mp3                 ← 白噪音「潮汐」音檔（claude.ai 版發佈時要用 files 一起上傳）
+├─ ocean.mp3                 ← 白噪音「潮汐」音檔（立體聲 96kbps）（claude.ai 版發佈時要用 files 一起上傳）
 ├─ docs/APP-SETTINGS.md      ← 本文件
 └─ tools/
    ├─ build.py               ← src → index.html
@@ -135,7 +135,7 @@ daily-practice/
 | 考試衝刺 | `#exam` | 考試名稱（預設空白＋引導語）、考試日期、圓圈倒數、依階段每日提醒、分段測驗計時（項目可自由刪減、恢復預設） |
 | 月曆 | `#calendar` | 每日紀錄、Google 行事曆匯入、會談（跳轉 Google Calendar / Gmail 預填） |
 | 靜心 | `#mind` | 靜心計時（時間可自訂，最少 3 組，預設 3/5/10/15/30/60 分）、多種禪修方法、一天多次紀錄 |
-| 覺察日記 | `#journal` | 每日三件式、情緒、回顧（圖表＋搜尋） |
+| 覺察日記 | `#journal` | 早晨意向固定第一；其餘區塊填完後，下次進來會移到最後並收合成一行摘要（同一次瀏覽中不跳動）。情緒清單有「略／詳」模式（`sd-emo-mode`，預設略）。回顧（圖表＋搜尋） |
 | 統計 | `#stats` | 週/月統計、番茄、靜心分鐘與安住程度趨勢 |
 | 我的節奏 | `#quiz` | 時型問卷（多選、不確定選項、信心權重）、分段結果、總報告 |
 | 設定 | `#prefs` | 分組：日常使用／提醒／外觀與語言／資料與同步／分享與說明 |
@@ -150,7 +150,7 @@ daily-practice/
 |---|---|---|
 | 番茄鐘（專注、休息） | 無 | `ring()`：880/660 Hz 清脆「嘀－嘟－嘀」，**重複兩次** |
 | 測驗計時（每段、全部） | 無 | `ring()`（同上）；剩 5 分、1 分鐘時 `warnTone()` 一聲＋數字閃爍 10 秒（設定 `sd-xwarn`，預設開） |
-| 白噪音（今日番茄鐘專注時） | 夜晚蟲鳴／潮汐／流水／燒柴 | 休息、靜心時自動淡出。潮汐用 `ocean.mp3`（540 KB，單聲道 48kbps）；其餘三種以 OfflineAudioContext 即時合成（0 KB），做成 24 秒無縫循環。設定 `sd-noise-on`、`sd-noise-k`、`sd-noise-v` |
+| 白噪音（今日番茄鐘專注時） | 夜晚蟲鳴／潮汐／流水／燒柴 | 休息、靜心時自動淡出。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；其餘三種以物理模型即時合成（0 KB）：流水＝大量氣泡共振、燒柴＝群聚劈啪聲＋爆裂＋閃動的低鳴、蟲鳴＝不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。設定 `sd-noise-on`、`sd-noise-k`、`sd-noise-v` |
 | 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒 | `yinqing(1,0)`：一聲引磬 |
 
 技術要點（iPhone 相容）：

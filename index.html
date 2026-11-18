@@ -482,6 +482,18 @@ main .grid2+.setgrp{margin-top:26px}
 @keyframes xwarn{from{opacity:1}to{opacity:.3}}
 @media (prefers-reduced-motion:reduce){.xclock.warn{animation:none}}
 @media (max-width:820px){.nzopts{margin-left:0}.fold>summary{padding:14px}.fold .foldbody{padding:12px 14px 16px}}
+.emos.brief{gap:6px}
+.emos.brief .emo{width:auto;flex-direction:row;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+.emos.brief .emo.on{border-color:var(--tone)}
+.emos.brief .emo .ed{display:none}
+.emos.brief .emo .lv{margin-top:0;gap:2px}
+.emos.brief .emo .lv i{width:5px;height:5px;border-radius:50%}
+.emos.brief .emo .en{font-weight:500}
+.emos.brief .emo.on .en{font-weight:700}
+.seg-sm button{padding:3px 10px;font-size:calc(12px * var(--fs,1))}
+.jdonehd{margin:6px 2px -4px;font-size:calc(12px * var(--fs,1));letter-spacing:.04em}
+.jdone .jck{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good);font-size:12px;margin-right:8px;vertical-align:2px}
+.jtick{font-size:calc(11px * var(--fs,1));vertical-align:2px;margin-left:6px}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1086,6 +1098,7 @@ function softRender(){if(editing()){pendingRender=true;return}render()}
 document.addEventListener('focusout',()=>{if(pendingRender)setTimeout(()=>{if(!editing()&&pendingRender){pendingRender=false;render()}},250)});
 let lastR=null,welcomed=false;
 function render(){
+  if(R!=='journal')JORD=null;
   const m=$('#main');const sy=window.scrollY;const sw=lastR!==null&&lastR!==R;lastR=R;
   m.innerHTML=localBanner()+(R.startsWith('page-')?vPage(R.slice(5)):VIEWS[R!=='today'&&R!=='prefs'&&!isOn(R)?'today':R]());
   renderNav();
@@ -1975,7 +1988,7 @@ let impMsg='';
 const FOLD_OPEN=new Set((()=>{const v=lsGet('sd-fold',[]);return Array.isArray(v)?v:[]})());
 const CHEV='<svg class="chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function fold(id,title,sum,body){return `<details class="card fold" data-fold="${id}"${FOLD_OPEN.has(id)?' open':''}><summary><span class="ftxt"><h2>${title}</h2><span class="fsum">${sum}</span></span>${CHEV}</summary><div class="foldbody">${body}</div></details>`}
-document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details.fold')){d.open?FOLD_OPEN.add(d.dataset.fold):FOLD_OPEN.delete(d.dataset.fold);lsSet('sd-fold',[...FOLD_OPEN])}},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details.fold')){d.open?FOLD_OPEN.add(d.dataset.fold):FOLD_OPEN.delete(d.dataset.fold);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')))}},true);
 function vPrefs(){
   const c=cfg();
   const th=themePref();
@@ -2820,6 +2833,7 @@ const EMO_DEF=[
 ];
 function emoList(){const c=cfg();return Array.isArray(c.emoList)?c.emoList:EMO_DEF}
 let emoEdit=false;
+const emoMode=()=>lsGet('sd-emo-mode','brief')==='full'?'full':'brief';
 const LV=['—','輕','中','強'];
 const METHODS0=['呼吸覺察','身體掃描','慈心','行走靜心','開放覺察'];
 function medMethods(){return METHODS0.concat(cfg().medMethods||[])}
@@ -2856,35 +2870,74 @@ const noiseVol=()=>{const v=+lsGet('sd-noise-v',40);return v>=0&&v<=100?v:40};
 const nzGain=()=>Math.max(.0001,Math.pow(noiseVol()/100,1.5)*1.1);
 let NZ=null,NZPREV=0,NZBUSY=false;const NZDATA={},NZLOAD={};
 function nzLoopify(d,X){const N=d.length-X,o=new Float32Array(N);o.set(d.subarray(0,N));for(let i=0;i<X;i++){const a=i/X*Math.PI/2;o[i]=d[i]*Math.sin(a)+d[N+i]*Math.cos(a)}return o}
-function nzNorm(d,target){let s=0;for(let i=0;i<d.length;i+=7)s+=d[i]*d[i];const r=Math.sqrt(s/(d.length/7))||1,k=target/r;for(let i=0;i<d.length;i++){let v=d[i]*k;d[i]=v>.95?.95:v<-.95?-.95:v}return d}
-function nzNoise(oc,sec,type){const n=Math.floor(oc.sampleRate*sec),b=oc.createBuffer(1,n,oc.sampleRate),d=b.getChannelData(0);let l=0,b0=0,b1=0,b2=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){l=(l+.02*w)/1.02;d[i]=l*3.5}else if(type==='pink'){b0=.99765*b0+w*.099046;b1=.963*b1+w*.2965164;b2=.57*b2+w*1.0526913;d[i]=(b0+b1+b2+w*.1848)*.11}else d[i]=w}return b}
+function nzNorm(ch,target){let s=0,n=0;ch.forEach(d=>{for(let i=0;i<d.length;i+=5){s+=d[i]*d[i];n++}});const k=target/(Math.sqrt(s/n)||1);ch.forEach(d=>{for(let i=0;i<d.length;i++){const v=d[i]*k,av=Math.abs(v);d[i]=av<=.8?v:Math.sign(v)*(.8+.18*Math.tanh((av-.8)/.18))}});return ch}
+function nzNoise(oc,sec,type){const n=Math.floor(oc.sampleRate*sec),b=oc.createBuffer(1,n,oc.sampleRate),d=b.getChannelData(0);let l=0,b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){l=(l+.02*w)/1.02;d[i]=l*3.5}else if(type==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}else d[i]=w}return b}
+// stereo impulse response: decorrelated, darkened exponential tail
+function nzIR(oc,sec,dark){const n=Math.floor(oc.sampleRate*sec),b=oc.createBuffer(2,n,oc.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let y=0;for(let i=0;i<n;i++){const x=(Math.random()*2-1)*Math.pow(1-i/n,2.6);y+=(x-y)*(dark+(1-dark)*(1-i/n));d[i]=y}}return b}
+// smooth random curve in [lo,hi], `pts` control points per second
+function nzCurve(sec,pts,lo,hi){const n=Math.max(2,Math.ceil(sec*pts)),a=new Float32Array(n);let v=Math.random();for(let i=0;i<n;i++){v+=(Math.random()-v)*.5;a[i]=lo+(hi-lo)*v}return a}
+const nzPan=p=>[Math.cos((p+1)*Math.PI/4),Math.sin((p+1)*Math.PI/4)];
 async function nzSynth(kind,sr){
-  const L=24,X=2,DUR=L+X,OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(1,Math.floor(sr*DUR),sr);
-  const R=Math.random,out=oc.createGain();out.connect(oc.destination);
-  const layer=(type,filt,f,q,gain)=>{const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,type);s.loop=true;const bq=oc.createBiquadFilter();bq.type=filt;bq.frequency.value=f;bq.Q.value=q;const g=oc.createGain();g.gain.value=gain;s.connect(bq);bq.connect(g);g.connect(out);s.start(0);return g};
-  const lfo=(g,rate,depth)=>{const o=oc.createOscillator(),d=oc.createGain();o.frequency.value=rate;d.gain.value=depth;o.connect(d);d.connect(g.gain);o.start(0)};
+  const L=40,X=3,DUR=L+X,N=Math.floor(sr*DUR),R=Math.random,TAU=Math.PI*2;
+  const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(2,N,sr);
+  // sample-accurate events are written straight into stereo arrays (fast, no node per event)
+  const near=[new Float32Array(N),new Float32Array(N)],far=[new Float32Array(N),new Float32Array(N)];
+  const put=(bus,i,v,g)=>{if(i>=0&&i<N){bus[0][i]+=v*g[0];bus[1][i]+=v*g[1]}};
+  const wet=oc.createGain(),conv=oc.createConvolver();conv.connect(wet);wet.connect(oc.destination);
+  const dry=oc.createGain();dry.connect(oc.destination);
+  const layer=(type,filt,f,q,gain,curve,toWet)=>{const m=oc.createChannelMerger(2);const src=()=>{const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,type);s.start(0);return s};const mid=src(),mg=oc.createGain();mg.gain.value=.75;mid.connect(mg);[0,1].forEach(c=>{const s=src(),sg=oc.createGain();sg.gain.value=.66;s.connect(sg);const bq=oc.createBiquadFilter();bq.type=filt;bq.frequency.value=f*(c?1.03:.97);bq.Q.value=q;sg.connect(bq);mg.connect(bq);bq.connect(m,0,c)});const g=oc.createGain();g.gain.value=gain;if(curve)g.gain.setValueCurveAtTime(curve,0,DUR);m.connect(g);g.connect(dry);if(toWet)g.connect(conv);return g};
+  const mix=(bus,dryG,wetG)=>{const b=oc.createBuffer(2,N,sr);b.getChannelData(0).set(bus[0]);b.getChannelData(1).set(bus[1]);const s=oc.createBufferSource();s.buffer=b;const g1=oc.createGain(),g2=oc.createGain();g1.gain.value=dryG;g2.gain.value=wetG;s.connect(g1);g1.connect(oc.destination);s.connect(g2);g2.connect(conv);s.start(0)};
   if(kind==='stream'){
-    lfo(layer('brown','bandpass',520,.5,.7),.13,.18);lfo(layer('pink','bandpass',1500,1.1,.32),.21,.14);lfo(layer('white','highpass',3200,.7,.035),.33,.015);
-    for(let t=.05;t<DUR;t+=.04+R()*.22){const o=oc.createOscillator(),g=oc.createGain(),f=320+R()*900;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(1.4+R()*.5),t+.03);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.015+R()*.05,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.05);o.connect(g);g.connect(out);o.start(t);o.stop(t+.06)}
+    // a brook = thousands of tiny resonating air bubbles (Minnaert), arriving in gurgling bursts
+    conv.buffer=nzIR(oc,1.1,.35);wet.gain.value=.5;
+    const gur=nzCurve(DUR,3,.25,1.6);
+    for(let t=0;t<DUR;){const gi=gur[Math.min(gur.length-1,Math.floor(t*3))];t+=-Math.log(1-R())/(260*gi);
+      const big=R()<.06,f0=big?140+R()*360:420*Math.pow(2400/420,Math.pow(R(),1.4)),tau=big?.012+R()*.03:.003+R()*.012,amp=(big?.5:.18)*(.3+R())*gi,rise=.6+R()*2.2,g=nzPan(R()*1.8-.9);
+      const i0=Math.floor(t*sr),len=Math.floor(tau*6*sr);let ph=R()*TAU;
+      for(let i=0;i<len;i++){const tt=i/sr,f=f0*(1+rise*Math.min(tt,tau*3)/tau*.25);ph+=TAU*f/sr;put(near,i0+i,amp*Math.exp(-tt/tau)*(1-Math.exp(-tt/.0006))*Math.sin(ph),g)}}
+    mix(near,.9,.35);
+    layer('pink','bandpass',700,.45,.22,nzCurve(DUR,.6,.14,.3),true);   // body of moving water
+    layer('white','highpass',4200,.5,.02,nzCurve(DUR,1,.012,.03),false); // fine spray
   }else if(kind==='fire'){
-    lfo(layer('brown','lowpass',320,.7,.85),.11,.3);layer('pink','bandpass',2400,.7,.05);
-    const wb=nzNoise(oc,.04,'white'),hp=oc.createBiquadFilter();hp.type='highpass';hp.frequency.value=1600;hp.connect(out);const lp=oc.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.connect(out);
-    for(let t=.03;t<DUR;t+=.02+Math.pow(R(),2)*.45){const s=oc.createBufferSource(),g=oc.createGain(),pop=R()<.12,len=pop?.03:.003+R()*.012,a=pop?.35+R()*.3:Math.pow(R(),2)*.7+.05;s.buffer=wb;g.gain.setValueAtTime(a,t);g.gain.exponentialRampToValueAtTime(.0001,t+len);s.connect(g);g.connect(pop?lp:hp);s.start(t,R()*.005,len+.01)}
-  }else{ // insects
-    layer('pink','lowpass',650,.6,.12);lfo(layer('white','bandpass',4600,9,.05),.09,.025);
-    [[4300,.62,.06],[4680,.86,.04],[3920,.74,.035],[5050,1.07,.022],[4450,.95,.018]].forEach(([f,per,amp])=>{const o=oc.createOscillator(),g=oc.createGain();o.frequency.value=f;g.gain.value=0;o.connect(g);g.connect(out);o.start(0);
-      for(let t=R()*per;t<DUR-.2;t+=per*(.9+R()*.2)+(R()<.06?1.5+R()*2:0)){for(let k=0;k<3;k++){const t0=t+k*.05;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(amp,t0+.005);g.gain.linearRampToValueAtTime(0,t0+.022)}}})
+    // fireplace: soft roar that flickers, clustered crackles, a few big pops and hissing sap
+    conv.buffer=nzIR(oc,.9,.25);wet.gain.value=.35;
+    layer('brown','lowpass',190,.6,.9,nzCurve(DUR,6,.45,1),false);
+    layer('pink','bandpass',520,.8,.08,nzCurve(DUR,4,.03,.12),false);
+    const crack=(t,amp,g)=>{let tt0=t;const n=1+Math.floor(Math.pow(R(),2)*5);for(let k=0;k<n;k++){tt0+=.0004+R()*.006;const f=1600+R()*4800,d=.0004+R()*.0018,i0=Math.floor(tt0*sr),len=Math.floor(d*7*sr),a=amp*(.4+R()*.8);let ph=R()*TAU;
+        for(let i=0;i<len;i++){const tt=i/sr;ph+=TAU*f/sr;put(near,i0+i,a*Math.exp(-tt/d)*(.55*Math.sin(ph)+.45*(R()*2-1)),g)}}};
+    for(let t=.05;t<DUR;){t+=-Math.log(1-R())/2.6;const n=1+Math.floor(Math.pow(R(),1.6)*9),g=nzPan(R()*1.4-.7),base=.15+Math.pow(R(),2)*.6;let tt=t;for(let k=0;k<n;k++){tt+=Math.pow(R(),2)*.12;crack(tt,base*(.5+R()),g)}}
+    for(let t=.3;t<DUR;){t+=-Math.log(1-R())/.25;const g=nzPan(R()*1.2-.6),f=500+R()*900,d=.004+R()*.01,i0=Math.floor(t*sr),len=Math.floor(d*8*sr),a=.6+R()*.4;let ph=0;
+      for(let i=0;i<len;i++){const tt=i/sr;ph+=TAU*f*(1-tt*3)/sr;put(near,i0+i,a*Math.exp(-tt/d)*(.6*Math.sin(ph)+.4*(R()*2-1)),g)}}
+    const hiss=oc.createGain();hiss.gain.value=0;for(let t=2;t<DUR-2;t+=6+R()*10){const d=.5+R()*1.5;hiss.gain.setValueAtTime(0,t);hiss.gain.linearRampToValueAtTime(.03+R()*.03,t+.15);hiss.gain.linearRampToValueAtTime(0,t+d)}
+    {const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,'white');const bq=oc.createBiquadFilter();bq.type='bandpass';bq.frequency.value=5200;bq.Q.value=2.5;s.connect(bq);bq.connect(hiss);hiss.connect(dry);s.start(0)}
+    mix(near,1,.4);
+  }else{
+    // summer night field: crickets at several distances, distant tree-cricket trills, a breath of wind
+    conv.buffer=nzIR(oc,2.6,.2);wet.gain.value=.55;
+    const cricket=(bus,f0,amp,g,per,np,pint,plen)=>{for(let t=R()*per;t<DUR-.3;){for(let k=0;k<np;k++){const t0=t+k*pint,i0=Math.floor(t0*sr),len=Math.floor(plen*sr),a=amp*(k===0?.8:1)*(.85+R()*.3);let ph=R()*TAU;
+          for(let i=0;i<len;i++){const u=i/len,f=f0*(1.025-.04*u);ph+=TAU*f/sr;const env=Math.pow(Math.sin(Math.PI*u),2);put(bus,i0+i,a*env*(Math.sin(ph)+.12*Math.sin(2*ph)+.04*Math.sin(3*ph)),g)}}
+        t+=per*(.92+R()*.16)+(R()<.05?2+R()*4:0)}};
+    for(let c=0;c<9;c++){const d=c<3?.35+R()*.25:.7+R()*.6,isFar=c>=3;
+      cricket(isFar?far:near,3900+R()*1300,(isFar?.05:.11)/d,nzPan(R()*1.8-.9),.45+R()*.6,3+Math.floor(R()*3),.028+R()*.012,.013+R()*.007)}
+    for(let c=0;c<3;c++){const f0=2700+R()*400,g=nzPan(R()*1.6-.8),pr=1/(42+R()*12),amp=.012+R()*.01,br=nzCurve(DUR,.3,.3,1);
+      for(let t=0;t<DUR;t+=pr){const i0=Math.floor(t*sr),len=Math.floor(pr*.55*sr),a=amp*br[Math.min(br.length-1,Math.floor(t*.3))];let ph=0;for(let i=0;i<len;i++){ph+=TAU*f0/sr;put(far,i0+i,a*Math.sin(Math.PI*i/len)*Math.sin(ph),g)}}}
+    mix(near,.85,.3);mix(far,.35,.9);
+    layer('pink','lowpass',420,.5,.1,nzCurve(DUR,.4,.05,.14),false);
   }
   const buf=await new Promise((ok,no)=>{oc.oncomplete=e=>ok(e.renderedBuffer);const p=oc.startRendering();if(p&&p.then)p.then(ok,no)});
-  return nzNorm(nzLoopify(buf.getChannelData(0),Math.floor(sr*X)),.1);
+  return nzNorm([0,1].map(c=>nzLoopify(buf.getChannelData(c),Math.floor(sr*X))),.11);
 }
 function nzData(kind,sr){const key=kind+sr;if(NZDATA[key])return Promise.resolve(NZDATA[key]);if(NZLOAD[key])return NZLOAD[key];
   return NZLOAD[key]=(async()=>{try{let d;
-    if(kind==='ocean'){const ab=await (await fetch(OCEAN_URL)).arrayBuffer();const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(1,sr,sr);
-      const b=await new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);if(p&&p.then)p.then(ok,no)});const c0=b.getChannelData(0),m=new Float32Array(c0.length);m.set(c0);if(b.numberOfChannels>1){const c1=b.getChannelData(1);for(let i=0;i<m.length;i++)m[i]=(m[i]+c1[i])/2}
-      d=nzNorm(nzLoopify(m,Math.floor(sr*4)),.1)}
+    if(kind==='ocean'){const ab=await (await fetch(OCEAN_URL)).arrayBuffer();const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(2,sr,sr);
+      const b=await new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);if(p&&p.then)p.then(ok,no)});
+      d=nzNorm([0,1].map(c=>{const src=b.getChannelData(Math.min(c,b.numberOfChannels-1)),m=new Float32Array(src.length);m.set(src);return nzLoopify(m,Math.floor(sr*4))}),.11)}
     else d=await nzSynth(kind,sr);
     NZDATA[key]=d;return d}catch(e){toast('白噪音載入失敗，請確認網路後再試');return null}finally{delete NZLOAD[key]}})()}
+const NZSR=44100;
+// prepare the chosen sound quietly so it is ready before the first pomodoro
+function nzWarm(){if(!noiseOn())return;const go=()=>nzData(noiseKind(),NZSR);(window.requestIdleCallback||setTimeout)(go,{timeout:6000})}
+setTimeout(nzWarm,4000);
 const nzWant=()=>(noiseOn()&&P.running&&P.mode==='work'&&!MT.running)||Date.now()<NZPREV;
 function nzStop(fast){const z=NZ;NZ=null;if(!z)return;try{const t=z.ac.currentTime;z.g.gain.cancelScheduledValues(t);z.g.gain.setValueAtTime(Math.max(.0001,z.g.gain.value),t);z.g.gain.exponentialRampToValueAtTime(.0001,t+(fast?.06:1.2));z.src.stop(t+(fast?.1:1.3))}catch{}}
 async function syncNoise(){
@@ -2892,8 +2945,8 @@ async function syncNoise(){
   if(!AC||AC.state==='closed')return;const k=noiseKind();
   if(NZ&&NZ.ac===AC&&NZ.kind===k){const v=nzGain();if(Math.abs(NZ.v-v)>.001){NZ.v=v;NZ.g.gain.setTargetAtTime(v,AC.currentTime,.15)}return}
   if(NZBUSY)return;NZBUSY=true;
-  try{if(NZ)nzStop(true);const ac=AC,d=await nzData(k,ac.sampleRate);if(!d||ac!==AC||ac.state==='closed'||!nzWant()||noiseKind()!==k)return;
-    const b=ac.createBuffer(1,d.length,ac.sampleRate);b.getChannelData(0).set(d);const src=ac.createBufferSource();src.buffer=b;src.loop=true;const g=ac.createGain();g.gain.value=.0001;src.connect(g);g.connect(ac.destination);src.start();const v=nzGain();g.gain.setTargetAtTime(v,ac.currentTime,.5);NZ={ac,kind:k,src,g,v}}
+  try{if(NZ)nzStop(true);const ac=AC,d=await nzData(k,NZSR);if(!d||ac!==AC||ac.state==='closed'||!nzWant()||noiseKind()!==k)return;
+    const b=ac.createBuffer(2,d[0].length,NZSR);b.getChannelData(0).set(d[0]);b.getChannelData(1).set(d[1]);const src=ac.createBufferSource();src.buffer=b;src.loop=true;const g=ac.createGain();g.gain.value=.0001;src.connect(g);g.connect(ac.destination);src.start();const v=nzGain();g.gain.setTargetAtTime(v,ac.currentTime,.5);NZ={ac,kind:k,src,g,v}}
   catch{}finally{NZBUSY=false}}
 function bell(n){if(!AC)return;try{const out=outNode();for(let i=0;i<n;i++){const t=T0()+.05+i*1.0,f0=i%2===0?784:659;
   [[f0,.34,2.8],[f0*2,.12,1.8],[f0*3,.05,1.0]].forEach(([f,a,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.01);g.gain.exponentialRampToValueAtTime(a*.4,t+.35);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)})}}catch{}}
@@ -2909,11 +2962,11 @@ function emoGrid(k){
   const chip=x=>{const v=+e[x.k]||0;if(emoEdit)return `<div class="emo ${x.g} editing"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><button class="ghost sm stdel" data-act="emoDel" data-e="${esc(x.k)}" aria-label="從清單移除「${esc(x.n)}」">×</button></div>`;return `<button class="emo ${x.g}${v?' on':''}" data-act="emo" data-k="${k}" data-e="${x.k}" style="--lv:${v}" aria-label="${esc(x.n)}，強度 ${LV[v]}"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=v?'f':''}"></i>`).join('')}</span></button>`};
   const others=(j.emoX||[]).map((o,i)=>`<button class="emo other on" data-act="emoX" data-k="${k}" data-i="${i}" style="--lv:${o.v}" aria-label="${esc(o.n)}，強度 ${LV[o.v]}"><span class="en">${esc(o.n)}</span><span class="ed">自訂</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=o.v?'f':''}"></i>`).join('')}</span></button>`).join('');
   const strong=EMO.filter(x=>(+e[x.k]||0)>=2);
-  return `<div class="row sb" style="margin:-4px 0 12px"><p class="muted" style="margin:0">${emoEdit?'按 × 從清單移除；也可以新增常用的情緒。之前的紀錄都會保留。':'點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。'}</p><button class="ghost sm" data-act="emoEditT">${emoEdit?'完成':'編輯清單'}</button></div>
+  return `<div class="row sb" style="margin:-4px 0 12px"><p class="muted" style="margin:0">${emoEdit?'按 × 從清單移除；也可以新增常用的情緒。之前的紀錄都會保留。':'點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。'}</p><span class="row" style="gap:6px;flex:none">${emoEdit?'':`<span class="seg seg-sm">${[['brief','略'],['full','詳']].map(([v,n])=>`<button data-act="emoMode" data-v="${v}" aria-pressed="${emoMode()===v}">${n}</button>`).join('')}</span>`}<button class="ghost sm" data-act="emoEditT">${emoEdit?'完成':'編輯清單'}</button></span></div>
   ${emoEdit?`<div class="row" style="margin-bottom:12px"><input id="emoAddN" type="text" placeholder="名稱，例：期待" style="width:120px"><input id="emoAddD" type="text" placeholder="說明（選填），例：盼望、興奮" style="flex:1;min-width:140px"><select id="emoAddG"><option value="hard">需要照顧</option><option value="ease">順暢</option></select><button class="sm sec" data-act="emoListAdd">加入清單</button><button class="ghost sm" data-act="emoListReset">恢復預設</button></div>`:''}
-  <h3 style="margin-top:0">需要照顧的狀態</h3><div class="emos">${EMO.filter(x=>x.g==='hard').map(chip).join('')}</div>
-  <h3>順暢的狀態</h3><div class="emos">${EMO.filter(x=>x.g==='ease').map(chip).join('')}</div>
-  ${emoEdit?'':`<h3>今天的其他情緒</h3><div class="emos">${others}<div class="row"><input id="emoNew" type="text" placeholder="自己命名，例：期待、委屈" style="width:170px"><button class="sm" data-act="emoAdd" data-k="${k}">加入</button></div></div>`}
+  <h3 style="margin-top:0">需要照顧的狀態</h3><div class="emos${emoMode()==='brief'&&!emoEdit?' brief':''}">${EMO.filter(x=>x.g==='hard').map(chip).join('')}</div>
+  <h3>順暢的狀態</h3><div class="emos${emoMode()==='brief'&&!emoEdit?' brief':''}">${EMO.filter(x=>x.g==='ease').map(chip).join('')}</div>
+  ${emoEdit?'':`<h3>今天的其他情緒</h3><div class="emos${emoMode()==='brief'?' brief':''}">${others}<div class="row"><input id="emoNew" type="text" placeholder="自己命名，例：期待、委屈" style="width:170px"><button class="sm" data-act="emoAdd" data-k="${k}">加入</button></div></div>`}
   ${!emoEdit&&strong.length?`<div class="tips">${strong.map(x=>`<p><b>${x.n}・${LV[+e[x.k]]}</b>　${esc(x.tip)}</p>`).join('')}</div>`:''}`;
 }
 function momentsHTML(k){
@@ -3043,6 +3096,38 @@ function journalReviewHTML(){
     ${list.length?list.slice(0,jMore).map(card).join('')+(list.length>jMore?`<button class="ghost" data-act="jMore" style="width:100%">再顯示 ${Math.min(30,list.length-jMore)} 天</button>`:''):`<p class="empty">${q?'這段期間沒有符合的紀錄。':'這段期間還沒有紀錄。從「這一天」開始寫，回顧會慢慢累積。'}</p>`}
   </section>`;
 }
+
+let JORD=null;
+function jDone(j){return {body:!!(j.mood&&j.energy&&j.calm),emo:!!(Object.keys(j.emo||{}).length||(j.emoX||[]).length),mom:!!(j.moments||[]).length,mind:!!(j.practice||[]).length,night:!!((j.wins||[]).some(Boolean)||j.good||j.adjust||j.free)}}
+function jSections(k,j,wins,sc){
+  const now=jDone(j);
+  if(!JORD||JORD.k!==k){JORD={k,done:now};[...FOLD_OPEN].forEach(x=>{if(x.startsWith('j:'))FOLD_OPEN.delete(x)})}
+  const pr=(j.practice||[]),emN=Object.entries(j.emo||{}).map(([e,v])=>emoName(e)+(LV[v]?'・'+LV[v]:'')).concat((j.emoX||[]).map(o=>o.n+(LV[o.v]?'・'+LV[o.v]:''))),wn=(j.wins||[]).filter(Boolean).length;
+  const S_=[
+    {id:'body',t:`身心狀態 ${XL('這天的專注紀錄','calendar',`data-k="${k}"`)}`,sum:`心境 ${j.mood||'—'}・精力 ${j.energy||'—'}・安定 ${j.calm||'—'}${j.sleep?'・睡 '+j.sleep+' 小時':''}`,b:`
+        <div class="row" style="gap:26px;align-items:flex-start">${sc('mood','心境','低落','明亮')}${sc('energy','精力','疲憊','充沛')}${sc('calm','安定','紛亂','安定')}
+          <div><h3 style="margin-top:0">睡眠（小時）</h3><input type="number" id="sl${k}" min="0" max="16" step="0.5" data-in="j" data-k="${k}" data-f="sleep" value="${j.sleep??''}"></div></div>
+        <label class="f" style="margin-top:12px">身體掃描：從頭到腳，哪裡緊繃、哪裡放鬆<input type="text" id="bd${k}" data-in="j" data-k="${k}" data-f="body" value="${esc(j.body)}" placeholder="例：肩頸緊、腹部放鬆、眼睛疲勞"></label>
+      `},
+    {id:'emo',t:`情緒覺察`,sum:esc(emN.slice(0,4).join('、')+(emN.length>4?'…':'')),b:`${emoGrid(k)}`},
+    {id:'mom',t:`覺察片段 <span class="muted">情緒升起時的當下紀錄</span>`,sum:`${(j.moments||[]).length} 則${(j.moments||[]).length?'・最近：'+esc(((j.moments||[]).slice(-1)[0].w||'').slice(0,18)):''}`,b:`${momentsHTML(k)}`},
+    {id:'mind',html:isOn('mind')?`<section class="card"><h2>靜心 ${XL(k===today()?'開始靜心':'靜心頁','mind')}</h2>${(()=>{const ps=(day(k).j||{}).practice||[];return ps.length?`<div class="list">${ps.map(x=>`<div class="li"><span class="num">${x.min}′</span><span class="grow">${esc(x.method)}${x.note?`<span class="muted">・${esc(x.note)}</span>`:''}</span>${x.q?`<span class="muted">安住 ${x.q}</span>`:''}</div>`).join('')}</div>`:'<p class="empty">這天沒有靜心紀錄。</p>'})()}</section>`:`<section class="card"><h2>靜心練習</h2>${practiceHTML(k)}</section>`,sum:`${pr.reduce((a,x)=>a+(+x.min||0),0)} 分・${esc(pr.map(x=>x.method).join('、'))}`,t:'靜心'},
+    {id:'night',t:`夜晚・回顧`,sum:[wn?`做到 ${wn} 件`:'',j.good?'感恩':'',j.adjust?'反思':'',j.free?'自由書寫':''].filter(Boolean).join('・'),b:`
+        <h3 style="margin-top:0">今天做到的五件事 <span class="muted">再小都算：準時起床、好好吃一頓飯</span></h3>
+        <div class="wins">${[0,1,2,3,4].map(i=>`<input type="text" id="w${k}${i}" data-in="j" data-k="${k}" data-f="wins" data-i="${i}" value="${esc(wins[i])}" placeholder="${i+1}.">`).join('')}</div>
+        <h3>感恩與好事</h3><textarea id="g${k}" data-in="j" data-k="${k}" data-f="good" rows="3" placeholder="今天被誰幫助、看見了什麼美好">${esc(j.good)}</textarea>
+        <h3>今日反思</h3><textarea id="a${k}" data-in="j" data-k="${k}" data-f="adjust" rows="2" placeholder="今天注意到什麼？明天想調整什麼？">${esc(j.adjust)}</textarea>
+        <h3>自由書寫</h3><textarea id="fr${k}" data-in="j" data-k="${k}" data-f="free" rows="5" placeholder="念頭、心得、任何想寫下的事">${esc(j.free)}</textarea>
+        <p class="muted" style="margin:8px 0 0">輸入後會自動儲存。</p>
+      `}];
+  const order=S_.filter(x=>!JORD.done[x.id]).concat(S_.filter(x=>JORD.done[x.id]));
+  const firstDone=order.findIndex(x=>JORD.done[x.id]);
+  return order.map((x,i)=>{const sep=i===firstDone?`<p class="jdonehd muted">已完成 ・ 點開可以修改或補寫</p>`:'';
+    const tick=now[x.id]&&!JORD.done[x.id]?' <span class="pill good jtick">✓ 已填</span>':'';
+    if(JORD.done[x.id]){const inner=x.html?x.html.replace(/^<section class="card"><h2>[\s\S]*?<\/h2>/,'').replace(/<\/section>$/,''):x.b;
+      const fid='j:'+x.id;return sep+`<details class="card fold jdone" data-fold="${fid}"${FOLD_OPEN.has(fid)?' open':''}><summary><span class="ftxt"><h2><span class="jck">✓</span>${{body:'身心狀態',emo:'情緒覺察',mom:'覺察片段',mind:'靜心',night:'夜晚・回顧'}[x.id]}</h2><span class="fsum">${x.sum||''}</span></span>${CHEV}</summary><div class="foldbody">${inner}</div></details>`}
+    return x.html?x.html.replace('</h2>',tick+'</h2>'):`<section class="card"><h2>${x.t}${tick}</h2>${x.b}</section>`}).join('\n');
+}
 function vJournal(){
   if(jTab==='review')return `<header class="ph"><div><p class="eyebrow">覺察日記</p><h1>回顧</h1></div><div class="row">${jTabs()}<div class="seg">${[['week','本週'],['month','30 天'],['q','90 天'],['all','全部']].map(([v,n])=>`<button data-act="jRange" data-v="${v}" aria-pressed="${jRange===v}">${n}</button>`).join('')}</div></div></header>${journalReviewHTML()}`;
   const k=jDay,j=day(k).j||{},wins=j.wins||[];
@@ -3056,22 +3141,7 @@ function vJournal(){
       <section class="card"><h2>早晨・今日意向</h2>
         <label class="f">今天想帶著什麼樣的心情或態度<input type="text" id="in${k}" data-in="j" data-k="${k}" data-f="intent" value="${esc(j.intent)}" placeholder="例：不急，一次做好一件事"></label>
         <h3>今天最想照顧的三件事</h3>${top3HTML(k)}</section>
-      <section class="card"><h2>身心狀態 ${XL('這天的專注紀錄','calendar',`data-k="${k}"`)}</h2>
-        <div class="row" style="gap:26px;align-items:flex-start">${sc('mood','心境','低落','明亮')}${sc('energy','精力','疲憊','充沛')}${sc('calm','安定','紛亂','安定')}
-          <div><h3 style="margin-top:0">睡眠（小時）</h3><input type="number" id="sl${k}" min="0" max="16" step="0.5" data-in="j" data-k="${k}" data-f="sleep" value="${j.sleep??''}"></div></div>
-        <label class="f" style="margin-top:12px">身體掃描：從頭到腳，哪裡緊繃、哪裡放鬆<input type="text" id="bd${k}" data-in="j" data-k="${k}" data-f="body" value="${esc(j.body)}" placeholder="例：肩頸緊、腹部放鬆、眼睛疲勞"></label>
-      </section>
-      <section class="card"><h2>情緒覺察</h2>${emoGrid(k)}</section>
-      <section class="card"><h2>覺察片段 <span class="muted">情緒升起時的當下紀錄</span></h2>${momentsHTML(k)}</section>
-      ${isOn('mind')?`<section class="card"><h2>靜心 ${XL(k===today()?'開始靜心':'靜心頁','mind')}</h2>${(()=>{const ps=(day(k).j||{}).practice||[];return ps.length?`<div class="list">${ps.map(x=>`<div class="li"><span class="num">${x.min}′</span><span class="grow">${esc(x.method)}${x.note?`<span class="muted">・${esc(x.note)}</span>`:''}</span>${x.q?`<span class="muted">安住 ${x.q}</span>`:''}</div>`).join('')}</div>`:'<p class="empty">這天沒有靜心紀錄。</p>'})()}</section>`:`<section class="card"><h2>靜心練習</h2>${practiceHTML(k)}</section>`}
-      <section class="card"><h2>夜晚・回顧</h2>
-        <h3 style="margin-top:0">今天做到的五件事 <span class="muted">再小都算：準時起床、好好吃一頓飯</span></h3>
-        <div class="wins">${[0,1,2,3,4].map(i=>`<input type="text" id="w${k}${i}" data-in="j" data-k="${k}" data-f="wins" data-i="${i}" value="${esc(wins[i])}" placeholder="${i+1}.">`).join('')}</div>
-        <h3>感恩與好事</h3><textarea id="g${k}" data-in="j" data-k="${k}" data-f="good" rows="3" placeholder="今天被誰幫助、看見了什麼美好">${esc(j.good)}</textarea>
-        <h3>今日反思</h3><textarea id="a${k}" data-in="j" data-k="${k}" data-f="adjust" rows="2" placeholder="今天注意到什麼？明天想調整什麼？">${esc(j.adjust)}</textarea>
-        <h3>自由書寫</h3><textarea id="fr${k}" data-in="j" data-k="${k}" data-f="free" rows="5" placeholder="念頭、心得、任何想寫下的事">${esc(j.free)}</textarea>
-        <p class="muted" style="margin:8px 0 0">輸入後會自動儲存。</p>
-      </section>
+      ${jSections(k,j,wins,sc)}
     </div>
     <aside class="stack">
       <section class="card"><h2>兩週情緒地圖</h2>${emoMap(k)}</section>
@@ -3081,6 +3151,7 @@ function vJournal(){
   </div>`;
 }
 Object.assign(A,{
+  emoMode:el=>{lsSet('sd-emo-mode',el.dataset.v);render()},
   emo:el=>{const e=el.dataset.e;editDay(el.dataset.k,d=>{d.j.emo=d.j.emo||{};const v=((+d.j.emo[e]||0)+1)%4;if(v)d.j.emo[e]=v;else delete d.j.emo[e]});render()},
   emoX:el=>{const i=+el.dataset.i;editDay(el.dataset.k,d=>{const o=d.j.emoX[i];o.v=(o.v+1)%4;if(!o.v)d.j.emoX.splice(i,1)});render()},
   emoAdd:el=>{const n=$('#emoNew').value.trim();if(!n)return;editDay(el.dataset.k,d=>{d.j.emoX=d.j.emoX||[];d.j.emoX.push({n,v:1})});render()},
@@ -3114,7 +3185,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},

@@ -475,6 +475,23 @@ main .grid2+.setgrp{margin-top:26px}
 .emomore{text-align:right;margin-top:6px}
 .linkbtn{border:0;background:none;padding:2px 0;color:var(--focus);font-size:calc(12.5px * var(--fs,1));cursor:pointer}
 .linkbtn:hover{text-decoration:underline}
+.purp{display:grid;gap:8px;margin:12px 0 4px;text-align:left}
+.purp-o{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left}
+.purp-o span{color:var(--muted);font-size:calc(12.5px * var(--fs,1))}
+.purp-o[aria-pressed=true]{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface));box-shadow:inset 0 0 0 1px var(--focus)}
+.rmlist{display:flex;flex-direction:column;gap:8px}
+.rmrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.rmrow.off{opacity:.65}
+.rmchk{display:flex;gap:10px;align-items:flex-start;flex:1;min-width:200px;cursor:pointer}
+.rmchk input{margin-top:3px}
+.rmchk>span{display:flex;flex-direction:column}
+.rmchk .muted{font-size:calc(12px * var(--fs,1))}
+.rmctl{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:6px;align-items:center;flex:1 1 260px;min-width:0}
+.rmctl select,.rmctl input[type=time]{width:100%;min-width:0}
+.rmctl .btn{white-space:nowrap;padding:6px 10px}
+.rmctl select{padding-left:10px;padding-right:4px}
+.rmctl input[type=time]{padding-left:10px;padding-right:6px}
+.excal{margin-top:6px}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -935,8 +952,15 @@ function syncBlockHTML(){
   </div>`;
 }
 let WSTEP=0;
+const PURPOSES=[['focus','讀書與工作專注','番茄鐘、月曆、統計、找出高效時段',['calendar','stats','quiz']],['goal','準備考試、比賽或演出','倒數、分段計時、紀錄與複習',['exam','calendar','stats']],['plan','研究寫作或長期計畫','把大計畫拆成階段與小步驟',['plan','calendar','stats']],['mind','身心照顧','靜心與覺察日記',['mind','journal']],['all','全部都看看','打開所有頁面',null]];
+let WPUR=new Set();
+function purposeChips(){return `<div class="purp">${PURPOSES.map(([k,n,d])=>`<button class="purp-o" data-act="purPick" data-k="${k}" aria-pressed="${WPUR.has(k)}"><b>${n}</b><span>${d}</span></button>`).join('')}</div>`}
+function applyPurpose(){if(!WPUR.size)return false;const all=Object.keys(OPTIONAL);let on=new Set();
+  if(WPUR.has('all'))on=new Set(all);else WPUR.forEach(k=>{(PURPOSES.find(x=>x[0]===k)[3]||[]).forEach(r=>on.add(r))});
+  editCfg(c=>{c.hidden=all.filter(r=>!on.has(r));c.purposes=[...WPUR]});return true}
+function openPurpose(){WPUR=new Set(cfg().purposes||[]);$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="puT"><div class="box"><h2 id="puT">你想用日課做什麼？</h2><p class="muted" style="margin-top:0">可以複選。會打開對應的頁面，其他的先藏起來（資料都會保留），之後隨時可以再調整。</p>${purposeChips()}<div class="row sb" style="margin-top:14px"><button class="ghost" data-act="close">取消</button><button class="pri" data-act="purApply">套用</button></div></div></div>`}
 function WELCOME(){
-  const W=[['歡迎來到日課','每天一點，日積月累。這是一個陪你專注、推進長期計畫、照顧身心的練習空間。接下來用幾張卡片，帶你認識最重要的用法。']];
+  const W=[['歡迎來到日課','每天一點，日積月累。這是一個陪你專注、推進長期計畫、照顧身心的練習空間。接下來用幾張卡片，帶你認識最重要的用法。'],['你想用日課做什麼？','可以複選。我們先打開對應的頁面，其他的先藏起來，之後隨時能在「設定」打開。','purpose']];
   W.push(['每天從「今日」開始','寫下今天最重要的三件事，按下番茄鐘開始專注。暫停時可以記下停在哪裡；冒出雜念就丟進「雜念停車場」。每段結束花十秒記下做了什麼，月曆和統計會自動累積。']);
   if(isOn('plan'))W.push(['計畫地圖：把大計畫拆小','建立計畫後（論文、研究、考證照、作品集都可以），會依完成日排好階段和小步驟，每天只要做「最小的一步」。「會談」可以預約指導教授或主管（直接在 Google 日曆確認後送出），會談結束後自動跳出紀錄表，對方的建議會變成待辦。']);
   if(isOn('quiz'))W.push(['找出你的高效時段','「我的節奏」用大約 12 分鐘的問答，找出你一天中的精力高峰和低谷，以及最能推動你的動力，排出建議的一天。可以分段做，每段完成都會先給你結果。']);
@@ -951,7 +975,7 @@ function openWelcome(){const W=WELCOME(),w=W[WSTEP],last=WSTEP===W.length-1;
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="wT"><div class="box welcome">
     ${lg?`<img class="wlogo" src="${lg}" alt="" width="56" height="56">`:''}
     <p class="wstep">${WSTEP+1} / ${W.length}</p>
-    <h2 id="wT">${w[0]}</h2><p class="wbody">${w[1]}</p>
+    <h2 id="wT">${w[0]}</h2><p class="wbody">${w[1]}</p>${w[2]==='purpose'?purposeChips():''}
     ${last&&STANDALONE?'<a class="wlink" href="guide.html" target="_blank" rel="noopener">怎麼加到主畫面？看圖文說明 →</a>':''}${last?'<p class="muted" style="margin:2px 0 0">之後想再看一次，在「設定 → 使用說明」。</p>':''}
     <div class="wdots" aria-hidden="true">${W.map((_,i)=>`<i class="${i===WSTEP?'on':''}"></i>`).join('')}</div>
     <div class="wact">${last?'':'<button class="ghost" data-act="wSkip">略過</button>'}<button class="pri" data-act="wNext">${last?'開始今天':'下一步'}</button></div></div></div>`}
@@ -994,6 +1018,39 @@ async function saveFile(name,data,type,ascii){
   if(STANDALONE){try{const u=URL.createObjectURL(new Blob([data],{type:type+';charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download=ascii||name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);return true}catch{}}
   try{await navigator.clipboard.writeText(data);toast('這裡不能下載檔案，已把內容複製到剪貼簿');return true}catch{toast('這裡無法下載，請手動複製');return false}
 }
+/* ---------- reminders via the phone's own calendar (.ics / Google Calendar) ---------- */
+const RM_DEF=[
+ {id:'intent',n:'早晨意向與三件事',d:'寫下今天的意向和最重要的三件事',t:'07:30',f:'daily',need:null},
+ {id:'focus',n:'開始第一個番茄',d:'打開日課，按下番茄鐘',t:'09:00',f:'weekdays',need:null},
+ {id:'mind',n:'靜心',d:'找個安靜的地方，靜心幾分鐘',t:'07:00',f:'daily',need:'mind'},
+ {id:'journal',n:'寫覺察日記',d:'回顧今天：做到的事、感恩與反思',t:'21:30',f:'daily',need:'journal'},
+ {id:'review',n:'每週回顧',d:'看看這週的統計和日記，安排下週',t:'20:00',f:'sun',need:'stats'},
+ {id:'backup',n:'備份日課資料',d:'到「設定 → 資料保護」下載或分享備份檔',t:'20:30',f:'sun',need:'backup'}];
+const RM_F={daily:'每天',weekdays:'平日',sun:'每週日'};
+function rmList(){const u=cfg().reminders||{};return RM_DEF.filter(r=>r.need===null||(r.need==='backup'?STANDALONE&&!(gdAvail()&&GD.on):isOn(r.need))).map(r=>Object.assign({},r,u[r.id]||{},{on:(u[r.id]||{}).on!==undefined?u[r.id].on:['intent','journal','mind'].includes(r.id)}))}
+const icsEsc=t=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/([,;])/g,'\\$1');
+const icsD=(k,t)=>k.replace(/-/g,'')+'T'+t.replace(':','')+'00';
+const icsStamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+const RRULE={daily:'FREQ=DAILY',weekdays:'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',sun:'FREQ=WEEKLY;BYDAY=SU'};
+const appLink=()=>STANDALONE?SHARE_URL:'';
+function icsEvent(o){const L=['BEGIN:VEVENT','UID:rike-'+o.uid+'@daily-practice','DTSTAMP:'+icsStamp()];
+  if(o.allDay){L.push('DTSTART;VALUE=DATE:'+o.date.replace(/-/g,''),'DTEND;VALUE=DATE:'+addDays(o.date,1).replace(/-/g,''))}else{L.push('DTSTART:'+icsD(o.date,o.t),'DURATION:PT'+(o.min||10)+'M')}
+  if(o.rrule)L.push('RRULE:'+o.rrule);
+  L.push('SUMMARY:'+icsEsc(o.title),'DESCRIPTION:'+icsEsc(o.desc+(appLink()?'\n'+appLink():'')));if(appLink())L.push('URL:'+appLink());
+  L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(o.title),'TRIGGER:'+(o.allDay?'PT9H':'PT0M'),'END:VALARM','END:VEVENT');return L.join('\r\n')}
+function icsFile(evs){return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Rike//Daily Practice//ZH','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:日課提醒',...evs.map(icsEvent),'END:VCALENDAR'].join('\r\n')+'\r\n'}
+function rmStart(r){let k=today();const now=new Date(),hm=pad(now.getHours())+':'+pad(now.getMinutes());if(r.t<=hm)k=addDays(k,1);if(r.f==='sun')while(parseD(k).getDay()!==0)k=addDays(k,1);if(r.f==='weekdays')while([0,6].includes(parseD(k).getDay()))k=addDays(k,1);return k}
+function rmGoogle(r){const k=rmStart(r),[h,m]=r.t.split(':').map(Number),e=new Date(2000,0,1,h,m+10),et=pad(e.getHours())+':'+pad(e.getMinutes());
+  const q=new URLSearchParams({action:'TEMPLATE',text:'日課・'+r.n,details:r.d+(appLink()?'\n'+appLink():''),dates:icsD(k,r.t)+'/'+icsD(k,et),recur:'RRULE:'+RRULE[r.f]});return 'https://calendar.google.com/calendar/render?'+q.toString()}
+function remindHTML(){const L=rmList(),on=L.filter(r=>r.on);
+  return `<p class="muted" style="margin-top:0">日課是網頁 App，關掉之後沒辦法自己發通知。把提醒加到手機的行事曆，就由行事曆準時通知你；iPhone、Android 和電腦都適用。</p>
+  <div class="rmlist">${L.map(r=>`<div class="rmrow${r.on?'':' off'}"><label class="rmchk"><input type="checkbox" data-ch="rmOn" data-id="${r.id}" ${r.on?'checked':''}><span><b>${r.n}</b><span class="muted">${r.d}</span></span></label>
+    <div class="rmctl"><select data-ch="rmF" data-id="${r.id}" aria-label="頻率">${Object.entries(RM_F).map(([v,n])=>`<option value="${v}"${r.f===v?' selected':''}>${n}</option>`).join('')}</select><input type="time" data-ch="rmT" data-id="${r.id}" value="${r.t}" aria-label="時間"><a class="ghost sm btn" href="${esc(rmGoogle(r))}" target="_blank" rel="noopener" title="在 Google 日曆新增這個提醒">Google</a></div></div>`).join('')}</div>
+  <div class="row" style="margin-top:12px"><button class="pri" data-act="rmIcs"${on.length?'':' disabled'}>把勾選的 ${on.length} 個加到行事曆</button></div>
+  <p class="muted" style="margin:8px 0 0">會下載一個行事曆檔（.ics），打開後選「全部加入」；iPhone 會直接出現加入行事曆的畫面。只用 Google 日曆的話，按每一行右邊的「Google」。之後想改時間，在行事曆裡直接改就好。</p>`}
+function goalIcs(e){const t=today(),n=diffDays(t,e.date),k=exKind(e.name),evs=[];
+  [30,14,7,3,1].filter(d=>d<n).forEach(d=>{const day=addDays(e.date,-d),ph=exPhase(d);evs.push({uid:'goal-'+e.date+'-'+d,date:day,t:'09:00',min:15,title:`${e.name||exL('ev')} D-${d}・${phName(k,ph)}`,desc:EX_FOCUS[k][ph][0]+'：'+EX_FOCUS[k][ph][1]})});
+  if(n>=0)evs.push({uid:'goal-'+e.date+'-0',date:e.date,allDay:true,title:`${e.name||exL('ev')}・就是今天`,desc:EX_FOCUS[k].p0[1]});return evs}
 function editCfg(fn){const c=clone(cfg());fn(c);save('meta','main',c)}
 
 const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。',viewonly:'目前沒有雲端儲存權限，紀錄先存在這個瀏覽器。',nologin:'資料只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。',standalone:'資料存在這個瀏覽器裡。記得定期到「設定」匯出備份。'};
@@ -1684,7 +1741,8 @@ function examCardHTML(e,i,t){const n=e.date?diffDays(t,e.date):null;
   return `<div class="excard"><div class="exring-wrap">${exRing(e,n)}</div><div class="exbody">${edit}
     <p class="exphase"><span class="pill ${ph==='p5'||ph==='p4'||ph==='p0'?'warn':'good'}">${phName(k,ph)}・${fo[0]}</span></p>
     <p class="extip">${esc(exTip(e,n))}</p>
-    <details class="exmore"><summary class="muted">這個階段可以怎麼準備</summary><p>${esc(fo[1])}</p></details></div></div>`}
+    <details class="exmore"><summary class="muted">這個階段可以怎麼準備</summary><p>${esc(fo[1])}</p></details>
+    ${n>0?`<button class="ghost sm excal" data-act="exIcs" data-i="${i}" title="把 D-30、14、7、3、1 和當天加到手機行事曆">加到行事曆</button>`:''}</div></div>`}
 function examTodayHTML(){if(!isOn('exam'))return '';const t=today(),ex=(cfg().exams||[]).filter(e=>e.date).map(e=>({e,n:diffDays(t,e.date)})).filter(x=>x.n>=0&&x.n<=120).sort((a,b)=>a.n-b.n)[0];if(!ex)return '';
   const mile=[90,60,30,14,7,3,1,0].includes(ex.n);
   return `<a class="extoday${mile?' mile':''}" href="#exam"><span class="num">${esc(ex.e.name)} ${ex.n===0?'今天':'D-'+ex.n}</span><span class="grow">${mile&&ex.n>0?`<b>${phName(exKind(ex.e.name),exPhase(ex.n))}：</b>`:''}${esc(exTip(ex.e,ex.n))}</span><span class="muted">→</span></a>`}
@@ -2037,6 +2095,7 @@ function vPrefs(){
     <p class="muted" style="margin:0 0 8px">用右邊的 ↑ ↓ 調整選單順序；「今日」固定在最前面，「設定」固定在最後。</p>
     <div class="vis">${(()=>{const ord=navOrder().filter(r=>OPTIONAL[r]);return ord.map((r,i)=>{const d=OPTIONAL[r];return `<div class="visline"><button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button><span class="ord"><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="-1" aria-label="往上移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="1" aria-label="往下移" ${i===ord.length-1?'disabled':''}>↓</button></span></div>`}).join('')})()}</div>
     ${(cfg().navOrder||[]).length?'<button class="ghost sm" data-act="navReset" style="margin-top:6px">恢復預設順序</button>':''}
+    <div class="row" style="margin-top:12px"><button class="sm" data-act="purOpen">依用途重新選擇</button><span class="muted">選擇你主要的用途，自動打開適合的頁面。</span></div>
     <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div>`)}
   ${fold('tags','記錄標籤',`${c.subjects.length} 個：${esc(c.subjects.slice(0,4).map(x=>x.name).join('、'))}${c.subjects.length>4?'…':''}`,`<p class="muted" style="margin-top:0">番茄鐘的分類，統計會依標籤分開計算。</p>
       <div class="list">${c.subjects.map((s,i)=>`<div class="li"><button class="swatch" data-act="colOpen" data-i="${i}" style="--sw:var(--c${s.c})" aria-label="顏色：${COLN[s.c]||''}，點一下更換" aria-expanded="${colOpen===i}"><i></i><span>${COLN[s.c]||''}</span></button><input id="sn${i}" type="text" data-ch="sub" data-i="${i}" data-f="name" value="${esc(s.name)}" style="flex:1"><input id="su${i}" type="text" data-ch="sub" data-i="${i}" data-f="unit" value="${esc(s.unit)}" placeholder="單位" style="width:70px"><button class="ghost sm" data-act="subDel" data-i="${i}" aria-label="刪除">×</button></div>${colOpen===i?`<div class="palette" role="group" aria-label="選擇顏色">${COLN.map((n,k)=>`<button class="pal" data-act="colSet" data-i="${i}" data-c="${k}" style="--sw:var(--c${k})" aria-pressed="${s.c===k}"><i></i>${n}</button>`).join('')}</div>`:''}`).join('')}</div>
@@ -2055,6 +2114,7 @@ function vPrefs(){
       <p class="muted">到「考試衝刺」頁，按計時器下方的「自訂」就能改名稱、分段和時間，也可以新增自己的計時。</p>
     `)}
   <h3 class="setgrp">提醒</h3>
+  ${fold('remind','每日提醒（加到行事曆）',(()=>{const on=rmList().filter(r=>r.on);return on.length?on.map(r=>r.n+' '+r.t).slice(0,3).join('・')+(on.length>3?'…':''):'還沒有選擇提醒'})(),remindHTML())}
   ${fold('sound','聲音與提醒',`音量 ${volPref()}%・白噪音：${noiseOn()?(NOISE_K.find(x=>x[0]===noiseKind())||['',''])[1]:'關'}・倒數提醒：${xwarnOn()?'開':'關'}`,`
     <div class="row sb"><div><h3 style="margin:0">音量 <span class="num" id="volVal">${volPref()}%</span></h3><p class="muted" style="margin:4px 0 0">番茄鐘、測驗計時和靜心的鈴聲都用這個音量。</p></div>
       <div class="row"><input type="range" id="volR" data-in="vol" min="0" max="100" step="5" value="${volPref()}" aria-label="音量" style="width:180px"><button class="sm" data-act="volTest">試聽</button></div></div>
@@ -2134,6 +2194,14 @@ const A={
   tEdit:()=>{tEditing=!tEditing;render()},
   exSceneT:()=>{exSceneOpen=!exSceneOpen;render()},
   exScene:el=>{const from=exScene(),to=el.dataset.v;editCfg(c=>{const untouched=sameTimers(c.timers,sceneTimers(from==='custom'?'exam':from))||sameTimers(c.timers,DEF.timers);c.exScene=to;if(untouched&&!T.running){c.timers=sceneTimers(to==='custom'?'exam':to);c.tv=2}});if(!cfg().timers.some(x=>x.id===T.pid)&&!T.running){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT()}toast('已切換為「'+(el.dataset.v==='custom'?'自訂':EXS[el.dataset.v].n)+'」');render()},
+  purPick:el=>{const k=el.dataset.k;if(k==='all'){WPUR=WPUR.has('all')?new Set():new Set(['all'])}else{WPUR.delete('all');WPUR.has(k)?WPUR.delete(k):WPUR.add(k)}
+    document.querySelectorAll('.purp-o').forEach(b=>b.setAttribute('aria-pressed',WPUR.has(b.dataset.k)))},
+  purOpen:()=>openPurpose(),
+  close:()=>closeModal(),
+  rmIcs:async()=>{const L=rmList().filter(r=>r.on);if(!L.length)return toast('先勾選要加入的提醒');const ics=icsFile(L.map(r=>({uid:'rm-'+r.id+'-'+r.f+'-'+r.t.replace(':',''),date:rmStart(r),t:r.t,min:10,rrule:RRULE[r.f],title:'日課・'+r.n,desc:r.d})));
+    if(await saveFile('日課提醒.ics',ics,'text/calendar','rike-reminders.ics'))toast('已下載行事曆檔，打開後選「全部加入」')},
+  exIcs:async el=>{const e=(cfg().exams||[])[+el.dataset.i];if(!e||!e.date)return;const evs=goalIcs(e);if(!evs.length)return toast('日期已經過了');if(await saveFile((e.name||'目標')+'倒數提醒.ics',icsFile(evs),'text/calendar','rike-goal.ics'))toast('已下載，打開後選「全部加入」')},
+  purApply:()=>{if(!applyPurpose())return toast('至少選一個');closeModal();toast('已依用途調整頁面');render()},
   tListT:()=>{tListEdit=!tListEdit;render()},
   tDelId:el=>{const id=el.dataset.id,ts=cfg().timers;if(ts.length<2)return toast('至少保留 1 個計時');if(T.running&&T.pid===id)return toast('這個計時進行中，先暫停或重設');const t=ts.find(x=>x.id===id);editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==id);c.tv=2});if(T.pid===id){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false}toast('已刪除「'+(t?t.name:'')+'」');render()},
   tRestore:()=>{const sc=exScene();editCfg(c=>{sceneTimers(sc==='custom'?'exam':sc).forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},
@@ -2188,7 +2256,7 @@ const A={
   gdNow:()=>{if(gdReady())gdSync();else gdConnect(false)},
   gdOff:el=>{if(!twoStep(el))return;gdDisconnect()},
   syncChip:()=>{if(gdReady())gdSync();else gdConnect(false)},
-  wNext:()=>{if(WSTEP>=WELCOME().length-1){lsSet('sd-welcome',true);closeModal();location.hash='today';return}WSTEP++;openWelcome()},
+  wNext:()=>{if((WELCOME()[WSTEP]||[])[2]==='purpose')applyPurpose();if(WSTEP>=WELCOME().length-1){lsSet('sd-welcome',true);closeModal();location.hash='today';return}WSTEP++;openWelcome()},
   wSkip:()=>{lsSet('sd-welcome',true);closeModal()},
   wAgain:()=>{WSTEP=0;openWelcome()},
   colOpen:el=>{const i=+el.dataset.i;colOpen=colOpen===i?-1:i;render()},
@@ -3331,7 +3399,7 @@ Object.assign(C,{
   npType:el=>{comboSet(el,'other');const r=isResearch(el.value);['#npMethodWrap','#npMethodNote'].forEach(q=>{const e=$(q);if(e)e.hidden=!r})},
   npMethod:el=>{comboSet(el,'custom')},
   msS:el=>{if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
-  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},exPage:el=>{editCfg(c=>{c.exPage=el.value.trim().slice(0,8)});render()},exLabel:el=>{editCfg(c=>{c.exLabels=Object.assign({},c.exLabels);const v=el.value.trim();if(v)c.exLabels[el.dataset.k]=v;else delete c.exLabels[el.dataset.k]});render()},
+  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},rmOn:el=>{const id=el.dataset.id;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{on:el.checked})});render()},rmF:el=>{const id=el.dataset.id;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{f:el.value})});render()},rmT:el=>{const id=el.dataset.id;if(!el.value)return;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{t:el.value})});render()},exPage:el=>{editCfg(c=>{c.exPage=el.value.trim().slice(0,8)});render()},exLabel:el=>{editCfg(c=>{c.exLabels=Object.assign({},c.exLabels);const v=el.value.trim();if(v)c.exLabels[el.dataset.k]=v;else delete c.exLabels[el.dataset.k]});render()},
   pjF:el=>{const f=el.dataset.f;editProj(p=>{p[f]=el.value});render();if((f==='type'&&el.value==='other')||(f==='method'&&el.value==='custom'))setTimeout(()=>{const i=$(f==='type'?'#pjTX':'#pjMX');i&&i.focus()},30)},
   stF:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id)[el.dataset.f]=el.value});if(el.dataset.f!=='name')render()},
   stDone:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id).status=el.checked?'done':''});if(el.checked)toast('一個階段完成了');render()},

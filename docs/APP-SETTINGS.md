@@ -35,6 +35,7 @@ daily-practice/
 ├─ i18n-en.js                ← 英文翻譯（由 tools/i18n/build-i18n.py 產生）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png
 ├─ qr.png                    ← 網站 QR code（設定頁、分享視窗使用）
+├─ ocean.mp3                 ← 白噪音「潮汐」音檔（claude.ai 版發佈時要用 files 一起上傳）
 ├─ docs/APP-SETTINGS.md      ← 本文件
 └─ tools/
    ├─ build.py               ← src → index.html
@@ -121,6 +122,7 @@ daily-practice/
 - 安全區：`env(safe-area-inset-*)`，支援瀏海機
 - 頁面最大寬度用 `100%`，不要用 `100vw`（縮放時會溢出）
 - 選單順序使用者可自訂（設定 → 選單順序）
+- 設定頁內容較多的區塊用 `fold(id,標題,摘要,內容)` 做成可收放卡片（預設收起，收起時顯示一行摘要，展開狀態記在 `sd-fold`）
 
 ---
 
@@ -130,7 +132,7 @@ daily-practice/
 |---|---|---|
 | 今日 | `#today` | 番茄鐘（專注/短休/長休循環）、標籤（可自填）、暫停筆記、提前結束原因、雜念停車場、今天三件事、精力/專注度、考試倒數橫幅 |
 | 計畫地圖 | `#plan` | 多種計畫範本、階段與步驟、彈性時間線、步驟細節筆記、今天的最小一步（成功模式） |
-| 考試衝刺 | `#exam` | 考試日期、圓圈倒數、依階段每日提醒、分段測驗計時 |
+| 考試衝刺 | `#exam` | 考試名稱（預設空白＋引導語）、考試日期、圓圈倒數、依階段每日提醒、分段測驗計時（項目可自由刪減、恢復預設） |
 | 月曆 | `#calendar` | 每日紀錄、Google 行事曆匯入、會談（跳轉 Google Calendar / Gmail 預填） |
 | 靜心 | `#mind` | 靜心計時（時間可自訂，最少 3 組，預設 3/5/10/15/30/60 分）、多種禪修方法、一天多次紀錄 |
 | 覺察日記 | `#journal` | 每日三件式、情緒、回顧（圖表＋搜尋） |
@@ -147,7 +149,8 @@ daily-practice/
 | 計時器 | 開始 | 結束 |
 |---|---|---|
 | 番茄鐘（專注、休息） | 無 | `ring()`：880/660 Hz 清脆「嘀－嘟－嘀」，**重複兩次** |
-| 測驗計時（每段、全部） | 無 | `ring()`（同上） |
+| 測驗計時（每段、全部） | 無 | `ring()`（同上）；剩 5 分、1 分鐘時 `warnTone()` 一聲＋數字閃爍 10 秒（設定 `sd-xwarn`，預設開） |
+| 白噪音（今日番茄鐘專注時） | 夜晚蟲鳴／潮汐／流水／燒柴 | 休息、靜心時自動淡出。潮汐用 `ocean.mp3`（540 KB，單聲道 48kbps）；其餘三種以 OfflineAudioContext 即時合成（0 KB），做成 24 秒無縫循環。設定 `sd-noise-on`、`sd-noise-k`、`sd-noise-v` |
 | 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒 | `yinqing(1,0)`：一聲引磬 |
 
 技術要點（iPhone 相容）：
@@ -230,7 +233,7 @@ node tools/tests/meditation-sounds.js
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
 
-6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址）。
+6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上 `{"ocean.mp3": "ocean.mp3"}`。
 7. 提醒使用者：手機把 App 完全關掉再開，就會換到新版。
 
 注意：如果 push 被拒（遠端有別的 session 推過），先 `git pull --rebase`。若衝突在 `index.html`，把遠端的改動合回 `src/studydesk.html` 再重新 build，不要直接覆蓋。

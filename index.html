@@ -456,6 +456,32 @@ main .grid2+.setgrp{margin-top:26px}
 .prrow>summary .prq,.prrow>summary .pill,.prrow>summary .num{white-space:nowrap;flex:none}
 .prrow[open]>summary{border-bottom:1px solid var(--line)}
 .prrow .prcard{padding:10px 0 12px}
+.card.fold{padding:0;margin-bottom:12px}
+.fold>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;border-radius:var(--r);-webkit-tap-highlight-color:transparent}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary:hover{background:var(--sunk)}
+.fold>summary:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.fold .ftxt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.fold .ftxt h2{margin:0}
+.fold .fsum{color:var(--muted);font-size:calc(12.5px * var(--fs,1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fold .chev{flex:none;color:var(--muted);transition:transform .25s ease}
+.fold[open]>summary{border-bottom:1px solid var(--line);border-radius:var(--r) var(--r) 0 0}
+.fold[open] .chev{transform:rotate(180deg)}
+.fold[open] .fsum{display:none}
+.fold .foldbody{padding:14px 18px 18px;animation:foldin .22s ease}
+@keyframes foldin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fold .foldbody{animation:none}.fold .chev{transition:none}}
+.setblk{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.nzopts{display:flex;flex-direction:column;gap:10px;margin:2px 0 12px 30px;transition:opacity .2s}
+.nzopts.dim{opacity:.5}
+.nzseg{flex-wrap:wrap}
+.nzvol{gap:8px}
+.nzvol input[type=range]{flex:1;min-width:120px;max-width:220px}
+.xclock.warn{color:var(--warn);animation:xwarn .5s ease-in-out infinite alternate}
+.xclock.warn.low{color:var(--bad)}
+@keyframes xwarn{from{opacity:1}to{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.xclock.warn{animation:none}}
+@media (max-width:820px){.nzopts{margin-left:0}.fold>summary{padding:14px}.fold .foldbody{padding:12px 14px 16px}}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1174,7 +1200,7 @@ function tAdvance(){
 let lastTitle='';
 let CUR_DAY=today();
 function tick(force){
-  syncSched();
+  syncSched();syncNoise();
   if(today()!==CUR_DAY&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){const o=CUR_DAY;CUR_DAY=today();if(jDay===o)jDay=CUR_DAY;if(calSel===o){calSel=CUR_DAY;calM=CUR_DAY.slice(0,7)}render();return}
   if(P.running&&Date.now()>=P.endAt){pComplete(false);return}
   if(T.running&&Date.now()>=T.endAt){tAdvance();return}
@@ -1186,7 +1212,7 @@ function tick(force){
   const mini=$('#miniClock');
   if(mini){const on=P.running||T.running||MT.running;mini.classList.toggle('on',on&&R!=='today');mini.textContent=P.running?`${P.mode==='work'?'專注':'休息'} ${mmss(pl)}`:T.running?`測驗 ${mmss(tLeft())}`:MT.running?`靜心 ${mmss(mLeft())}`:''}
   const xe=$('#xTime');
-  if(xe){const l=tLeft();xe.textContent=mmss(l);xe.classList.toggle('run',T.running);xe.classList.toggle('low',T.running&&l<=60)}
+  if(xe){const l=tLeft(),tot=tSegSec();xe.textContent=mmss(l);xe.classList.toggle('run',T.running);xe.classList.toggle('low',T.running&&l<=60);xe.classList.toggle('warn',T.running&&xwarnOn()&&[300,60].some(th=>tot>th+5&&l<=th&&l>th-10))}
 }
 setInterval(()=>tick(false),250);
 
@@ -1230,7 +1256,8 @@ function syncSched(){
   if(P.running)want.p={end:P.endAt,fn:ring};
   if(T.running){const last=T.seg>=tPreset().segs.length-1;want.t={end:T.endAt,fn:ring}}
   if(MT.running)want.m={end:MT.endAt,fn:()=>yinqing(1,0)};
-  ['p','t','m'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
+  if(T.running&&xwarnOn()){const tot=tSegSec();[300,60].forEach(th=>{if(tot>th+5&&T.endAt-th*1000>Date.now()+200)want['w'+th]={end:T.endAt-th*1000,fn:warnTone}})}
+  ['p','t','m','w300','w60'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
   const any=P.running||T.running||MT.running;
   if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!(P.running||T.running||MT.running))keepAlive(false)},20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
@@ -1547,7 +1574,7 @@ function weekReview(keys,A,subs){
 }
 
 /* ---------- exam view ---------- */
-let mkFilter='due',tEditing=false,mkSubEdit=false,mkSubAdding=false;
+let mkFilter='due',tEditing=false,tListEdit=false,mkSubEdit=false,mkSubAdding=false;
 const MK_DEF=[{id:'mk1',n:'閱讀',c:0},{id:'mk2',n:'聽力',c:3},{id:'mk3',n:'口說',c:2},{id:'mk4',n:'寫作',c:1},{id:'mk5',n:'其他',c:7}];
 function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:MK_DEF}
 function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_DEF.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
@@ -1621,10 +1648,12 @@ function vExam(){
   const t=today();
   const shown=mlist.filter(([,m])=>mkFilter==='due'?m.due&&m.due<=t:mkFilter==='master'?!m.due:true).sort((a,b)=>(a[1].due||'9')<(b[1].due||'9')?-1:1);
   const causeCount={};mlist.forEach(([,m])=>(m.causes||[]).forEach(x=>causeCount[x]=(causeCount[x]||0)+1));
-  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">考試衝刺</p><input class="pgtitle" id="examTitle" type="text" data-ch="examTitle" value="${esc(c.examTitle||'托福準備')}" aria-label="頁面標題（點一下可以改）" title="點一下可以改成你要準備的考試"></div><div class="chips">${examChips()}</div></header>
+  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">考試衝刺</p><input class="pgtitle" id="examTitle" type="text" data-ch="examTitle" value="${esc(c.examTitle==='托福準備'||c.examTitle==='考試準備'?'':(c.examTitle||''))}" placeholder="開始你的考試：點這裡寫下考試名稱" aria-label="考試名稱（點一下可以改）" title="點一下寫下你要準備的考試"></div><div class="chips">${examChips()}</div></header>
   <div class="grid2">
     <section class="card"><h2>測驗計時 <span class="muted">練習用，不算進番茄鐘</span></h2>
-      <div class="row" style="justify-content:center">${c.timers.map(x=>`<button class="sm" data-act="tPick" data-id="${esc(x.id)}" aria-pressed="${x.id===T.pid}">${esc(x.name)}</button>`).join('')}<button class="ghost sm" data-act="tNew">＋ 新增計時</button></div>
+      <div class="minchips">${c.timers.map(x=>tListEdit?`<span class="minchip editing">${esc(x.name)}<button class="tdel" data-act="tDelId" data-id="${esc(x.id)}" aria-label="刪除「${esc(x.name)}」"${c.timers.length<2?' disabled':''}>×</button></span>`:`<button class="sm" data-act="tPick" data-id="${esc(x.id)}" aria-pressed="${x.id===T.pid}">${esc(x.name)}</button>`).join('')}
+        ${tListEdit?`<button class="sm sec" data-act="tNew">＋ 新增</button>${DEF.timers.some(d=>!c.timers.some(x=>x.id===d.id))?'<button class="ghost sm" data-act="tRestore">恢復預設項目</button>':''}<button class="ghost sm minedit" data-act="tListT">完成</button>`:'<button class="ghost sm minedit" data-act="tListT">編輯項目</button>'}</div>
+      ${tListEdit?'<p class="muted" style="text-align:center;margin:6px 0 0">按 × 刪除不用的項目，至少保留 1 個；按「＋ 新增」加入自己的計時。</p>':''}
       <div class="xclock" id="xTime">--:--</div>
       <div class="segs">${p.segs.map((s,i)=>`<span class="${i===T.seg?'on':i<T.seg?'past':''}">${esc(s.n)} ${mmss(s.s)}</span>`).join('')}</div>
       <div class="ctrl"><button class="pri" style="background:var(--focus);border-color:var(--focus);color:var(--surface)" data-act="tToggle">${T.running?'暫停':'開始'}</button><button data-act="tPlus">+1 分鐘</button><button data-act="tNext"${T.seg>=p.segs.length-1?' disabled':''}>下一段</button><button data-act="tReset">重設</button></div>
@@ -1943,43 +1972,53 @@ function meetLogHTML(ms){return ms.map(m=>`<details class="mrec"${ms[0]===m?' op
 let jDay=today();
 /* ---------- prefs view ---------- */
 let impMsg='';
+const FOLD_OPEN=new Set((()=>{const v=lsGet('sd-fold',[]);return Array.isArray(v)?v:[]})());
+const CHEV='<svg class="chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function fold(id,title,sum,body){return `<details class="card fold" data-fold="${id}"${FOLD_OPEN.has(id)?' open':''}><summary><span class="ftxt"><h2>${title}</h2><span class="fsum">${sum}</span></span>${CHEV}</summary><div class="foldbody">${body}</div></details>`}
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details.fold')){d.open?FOLD_OPEN.add(d.dataset.fold):FOLD_OPEN.delete(d.dataset.fold);lsSet('sd-fold',[...FOLD_OPEN])}},true);
 function vPrefs(){
   const c=cfg();
   const th=themePref();
   return `<header class="ph"><div><p class="eyebrow">設定</p><h1>打造你的日課</h1></div></header>
   <h3 class="setgrp">日常使用</h3>
-  <section class="card" style="margin-bottom:16px"><h2>要顯示哪些頁面</h2><p class="muted">用不到的頁面可以先藏起來，資料都會保留，之後再打開就回來了。</p>
+  ${fold('pages','要顯示哪些頁面',`${navOrder().filter(r=>OPTIONAL[r]&&isOn(r)).length} / ${navOrder().filter(r=>OPTIONAL[r]).length} 頁顯示中・可調整順序`,`<p class="muted">用不到的頁面可以先藏起來，資料都會保留，之後再打開就回來了。</p>
     <p class="muted" style="margin:0 0 8px">用右邊的 ↑ ↓ 調整選單順序；「今日」固定在最前面，「設定」固定在最後。</p>
     <div class="vis">${(()=>{const ord=navOrder().filter(r=>OPTIONAL[r]);return ord.map((r,i)=>{const d=OPTIONAL[r];return `<div class="visline"><button class="visrow" data-act="navToggle" data-r="${r}" aria-pressed="${isOn(r)}"><span class="sw" aria-hidden="true"></span><span><b>${d.split('：')[0]}</b><span class="muted">${d.split('：')[1]}</span></span></button><span class="ord"><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="-1" aria-label="往上移" ${i===0?'disabled':''}>↑</button><button class="ghost sm" data-act="navMove" data-r="${r}" data-d="1" aria-label="往下移" ${i===ord.length-1?'disabled':''}>↓</button></span></div>`}).join('')})()}</div>
     ${(cfg().navOrder||[]).length?'<button class="ghost sm" data-act="navReset" style="margin-top:6px">恢復預設順序</button>':''}
-    <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div></section>
-  <div class="grid2">
-    <section class="card"><h2>記錄標籤 <span class="muted">番茄鐘的分類，統計會依標籤分開計算</span></h2>
+    <div class="row" style="margin-top:12px"><button class="sec" data-act="pgNewOpen">＋ 新增自己的頁面</button><span class="muted">用筆記、清單、計數器、進度條、倒數日、每日打卡、紀錄表組合出你的計畫。</span></div>`)}
+  ${fold('tags','記錄標籤',`${c.subjects.length} 個：${esc(c.subjects.slice(0,4).map(x=>x.name).join('、'))}${c.subjects.length>4?'…':''}`,`<p class="muted" style="margin-top:0">番茄鐘的分類，統計會依標籤分開計算。</p>
       <div class="list">${c.subjects.map((s,i)=>`<div class="li"><button class="swatch" data-act="colOpen" data-i="${i}" style="--sw:var(--c${s.c})" aria-label="顏色：${COLN[s.c]||''}，點一下更換" aria-expanded="${colOpen===i}"><i></i><span>${COLN[s.c]||''}</span></button><input id="sn${i}" type="text" data-ch="sub" data-i="${i}" data-f="name" value="${esc(s.name)}" style="flex:1"><input id="su${i}" type="text" data-ch="sub" data-i="${i}" data-f="unit" value="${esc(s.unit)}" placeholder="單位" style="width:70px"><button class="ghost sm" data-act="subDel" data-i="${i}" aria-label="刪除">×</button></div>${colOpen===i?`<div class="palette" role="group" aria-label="選擇顏色">${COLN.map((n,k)=>`<button class="pal" data-act="colSet" data-i="${i}" data-c="${k}" style="--sw:var(--c${k})" aria-pressed="${s.c===k}"><i></i>${n}</button>`).join('')}</div>`:''}`).join('')}</div>
-      <div style="margin-top:10px"><button data-act="subAdd">新增標籤</button></div>
-      <h2 style="margin-top:22px">番茄鐘（分鐘）</h2>
+      <div style="margin-top:10px"><button data-act="subAdd">新增標籤</button></div>`)}
+  <section class="card" style="margin-bottom:12px"><h2>番茄鐘（分鐘）</h2>
       <div class="row">${[['work','專注'],['short','短休'],['long','長休'],['every','每幾個番茄長休一次']].map(([k,n])=>`<label class="f">${n}<input id="po${k}" type="number" min="1" max="180" data-ch="pomo" data-f="${k}" value="${c.pomo[k]}"></label>`).join('')}</div>
       <h2 style="margin-top:22px">模考計分</h2>
       <div class="seg">${[['30','每科 0–30（總分 120）'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${c.scale===v}">${n}</button>`).join('')}</div>
       ${c.scale==='custom'?scaleEditorHTML():''}
       <p class="muted">依照你使用的模考成績單選擇就好，之後隨時可以切換。準備托福以外的考試，可以選「自訂」，自己設定項目、滿分和總分算法。</p>
     </section>
-    <section class="card"><h2>計數器</h2>
+  ${fold('ctr','計數器',c.counters.length?`${c.counters.length} 個：${esc(c.counters.slice(0,3).map(x=>x.name).join('、'))}${c.counters.length>3?'…':''}`:'還沒有計數器',`
       <div class="list">${c.counters.map((x,i)=>`<div class="li ctrrow"><label class="f ctrname">名稱<input id="cn${i}" type="text" data-ch="ctr" data-i="${i}" data-f="name" value="${esc(x.name)}"></label><label class="f ctrnum">目標<input id="cg${i}" type="number" min="0" data-ch="ctr" data-i="${i}" data-f="goal" value="${x.goal}"></label><label class="f ctrnum">每次<input id="cs${i}" type="number" min="1" data-ch="ctr" data-i="${i}" data-f="step" value="${x.step}"></label><button class="ghost sm" data-act="ctrDel" data-i="${i}" aria-label="刪除">×</button></div>`).join('')}</div>
       <div style="margin-top:10px"><button data-act="ctrAdd">新增計數器</button></div>
-      <h2 style="margin-top:22px">測驗計時</h2>
+      <h3 style="margin-top:18px">測驗計時</h3>
       <p class="muted">到「考試衝刺」頁，按計時器下方的「自訂」就能改名稱、分段和時間，也可以新增自己的計時。</p>
-    </section>
-  </div>
+    `)}
   <h3 class="setgrp">提醒</h3>
-  <section class="card" style="margin-bottom:16px"><h2>聲音與提醒</h2>
+  ${fold('sound','聲音與提醒',`音量 ${volPref()}%・白噪音：${noiseOn()?(NOISE_K.find(x=>x[0]===noiseKind())||['',''])[1]:'關'}・倒數提醒：${xwarnOn()?'開':'關'}`,`
     <div class="row sb"><div><h3 style="margin:0">音量 <span class="num" id="volVal">${volPref()}%</span></h3><p class="muted" style="margin:4px 0 0">番茄鐘、測驗計時和靜心的鈴聲都用這個音量。</p></div>
       <div class="row"><input type="range" id="volR" data-in="vol" min="0" max="100" step="5" value="${volPref()}" aria-label="音量" style="width:180px"><button class="sm" data-act="volTest">試聽</button></div></div>
+    <div class="setblk">
+      <label class="visrow"><input type="checkbox" data-ch="noiseSet" ${noiseOn()?'checked':''}><span><b>白噪音</b><span class="muted">「今日」番茄鐘專注時播放，幫你隔開周圍的雜音；休息和靜心時自動停止。</span></span></label>
+      <div class="nzopts${noiseOn()?'':' dim'}">
+        <div class="seg nzseg">${NOISE_K.map(([v,n])=>`<button data-act="noiseKind" data-v="${v}" aria-pressed="${noiseKind()===v}">${n}</button>`).join('')}</div>
+        <div class="row nzvol"><span class="muted">音量</span><input type="range" id="nzR" data-in="noiseVol" min="0" max="100" step="5" value="${noiseVol()}" aria-label="白噪音音量"><span class="num" id="nzVal">${noiseVol()}%</span><button class="sm" data-act="noisePrev">${Date.now()<NZPREV?'停止試聽':'試聽'}</button></div>
+      </div>
+    </div>
+    <label class="visrow" style="margin-top:4px"><input type="checkbox" data-ch="xwarnSet" ${xwarnOn()?'checked':''}><span><b>考試計時倒數提醒</b><span class="muted">「考試衝刺」計時剩 5 分鐘、1 分鐘時，數字閃爍變色 10 秒，並響一聲短提示音。</span></span></label>
     <label class="visrow" style="margin-top:12px"><input type="checkbox" data-ch="bgSet" ${bgPref()?'checked':''}><span><b>螢幕關掉也響鈴</b><span class="muted">計時中把手機鎖定、電腦螢幕關掉，時間到仍會響。可能會暫停你正在聽的音樂；邊讀書邊聽歌的話可以關掉。</span></span></label>
     <label class="visrow"><input type="checkbox" data-ch="wakeSet" ${wakePref()?'checked':''}><span><b>計時時保持螢幕亮著</b><span class="muted">最保險的做法，適合手機放在桌上計時。比較耗電。</span></span></label>
     <div class="row sb" style="margin-top:10px"><div><b style="font-size:calc(13px * var(--fs,1))">系統通知</b><div class="muted">${'Notification' in window?(Notification.permission==='granted'?'已開啟。在別的分頁或 App 時，時間到會跳出通知。':Notification.permission==='denied'?'已被瀏覽器封鎖，要到瀏覽器的網站設定裡開啟。':'在別的分頁或 App 時，時間到跳出通知。'):'這個瀏覽器不支援通知。'}</div></div>${'Notification' in window&&Notification.permission==='default'?'<button class="sm" data-act="notifyOn">開啟通知</button>':''}</div>
     <p class="muted" style="margin:10px 0 0">iPhone 小提醒：先把日課加到主畫面再使用，並記得開始計時前把音量調大。若鎖定後仍沒有聲音，請開啟「保持螢幕亮著」。</p>
-  </section>
+  `)}
   <h3 class="setgrp">外觀與語言</h3>
   <section class="card" style="margin-bottom:16px"><div class="row sb"><div><h2 style="margin:0">外觀</h2><p class="muted" style="margin:4px 0 0">選擇淺色或深色背景，或跟著裝置自動切換。</p></div>
     <div class="seg">${[['auto','跟隨系統'],['light','淺色'],['dark','深色']].map(([v,n])=>`<button data-act="theme" data-v="${v}" aria-pressed="${th===v}">${n}</button>`).join('')}</div></div>
@@ -2041,10 +2080,13 @@ const A={
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
   tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
   tEdit:()=>{tEditing=!tEditing;render()},
+  tListT:()=>{tListEdit=!tListEdit;render()},
+  tDelId:el=>{const id=el.dataset.id,ts=cfg().timers;if(ts.length<2)return toast('至少保留 1 個計時');if(T.running&&T.pid===id)return toast('這個計時進行中，先暫停或重設');const t=ts.find(x=>x.id===id);editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==id);c.tv=2});if(T.pid===id){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false}toast('已刪除「'+(t?t.name:'')+'」');render()},
+  tRestore:()=>{editCfg(c=>{DEF.timers.forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},
   tSegRead:()=>{const p=tPreset();return p.segs.map((_,i)=>({n:($('#tsn'+i).value||'計時').trim(),s:Math.max(0,(+$('#tsm'+i).value||0)*60+(+$('#tss'+i).value||0))}))},
   tSegAdd:()=>{const segs=A.tSegRead();segs.push({n:'新段落',s:600});editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t)t.segs=segs;c.tv=2});render()},
   tSegDel:el=>{const segs=A.tSegRead();segs.splice(+el.dataset.i,1);editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t)t.segs=segs;c.tv=2});render()},
-  tNew:()=>{if(T.running)return toast('計時進行中，先暫停或重設');const id=rid();editCfg(c=>{c.timers.push({id,name:'我的計時',segs:[{n:'作答',s:1500}]});c.tv=2});T={pid:id,seg:0,running:false,endAt:0,left:null};savT();tEditing=true;render();setTimeout(()=>{const n=$('#tName');n&&n.select()},40)},
+  tNew:()=>{if(T.running)return toast('計時進行中，先暫停或重設');tListEdit=false;const id=rid();editCfg(c=>{c.timers.push({id,name:'我的計時',segs:[{n:'作答',s:1500}]});c.tv=2});T={pid:id,seg:0,running:false,endAt:0,left:null};savT();tEditing=true;render();setTimeout(()=>{const n=$('#tName');n&&n.select()},40)},
   tDelP:el=>{if(!twoStep(el))return;editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==T.pid);c.tv=2});T={pid:(cfg().timers[0]||{}).id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false;render()},
   tSave:()=>{const segs=A.tSegRead().filter(x=>x.s>0);if(!segs.length)return toast('至少要有一段大於 0 秒');const nm=(($('#tName')||{}).value||'').trim();editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t){t.segs=segs;if(nm)t.name=nm}c.tv=2});if(!T.running){T.seg=0;T.left=null;savT()}tEditing=false;toast('已儲存');render()},
   tDefault:()=>{const d=DEF.timers.find(x=>x.id===T.pid);editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t&&d)t.segs=clone(d.segs);else if(!d){c.timers=clone(DEF.timers);T.pid='n1'}c.tv=2});T.seg=0;T.left=null;savT();toast(d?'已恢復預設時間':'已恢復全部預設');render()},
@@ -2698,6 +2740,8 @@ Object.assign(A,{
   fbSend:sendFeedback,
   fbCopy:async()=>{const t=`[${($('#fbCat [aria-pressed="true"]')||{}).dataset?.v||'問題'}] ${$('#fbText').value}\n頁面：${fbPageName()}`;try{await navigator.clipboard.writeText(t);toast('已複製')}catch{toast('這裡無法複製，請手動選取文字')}},
   fbDone:async el=>{const u=el.dataset.u,id=el.dataset.id,d=clone(FB[u]||{items:[]});const it=(d.items||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;FB[u]=d;render();try{await DBX.doc('feedback/'+u).set(d)}catch{toast('沒有更新成功，請再試一次')}},
+  noiseKind:el=>{lsSet('sd-noise-k',el.dataset.v);if(!noiseOn()){unlockAudio();NZPREV=Date.now()+10000}syncNoise();render()},
+  noisePrev:()=>{unlockAudio();NZPREV=Date.now()<NZPREV?0:Date.now()+10000;syncNoise();render()},
   volTest:()=>{unlockAudio();whenAudio(ring)},
   notifyOn:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'通知已開啟':'沒有開啟通知')}catch{}render()},
   landSet:el=>{lsSet('sd-land',el.dataset.v);applyScale();render()},
@@ -2801,6 +2845,56 @@ let MT=lsGet('sd-mtimer',null)||{min:10,method:'呼吸覺察',running:false,endA
 const savMT=()=>lsSet('sd-mtimer',MT);
 function mLeft(){return MT.running?Math.max(0,(MT.endAt-Date.now())/1000):(MT.left??MT.min*60)}
 function ring(){if(!AC)return;try{const out=dest();for(let r=0;r<2;r++)for(let i=0;i<3;i++){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=i%2?660:880;o.connect(g);g.connect(out);const t=T0()+.05+r*1.4+i*.32;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.start(t);o.stop(t+.27)}}catch{}}
+function warnTone(){if(!AC)return;try{const out=dest(),t=T0()+.05;[[1175,.24],[2350,.05]].forEach(([f,a])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.35);o.start(t);o.stop(t+.4)})}catch{}}
+const xwarnOn=()=>lsGet('sd-xwarn',true)!==false;
+/* ---------- white noise (today's pomodoro, focus only) ---------- */
+const NOISE_K=[['insects','夜晚蟲鳴'],['ocean','潮汐'],['stream','流水'],['fire','燒柴']];
+const OCEAN_URL='ocean.mp3';
+const noiseOn=()=>lsGet('sd-noise-on',false)===true;
+const noiseKind=()=>{const k=lsGet('sd-noise-k','ocean');return NOISE_K.some(x=>x[0]===k)?k:'ocean'};
+const noiseVol=()=>{const v=+lsGet('sd-noise-v',40);return v>=0&&v<=100?v:40};
+const nzGain=()=>Math.max(.0001,Math.pow(noiseVol()/100,1.5)*1.1);
+let NZ=null,NZPREV=0,NZBUSY=false;const NZDATA={},NZLOAD={};
+function nzLoopify(d,X){const N=d.length-X,o=new Float32Array(N);o.set(d.subarray(0,N));for(let i=0;i<X;i++){const a=i/X*Math.PI/2;o[i]=d[i]*Math.sin(a)+d[N+i]*Math.cos(a)}return o}
+function nzNorm(d,target){let s=0;for(let i=0;i<d.length;i+=7)s+=d[i]*d[i];const r=Math.sqrt(s/(d.length/7))||1,k=target/r;for(let i=0;i<d.length;i++){let v=d[i]*k;d[i]=v>.95?.95:v<-.95?-.95:v}return d}
+function nzNoise(oc,sec,type){const n=Math.floor(oc.sampleRate*sec),b=oc.createBuffer(1,n,oc.sampleRate),d=b.getChannelData(0);let l=0,b0=0,b1=0,b2=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){l=(l+.02*w)/1.02;d[i]=l*3.5}else if(type==='pink'){b0=.99765*b0+w*.099046;b1=.963*b1+w*.2965164;b2=.57*b2+w*1.0526913;d[i]=(b0+b1+b2+w*.1848)*.11}else d[i]=w}return b}
+async function nzSynth(kind,sr){
+  const L=24,X=2,DUR=L+X,OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(1,Math.floor(sr*DUR),sr);
+  const R=Math.random,out=oc.createGain();out.connect(oc.destination);
+  const layer=(type,filt,f,q,gain)=>{const s=oc.createBufferSource();s.buffer=nzNoise(oc,DUR,type);s.loop=true;const bq=oc.createBiquadFilter();bq.type=filt;bq.frequency.value=f;bq.Q.value=q;const g=oc.createGain();g.gain.value=gain;s.connect(bq);bq.connect(g);g.connect(out);s.start(0);return g};
+  const lfo=(g,rate,depth)=>{const o=oc.createOscillator(),d=oc.createGain();o.frequency.value=rate;d.gain.value=depth;o.connect(d);d.connect(g.gain);o.start(0)};
+  if(kind==='stream'){
+    lfo(layer('brown','bandpass',520,.5,.7),.13,.18);lfo(layer('pink','bandpass',1500,1.1,.32),.21,.14);lfo(layer('white','highpass',3200,.7,.035),.33,.015);
+    for(let t=.05;t<DUR;t+=.04+R()*.22){const o=oc.createOscillator(),g=oc.createGain(),f=320+R()*900;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(1.4+R()*.5),t+.03);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.015+R()*.05,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.05);o.connect(g);g.connect(out);o.start(t);o.stop(t+.06)}
+  }else if(kind==='fire'){
+    lfo(layer('brown','lowpass',320,.7,.85),.11,.3);layer('pink','bandpass',2400,.7,.05);
+    const wb=nzNoise(oc,.04,'white'),hp=oc.createBiquadFilter();hp.type='highpass';hp.frequency.value=1600;hp.connect(out);const lp=oc.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.connect(out);
+    for(let t=.03;t<DUR;t+=.02+Math.pow(R(),2)*.45){const s=oc.createBufferSource(),g=oc.createGain(),pop=R()<.12,len=pop?.03:.003+R()*.012,a=pop?.35+R()*.3:Math.pow(R(),2)*.7+.05;s.buffer=wb;g.gain.setValueAtTime(a,t);g.gain.exponentialRampToValueAtTime(.0001,t+len);s.connect(g);g.connect(pop?lp:hp);s.start(t,R()*.005,len+.01)}
+  }else{ // insects
+    layer('pink','lowpass',650,.6,.12);lfo(layer('white','bandpass',4600,9,.05),.09,.025);
+    [[4300,.62,.06],[4680,.86,.04],[3920,.74,.035],[5050,1.07,.022],[4450,.95,.018]].forEach(([f,per,amp])=>{const o=oc.createOscillator(),g=oc.createGain();o.frequency.value=f;g.gain.value=0;o.connect(g);g.connect(out);o.start(0);
+      for(let t=R()*per;t<DUR-.2;t+=per*(.9+R()*.2)+(R()<.06?1.5+R()*2:0)){for(let k=0;k<3;k++){const t0=t+k*.05;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(amp,t0+.005);g.gain.linearRampToValueAtTime(0,t0+.022)}}})
+  }
+  const buf=await new Promise((ok,no)=>{oc.oncomplete=e=>ok(e.renderedBuffer);const p=oc.startRendering();if(p&&p.then)p.then(ok,no)});
+  return nzNorm(nzLoopify(buf.getChannelData(0),Math.floor(sr*X)),.1);
+}
+function nzData(kind,sr){const key=kind+sr;if(NZDATA[key])return Promise.resolve(NZDATA[key]);if(NZLOAD[key])return NZLOAD[key];
+  return NZLOAD[key]=(async()=>{try{let d;
+    if(kind==='ocean'){const ab=await (await fetch(OCEAN_URL)).arrayBuffer();const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,oc=new OC(1,sr,sr);
+      const b=await new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);if(p&&p.then)p.then(ok,no)});const c0=b.getChannelData(0),m=new Float32Array(c0.length);m.set(c0);if(b.numberOfChannels>1){const c1=b.getChannelData(1);for(let i=0;i<m.length;i++)m[i]=(m[i]+c1[i])/2}
+      d=nzNorm(nzLoopify(m,Math.floor(sr*4)),.1)}
+    else d=await nzSynth(kind,sr);
+    NZDATA[key]=d;return d}catch(e){toast('白噪音載入失敗，請確認網路後再試');return null}finally{delete NZLOAD[key]}})()}
+const nzWant=()=>(noiseOn()&&P.running&&P.mode==='work'&&!MT.running)||Date.now()<NZPREV;
+function nzStop(fast){const z=NZ;NZ=null;if(!z)return;try{const t=z.ac.currentTime;z.g.gain.cancelScheduledValues(t);z.g.gain.setValueAtTime(Math.max(.0001,z.g.gain.value),t);z.g.gain.exponentialRampToValueAtTime(.0001,t+(fast?.06:1.2));z.src.stop(t+(fast?.1:1.3))}catch{}}
+async function syncNoise(){
+  if(!nzWant()){if(NZ)nzStop();if(NZPREV&&Date.now()>=NZPREV){NZPREV=0;if(R==='prefs')render()}return}
+  if(!AC||AC.state==='closed')return;const k=noiseKind();
+  if(NZ&&NZ.ac===AC&&NZ.kind===k){const v=nzGain();if(Math.abs(NZ.v-v)>.001){NZ.v=v;NZ.g.gain.setTargetAtTime(v,AC.currentTime,.15)}return}
+  if(NZBUSY)return;NZBUSY=true;
+  try{if(NZ)nzStop(true);const ac=AC,d=await nzData(k,ac.sampleRate);if(!d||ac!==AC||ac.state==='closed'||!nzWant()||noiseKind()!==k)return;
+    const b=ac.createBuffer(1,d.length,ac.sampleRate);b.getChannelData(0).set(d);const src=ac.createBufferSource();src.buffer=b;src.loop=true;const g=ac.createGain();g.gain.value=.0001;src.connect(g);g.connect(ac.destination);src.start();const v=nzGain();g.gain.setTargetAtTime(v,ac.currentTime,.5);NZ={ac,kind:k,src,g,v}}
+  catch{}finally{NZBUSY=false}}
 function bell(n){if(!AC)return;try{const out=outNode();for(let i=0;i<n;i++){const t=T0()+.05+i*1.0,f0=i%2===0?784:659;
   [[f0,.34,2.8],[f0*2,.12,1.8],[f0*3,.05,1.0]].forEach(([f,a,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.01);g.gain.exponentialRampToValueAtTime(a*.4,t+.35);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)})}}catch{}}
 function mComplete(){
@@ -3020,7 +3114,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -3031,7 +3125,7 @@ Object.assign(A,{
   starterAdd:()=>{const n=$('#stNewN').value.trim(),d=$('#stNewD').value.trim();if(!n)return toast('先寫名稱');editCfg(c=>{c.starters=starters().concat([['u_'+rid(),n,d||'15 分鐘內能完成']])});render()},
   starterReset:el=>{if(!twoStep(el))return;editCfg(c=>{delete c.starters});render()}
 });
-Object.assign(IN,{jQ:el=>{jQ=el.value;jMore=30;const pos=el.selectionStart;clearTimeout(window.__jqT);window.__jqT=setTimeout(()=>{render();const i=$('#jQ');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch{}}},250)},vol:el=>{lsSet('sd-vol',+el.value);applyVol();const v=$('#volVal');if(v)v.textContent=el.value+'%'},prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.note=el.value},true)}});
+Object.assign(IN,{jQ:el=>{jQ=el.value;jMore=30;const pos=el.selectionStart;clearTimeout(window.__jqT);window.__jqT=setTimeout(()=>{render();const i=$('#jQ');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch{}}},250)},noiseVol:el=>{lsSet('sd-noise-v',+el.value);const v=$('#nzVal');if(v)v.textContent=el.value+'%';syncNoise()},vol:el=>{lsSet('sd-vol',+el.value);applyVol();const v=$('#volVal');if(v)v.textContent=el.value+'%'},prNote:el=>{editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.note=el.value},true)}});
 
 /* ---------- plan actions ---------- */
 function findStr(o,re,d=0){if(d>6||o==null)return null;if(typeof o==='string')return re.test(o)?o:null;if(typeof o==='object'){for(const v of Object.values(o)){const r=findStr(v,re,d+1);if(r)return r}}return null}
@@ -3124,7 +3218,7 @@ Object.assign(C,{
   npType:el=>{comboSet(el,'other');const r=isResearch(el.value);['#npMethodWrap','#npMethodNote'].forEach(q=>{const e=$(q);if(e)e.hidden=!r})},
   npMethod:el=>{comboSet(el,'custom')},
   msS:el=>{if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
-  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()||'考試準備'})},
+  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},
   pjF:el=>{const f=el.dataset.f;editProj(p=>{p[f]=el.value});render();if((f==='type'&&el.value==='other')||(f==='method'&&el.value==='custom'))setTimeout(()=>{const i=$(f==='type'?'#pjTX':'#pjMX');i&&i.focus()},30)},
   stF:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id)[el.dataset.f]=el.value});if(el.dataset.f!=='name')render()},
   stDone:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id).status=el.checked?'done':''});if(el.checked)toast('一個階段完成了');render()},

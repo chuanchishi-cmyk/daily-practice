@@ -494,6 +494,14 @@ main .grid2+.setgrp{margin-top:26px}
 .jdonehd{margin:6px 2px -4px;font-size:calc(12px * var(--fs,1));letter-spacing:.04em}
 .jdone .jck{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good);font-size:12px;margin-right:8px;vertical-align:2px}
 .jtick{font-size:calc(11px * var(--fs,1));vertical-align:2px;margin-left:6px}
+.exscene{margin:-6px 0 14px}
+.exsc-btn{font-size:calc(12.5px * var(--fs,1));padding:3px 10px;border:1px solid var(--line);border-radius:999px}
+.exsc-body{margin-top:8px;animation:foldin .2s ease}
+.exsc-body .seg{flex-wrap:wrap}
+.exsc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.emomore{text-align:right;margin-top:6px}
+.linkbtn{border:0;background:none;padding:2px 0;color:var(--focus);font-size:calc(12.5px * var(--fs,1));cursor:pointer}
+.linkbtn:hover{text-decoration:underline}
 .mtally{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
 .madd{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .madd summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
@@ -1126,7 +1134,7 @@ function todayMindHTML(){
 }
 function examChips(){
   const ex=cfg().exams.filter(e=>e.date);
-  if(!ex.length)return `<a class="chip" href="#exam">設定考試日期</a>`;
+  if(!ex.length)return `<a class="chip" href="#exam">${esc(exL('chip'))}</a>`;
   return ex.map(e=>{const n=diffDays(today(),e.date);return n<0?`<span class="chip">${esc(e.name)} 已結束</span>`:`<a class="chip${n<=30?' hot':''}" href="#exam">${esc(e.name)} 還有 <b>${n}</b> 天</a>`}).join('');
 }
 
@@ -1275,7 +1283,7 @@ function syncSched(){
   const any=P.running||T.running||MT.running;
   if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!(P.running||T.running||MT.running))keepAlive(false)},20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
   wakeLock(any&&wakePref());
-  mediaMeta(any?(P.running?(P.mode==='work'?'番茄鐘・專注中':'番茄鐘・休息中'):T.running?'測驗計時中':'靜心中'):null);
+  mediaMeta(any?(P.running?(P.mode==='work'?'番茄鐘・專注中':'番茄鐘・休息中'):T.running?exL('timerRun'):'靜心中'):null);
 }
 function beep(n){if(!AC)return;try{for(let i=0;i<n;i++){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=i%2?660:880;o.connect(g);g.connect(dest());const t=T0()+i*.32;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.start(t);o.stop(t+.27)}}catch{}}
 
@@ -1356,7 +1364,7 @@ function sessionsHTML(k,del=true){
 function dueList(){const t=today();return Object.entries(S.mistakes).filter(([,m])=>m.due&&m.due<=t).sort((a,b)=>a[1].due<b[1].due?-1:1)}
 function dueHTML(){
   const d=dueList();
-  if(!d.length)return `<p class="empty">今天沒有要複習的錯題。<a href="#exam">新增錯題</a></p>`;
+  if(!d.length)return `<p class="empty">今天沒有要複習的項目。<a href="#exam">${esc(exL('bookAdd'))}</a></p>`;
   return `<div class="list">${d.slice(0,5).map(([id,m])=>`<div class="li">${mkDot(m.sub)}<div class="grow">${esc((m.q||'').slice(0,40))}</div><span class="pill ${m.due<today()?'bad':'warn'}">${m.due<today()?'逾期':'今天'}</span></div>`).join('')}</div>
   <div class="row sb" style="margin-top:10px"><span class="muted">共 ${d.length} 題</span><a class="btn" href="#exam" data-act="goReview">開始複習</a></div>`;
 }
@@ -1383,7 +1391,7 @@ function widgetBody(w,k){
   if(w==='sessions')return [`今日專注紀錄 <span class="muted">${ss.length} 筆・${mins} 分</span> ${XL('看本週統計','stats','data-m="week"')}`,`${sessionsHTML(k)}<div style="margin-top:10px"><button data-act="manual">補登一筆</button></div>`];
   if(w==='counters')return [`計數 ${XL('調整計數器','prefs')}`,countersHTML(k)];
   if(w==='mind')return [`靜心 ${XL('靜心頁','mind')}`,todayMindHTML()];
-  if(w==='due')return [`待複習錯題 ${XL('考試衝刺','exam')}`,dueHTML()];
+  if(w==='due')return [`${esc(exL('due'))} ${XL(exPage(),'exam')}`,dueHTML()];
   if(w==='next')return [`計畫的下一步 ${XL('計畫地圖','plan')}`,nextStepsHTML()];
   if(w==='exams'){const ex=cfg().exams;return [`考試倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有考試日期。</p>'];}
   if(w==='mood'){const j=day(k).j||{};return [`今日心境 ${XL('覺察日記','journal')}`,`<div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="mood" data-n="${n}" aria-pressed="${j.mood===n}">${n}</button>`).join('')}</div><p class="muted" style="margin:8px 0 0">1 低落，5 明亮。會同步到覺察日記。</p>`];}
@@ -1593,11 +1601,41 @@ function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:
 function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_DEF.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
 const mkDot=id=>`<span class="dot" style="background:var(--c${mkSub(id).c})" title="${esc(mkSub(id).n)}"></span>`;
 const ENC=['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'];
-function encLine(p){if(T.running)return '專心作答中，每段結束都會響鈴提醒你。';if(T.left===0)return '完成了！給自己一點肯定，記得在下方記錄分數或錯題。';const d=Math.floor(Date.now()/864e5);return ENC[(d+T.seg)%ENC.length]}
+function encLine(p){if(T.running)return exL('encRun');if(T.left===0)return exL('encDone');const d=Math.floor(Date.now()/864e5),E=exL('enc');return E[(d+T.seg)%E.length]}
+/* ---------- goal scenes: same page, different wording ---------- */
+const EXS={
+ exam:{n:'考試',ev:'考試',pre:'考前',timer:'測驗計時',timerRun:'測驗計時中',dates:'考試日期',dateAdd:'新增考試或截止日',datesHint:'例如托福、研究所筆試、證照考試或申請截止日。',namePh:'例：托福、研究所筆試、申請截止',score:'模考紀錄',scoreShort:'模考',scorePh:'例：TPO 60、官方模考',book:'錯題本',bookAdd:'加入錯題本',due:'待複習錯題',item:'題目或摘要',itemPh:'例：TPO 48 R2 Q7 修辭目的題',cause:'錯因',causes:['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'],answer:'正解與學到什麼',answerPh:'下次看到這種題目要注意什麼',subj:'科目',titlePh:'開始你的考試',chip:'設定考試日期',
+   enc:['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'],encRun:'專心作答中，每段結束都會響鈴提醒你。',encDone:'完成了！給自己一點肯定，記得在下方記錄分數或錯題。'},
+ race:{n:'比賽',ev:'比賽',pre:'賽前',timer:'訓練計時',timerRun:'訓練計時中',dates:'比賽日期',dateAdd:'新增比賽或截止日',datesHint:'例如馬拉松、球賽、棋賽、程式競賽或報名截止日。',namePh:'例：台北馬拉松、全國賽、報名截止',score:'成績紀錄',scoreShort:'成績',scorePh:'例：10K 配速 5:30、隊內練習賽',book:'待加強',bookAdd:'加入待加強',due:'待加強項目',item:'項目或情況',itemPh:'例：後段體力下滑、起跑太快',cause:'原因',causes:['體能','技術','節奏','心理','準備不足','傷痛'],answer:'調整方法',answerPh:'下次怎麼練、怎麼調整',subj:'類別',titlePh:'開始你的比賽',chip:'設定比賽日期',
+   enc:['暖身做足了再開始，身體會感謝你。','照今天的計畫練，不必一次拚到底。','注意呼吸和節奏，穩定比速度重要。','每一次訓練，都讓比賽那天更熟悉一點。','累了就調整，受傷才是最大的退步。','練完記得收操和補水。'],encRun:'專心訓練中，每段結束都會響鈴提醒你。',encDone:'完成了！記下今天的成績和身體感受。'},
+ show:{n:'演出',ev:'演出',pre:'演出前',timer:'練習計時',timerRun:'練習計時中',dates:'演出日期',dateAdd:'新增演出或截止日',datesHint:'例如音樂會、比賽、評鑑、徵選或報名截止日。',namePh:'例：期末音樂會、鋼琴檢定、徵選',score:'自評紀錄',scoreShort:'自評',scorePh:'例：整首走一遍、錄音自評',book:'待加強段落',bookAdd:'加入待加強',due:'待加強段落',item:'段落或問題',itemPh:'例：第二樂章 32–40 小節換把位',cause:'原因',causes:['技巧','記譜','節奏','音準','表情','緊張'],answer:'練習方法',answerPh:'怎麼練這一段、要注意什麼',subj:'曲目／部分',titlePh:'開始你的演出',chip:'設定演出日期',
+   enc:['先慢後快，慢練是最快的路。','今天只專心練一個段落也很好。','錄下來聽一次，耳朵會告訴你答案。','每一次完整走一遍，都讓舞台更熟悉一點。','手酸了就休息，別硬撐。','享受音樂本身，不只是準確。'],encRun:'專心練習中，每段結束都會響鈴提醒你。',encDone:'完成了！記下今天的自評和要加強的段落。'},
+ talk:{n:'發表',ev:'發表',pre:'發表前',timer:'演練計時',timerRun:'演練計時中',dates:'發表日期',dateAdd:'新增發表或截止日',datesHint:'例如論文口試、研討會報告、簡報、面試或繳交截止日。',namePh:'例：碩論口試、研討會報告、面試',score:'演練紀錄',scoreShort:'演練',scorePh:'例：完整演練一次、模擬口試',book:'待準備的問題',bookAdd:'加入問題清單',due:'待準備的問題',item:'問題或卡住的地方',itemPh:'例：研究方法為什麼選質性訪談',cause:'類型',causes:['內容不熟','說不清楚','超時','沒想到的問題','緊張','資料不足'],answer:'回答要點',answerPh:'準備怎麼回答、要引用什麼',subj:'類別',titlePh:'開始你的發表',chip:'設定發表日期',
+   enc:['先講給自己聽一遍，卡住的地方就是要準備的地方。','開頭和結尾最重要，先練熟這兩段。','計時演練，才知道哪裡要刪。','每一次演練，都讓台上更熟悉一點。','想像評審會問的三個問題，先寫下來。','講慢一點，停頓也是表達。'],encRun:'專心演練中，每段結束都會響鈴提醒你。',encDone:'完成了！記下這次演練的狀況和被問倒的問題。'}};
+const EXS_TIMERS={
+ race:[{id:'r1',name:'暖身',segs:[{n:'暖身',s:600}]},{id:'r2',name:'間歇訓練',segs:[{n:'快',s:240},{n:'慢',s:120},{n:'快',s:240},{n:'慢',s:120},{n:'快',s:240}]},{id:'r3',name:'模擬比賽',segs:[{n:'比賽',s:3600}]},{id:'r4',name:'收操',segs:[{n:'收操伸展',s:600}]}],
+ show:[{id:'s1',name:'段落練習',segs:[{n:'慢練',s:600},{n:'原速',s:300}]},{id:'s2',name:'全曲走一遍',segs:[{n:'全曲',s:900}]},{id:'s3',name:'模擬演出',segs:[{n:'暖身',s:300},{n:'演出',s:900}]}],
+ talk:[{id:'k1',name:'完整演練',segs:[{n:'報告',s:1200}]},{id:'k2',name:'模擬口試',segs:[{n:'報告',s:1200},{n:'提問',s:900}]},{id:'k3',name:'開場練習',segs:[{n:'開場',s:120}]},{id:'k4',name:'一分鐘簡介',segs:[{n:'簡介',s:60}]}]};
+const sceneTimers=sc=>clone(EXS_TIMERS[sc]||DEF.timers);
+const sameTimers=(a,b)=>JSON.stringify((a||[]).map(t=>[t.id,t.name,t.segs]))===JSON.stringify((b||[]).map(t=>[t.id,t.name,t.segs]));
+const EXS_EDIT=[['timer','計時'],['dates','日期區'],['score','成績紀錄'],['book','複習本'],['item','複習項目'],['answer','解法／要點']];
+const exScene=()=>{const v=cfg().exScene;return v==='custom'||EXS[v]?v:'exam'};
+function exL(k){const sc=exScene(),b=EXS[sc==='custom'?'exam':sc];if(sc==='custom'){const u=cfg().exLabels||{};if(u[k])return u[k]}return b[k]}
+const exPage=()=>(cfg().exPage||'').trim()||'目標衝刺';
+const exScale=()=>{const sc=exScene();return sc==='exam'||sc==='custom'?cfg().scale:'custom'};
+let exSceneOpen=false;
+function exScenePanel(){const sc=exScene();
+  return `<div class="exscene${exSceneOpen?' open':''}"><button class="ghost sm exsc-btn" data-act="exSceneT" aria-expanded="${exSceneOpen}">情境：${sc==='custom'?'自訂':EXS[sc].n} <span aria-hidden="true">${exSceneOpen?'▴':'▾'}</span></button>
+    ${exSceneOpen?`<div class="exsc-body card">
+      <p class="muted" style="margin:0 0 8px">同一套工具：倒數、每日提醒、分段計時、紀錄與複習。選一個最接近的情境，整頁用語和每日提醒會一起換；你的紀錄完全不變。</p>
+      <div class="seg">${['exam','race','show','talk'].map(v=>`<button data-act="exScene" data-v="${v}" aria-pressed="${sc===v}">${EXS[v].n}</button>`).join('')}<button data-act="exScene" data-v="custom" aria-pressed="${sc==='custom'}">自訂</button></div>
+      <label class="f" style="margin-top:12px">選單上的名稱<input type="text" id="exPageN" data-ch="exPage" value="${esc(cfg().exPage||'')}" placeholder="目標衝刺" maxlength="8"></label>
+      ${sc==='custom'?`<div class="exsc-grid">${EXS_EDIT.map(([k,n])=>`<label class="f">${n}<input type="text" id="exl_${k}" data-ch="exLabel" data-k="${k}" value="${esc((cfg().exLabels||{})[k]||'')}" placeholder="${esc(EXS.exam[k])}"></label>`).join('')}</div><p class="muted" style="margin:6px 0 0">留白就用預設的說法。</p>`:''}
+    </div>`:''}</div>`}
 /* ---------- exam countdown coaching ---------- */
 const EXK_LANG=/托福|TOEFL|雅思|IELTS|多益|TOEIC|GRE|GMAT|SAT|日檢|JLPT|英檢|GEPT|DELF|TOPIK|HSK|Duolingo/i;
 const EXK_EXAM=/考|試|檢定|證照|筆試|面試|國考|會考|學測|指考|分科|測驗|exam|test/i;
-function exKind(name){return EXK_LANG.test(name||'')?'lang':EXK_EXAM.test(name||'')?'exam':'deadline'}
+function exKind(name){const sc=exScene();if(sc==='race'||sc==='show'||sc==='talk')return /截止|報名|繳交|deadline/i.test(name||'')?'deadline':sc;return EXK_LANG.test(name||'')?'lang':EXK_EXAM.test(name||'')?'exam':'deadline'}
 function exPhase(n){return n<0?'past':n===0?'p0':n<=3?'p5':n<=7?'p4':n<=14?'p3':n<=30?'p2':'p1'}
 const EX_TIPS={
  lang:{
@@ -1616,6 +1654,30 @@ const EX_TIPS={
   p5:['不再學新東西，複習熟悉的就好。','確認時間、地點、交通和要帶的東西。','早點睡，讓頭腦在考試時保持清楚。','你已經準備了這麼久，相信自己的累積。'],
   p0:['帶齊證件，吃點東西，深呼吸。把會的寫出來就好。'],
   past:['辛苦了！先好好休息，再回頭記下這次的心得。']},
+ race:{
+  p1:['今天練好一件事就好：體能、技術或節奏，選一個。','穩定的練習量，比偶爾一次的爆發更有用。','記下每次訓練的身體感受，身體會給你線索。','留意休息和睡眠，恢復也是訓練的一部分。'],
+  p2:['找出最需要加強的一項，這週優先處理。','用練習賽或模擬檢查狀態，失誤就是線索。','某個練法沒效，就換一個，或問問教練、隊友。','確認報名、裝備和比賽規則。'],
+  p3:['決定比賽策略：配速、戰術或節奏怎麼分配。','把時間留給最有機會進步的地方，其餘維持就好。','練習時照比賽的方式來，熟悉流程。','照顧飲食和睡眠，體力就是實力。'],
+  p4:['開始減量，保持強度、降低總量。','模擬一次比賽當天的作息和流程。','檢討時看策略有沒有照計畫走。','緊張是正常的，代表你準備好了。'],
+  p5:['不再嘗試新東西，照練好的方式走。','確認交通、天氣、裝備和補給。','輕鬆活動保持身體的感覺，然後早點睡。','你已經練了這麼久，相信自己的累積。'],
+  p0:['吃點熟悉的東西，好好暖身，照你的節奏來。今天只是把累積的展現出來。'],
+  past:['辛苦了！先好好恢復，再記下這次比賽的心得。']},
+ show:{
+  p1:['今天選一個段落，慢慢練到穩。','先把譜讀熟，再求速度和表情。','錄下來聽一次，找出最需要加強的地方。','每天固定的練習時間，比偶爾長時間更有用。'],
+  p2:['列出還不穩的段落，一段一段解決。','困難的段落拆小、放慢，再接回去。','某個練法沒效就換一個，或請老師聽聽看。','確認報名、曲目和演出資訊。'],
+  p3:['開始完整走全曲，把段落接起來。','把時間留給最常出錯的地方，熟的先維持。','練習在有人聽的情況下演奏，習慣被注視的感覺。','照顧手和身體，避免過度練習受傷。'],
+  p4:['每天完整演出一次，中間不停下來。','模擬演出當天的服裝、時段和流程。','出錯了也繼續，練習怎麼接回來。','作息固定下來，穩定比臨時衝刺重要。'],
+  p5:['不再改詮釋或指法，照練好的走。','確認服裝、譜、樂器和交通。','輕鬆走一遍保持手感，然後早點睡。','你已經準備了這麼久，相信自己的累積。'],
+  p0:['深呼吸，享受音樂本身。今天只是把你累積的分享出來。'],
+  past:['辛苦了！先好好休息，再記下這次演出的心得。']},
+ talk:{
+  p1:['先寫下這次要傳達的三個重點。','把內容的骨架定下來，細節之後再補。','先講給自己聽一遍，卡住的地方就是要準備的地方。','每天推進一小段，比最後熬夜更可靠。'],
+  p2:['列出評審或聽眾可能會問的問題。','找出最說不清楚的部分，優先整理。','講給同學或朋友聽，請他們挑問題。','確認時間、場地、設備和繳交規定。'],
+  p3:['開始計時演練，該刪的就刪。','把開頭和結尾練熟，這兩段最重要。','把準備好的問題答案整理成重點。','照顧睡眠，頭腦清楚比多背一頁更重要。'],
+  p4:['每天完整演練一次，照正式的時間來。','模擬一次被提問的情境。','檢討時看流程和時間，不只看內容。','緊張是正常的，代表你在乎。'],
+  p5:['不再大改內容，熟悉現在的版本就好。','確認檔案、備份、設備和服裝。','輕鬆講一遍開頭，然後早點睡。','你已經準備了這麼久，相信自己的累積。'],
+  p0:['檔案備份好，喝口水，講慢一點。今天只是把你準備的分享出來。'],
+  past:['辛苦了！趁記憶還清楚，記下被問到的問題和自己的表現。']},
  deadline:{
   p1:['離截止還有時間，先把要做的事拆小。','每天推進一小步，時間會幫你累積。','先完成，再求完美。'],
   p2:['列出還沒完成的項目，排個先後。','把最模糊的那一件，先做一點點。','需要別人幫忙的部分，早點開口。'],
@@ -1633,14 +1695,17 @@ const EX_FOCUS={
   p0:['考試當天','帶齊證件，帶件外套。吃早餐、活動一下筋骨，先唸幾句幫自己暖身。考試只是把累積的展現出來，不是評斷你這個人。可以不完美，但不要輕易放棄。考完先好好吃一頓，再把題目回憶和表現記下來，之後檢討很有用。'],
   past:['考完之後','先好好休息。趁記憶還清楚，把題目回憶、時間分配和當下的感受記下來，出分後一起檢討。']},
  exam:{p1:['打基礎','把範圍列清楚，每天穩定推進一小段。先弄懂，再求熟練。'],p2:['找出弱點','用練習題或考古題找出最不穩的部分，優先補強。卡住時，向老師或同學求助。'],p3:['定下衝刺策略','決定哪些補強、哪些維持，把時間留給最有機會進步的地方。照顧睡眠和體力。'],p4:['模擬與穩定','用接近正式考試的方式練習，固定作息。檢討流程，不只看分數。'],p5:['安定下來','不再學新東西。確認考試資訊和要帶的東西，早點睡。'],p0:['考試當天','帶齊證件，吃點東西，深呼吸。把會的寫出來就好。'],past:['考完之後','好好休息，之後再回頭記下心得。']},
+ race:{p1:['打底期','建立穩定的訓練量和作息，先把基本體能和技術打穩。記下每次訓練的感受，找出自己的強項和弱項。'],p2:['加強弱項','以弱項為單位安排訓練，一次解決一個問題。用練習賽檢查狀態；練法沒效就換一個，或請教練、隊友看看。'],p3:['策略期','決定比賽策略：配速、戰術或節奏怎麼分配。把時間留給最有機會進步的地方。照顧飲食和睡眠。'],p4:['減量與模擬','保持強度、降低總量，讓身體恢復。模擬一次比賽當天的作息和流程，檢討策略有沒有照計畫走。'],p5:['安定下來','不再嘗試新東西。確認裝備、補給、交通和天氣，輕鬆活動保持手感，早點睡。'],p0:['比賽當天','吃熟悉的食物、好好暖身，照你的節奏來。賽後先恢復，再記下心得。'],past:['賽後','好好恢復。趁記憶還清楚，記下配速、狀態和可以改進的地方。']},
+ show:{p1:['讀譜與基礎','把作品讀熟，先求正確再求速度。困難的段落先標出來，每天固定時間練習。'],p2:['解決難段','一次專注一個難段：拆小、放慢、再接回去。錄音聽自己的演奏，或請老師給意見。'],p3:['連接與詮釋','開始完整走全曲，把段落接順，確定詮釋。在有人聽的情況下練習，習慣被注視。'],p4:['模擬演出','每天完整演出一次不停下來，練習出錯時怎麼接回來。模擬當天的服裝與時段。'],p5:['安定下來','不再改詮釋或指法。確認服裝、譜、樂器和交通，輕鬆走一遍，早點睡。'],p0:['演出當天','深呼吸，享受音樂。結束後先好好休息，再記下心得。'],past:['演出之後','好好休息。趁記憶還清楚，記下表現和下次想調整的地方。']},
+ talk:{p1:['定骨架','確定要傳達的三個重點和整體架構，細節之後再補。先講給自己聽，找出卡住的地方。'],p2:['預想問題','列出聽眾或評審可能問的問題，整理最說不清楚的部分。講給別人聽，請他們挑問題。'],p3:['計時演練','照正式時間演練，該刪就刪。開頭和結尾練到熟，問題答案整理成重點。'],p4:['模擬發表','每天完整演練一次，模擬被提問的情境。檢討流程與時間，不只看內容。'],p5:['安定下來','不再大改內容。確認檔案、備份、設備和服裝，輕鬆講一遍開頭，早點睡。'],p0:['發表當天','檔案備份好，喝口水，講慢一點。結束後記下被問到的問題。'],past:['發表之後','趁記憶還清楚，記下被問到的問題、回答得好與不好的地方。']},
  deadline:{p1:['拆小','把大事拆成小步驟，每天推進一點。'],p2:['排先後','列出未完成的項目，最模糊的先動一點，需要幫忙的早點開口。'],p3:['檢查','核對清單，留緩衝時間。'],p4:['收尾','整理、校對、確認格式，不要臨時大改方向。'],p5:['確認','最後確認，準備送出。'],p0:['截止日','確認送出成功，然後好好休息。'],past:['之後','確認結果，謝謝自己的努力。']}};
 const PH_NAME={p1:'遠期',p2:'考前一個月',p3:'考前兩週',p4:'考前一週',p5:'考前三天',p0:'今天',past:'已結束'};
-const phName=(k,ph)=>k==='deadline'?PH_NAME[ph].replace('考前','截止前'):PH_NAME[ph];
+const phName=(k,ph)=>PH_NAME[ph].replace('考前',k==='deadline'?'截止前':k==='race'?'賽前':k==='show'?'演出前':k==='talk'?'發表前':'考前');
 function exTip(e,n){const k=exKind(e.name),ph=exPhase(n),arr=EX_TIPS[k][ph];const di=Math.floor(Date.now()/864e5);return arr[di%arr.length]}
 function exRing(e,n){const tot=Math.max(n,e.setAt?diffDays(e.setAt,e.date):Math.max(n,90),1),f=n<0?1:1-n/tot,R=40,C=2*Math.PI*R,hot=n>=0&&n<=7;
   return `<svg class="exring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="${R}" class="trk"/><circle cx="50" cy="50" r="${R}" class="val${hot?' hot':''}" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${(C*(1-Math.max(0.02,Math.min(1,f)))).toFixed(1)}"/></svg><div class="exnum"><b>${n<0?'✓':n===0?'今天':n}</b>${n>0?'<span>天</span>':''}</div>`}
 function examCardHTML(e,i,t){const n=e.date?diffDays(t,e.date):null;
-  const edit=`<div class="exedit"><input type="text" class="exname" id="exn${i}" data-ch="exam" data-i="${i}" data-f="name" value="${esc(e.name)}" aria-label="名稱" placeholder="例：托福、研究所筆試、申請截止"><div class="row exdate"><input type="date" id="exd${i}" data-ch="exam" data-i="${i}" data-f="date" value="${esc(e.date)}" aria-label="日期"><button class="ghost sm" data-act="exDel" data-i="${i}" aria-label="刪除">×</button></div></div>`;
+  const edit=`<div class="exedit"><input type="text" class="exname" id="exn${i}" data-ch="exam" data-i="${i}" data-f="name" value="${esc(e.name)}" aria-label="名稱" placeholder="${esc(exL('namePh'))}"><div class="row exdate"><input type="date" id="exd${i}" data-ch="exam" data-i="${i}" data-f="date" value="${esc(e.date)}" aria-label="日期"><button class="ghost sm" data-act="exDel" data-i="${i}" aria-label="刪除">×</button></div></div>`;
   if(n==null)return `<div class="excard empty">${edit}<p class="muted" style="margin:6px 0 0">選好日期，這裡會開始倒數，並每天給你一句提醒。</p></div>`;
   const k=exKind(e.name),ph=exPhase(n),fo=EX_FOCUS[k][ph];
   return `<div class="excard"><div class="exring-wrap">${exRing(e,n)}</div><div class="exbody">${edit}
@@ -1653,7 +1718,7 @@ function examTodayHTML(){if(!isOn('exam'))return '';const t=today(),ex=(cfg().ex
 function vExam(){
   const c=cfg(),p=tPreset();
   const mocks=Object.entries(S.mocks).sort((a,b)=>a[1].date<b[1].date?-1:1);
-  const scale=c.scale,sp=scoreSpec(scale),ymax=sp.max;
+  const scale=exScale(),sp=scoreSpec(scale),ymax=sp.max;
   const ms=mocks.filter(([,m])=>(m.scale||'30')===scale);
   const series=sp.secs.map(x=>({c:secColor(x),vals:ms.map(([,m])=>m[x[0]]===''||m[x[0]]==null?null:+m[x[0]])}));
   const total=m=>scoreTotal(m,sp);
@@ -1661,11 +1726,12 @@ function vExam(){
   const t=today();
   const shown=mlist.filter(([,m])=>mkFilter==='due'?m.due&&m.due<=t:mkFilter==='master'?!m.due:true).sort((a,b)=>(a[1].due||'9')<(b[1].due||'9')?-1:1);
   const causeCount={};mlist.forEach(([,m])=>(m.causes||[]).forEach(x=>causeCount[x]=(causeCount[x]||0)+1));
-  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">考試衝刺</p><input class="pgtitle" id="examTitle" type="text" data-ch="examTitle" value="${esc(c.examTitle==='托福準備'||c.examTitle==='考試準備'?'':(c.examTitle||''))}" placeholder="開始你的考試：點這裡寫下考試名稱" aria-label="考試名稱（點一下可以改）" title="點一下寫下你要準備的考試"></div><div class="chips">${examChips()}</div></header>
+  return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">${esc(exPage())}</p><input class="pgtitle" id="examTitle" type="text" data-ch="examTitle" value="${esc(c.examTitle==='托福準備'||c.examTitle==='考試準備'?'':(c.examTitle||''))}" placeholder="${esc(exL('titlePh'))}" aria-label="名稱（點一下可以改）" title="點一下寫下你要準備的目標"></div><div class="chips">${examChips()}</div></header>
+  ${exScenePanel()}
   <div class="grid2">
-    <section class="card"><h2>測驗計時 <span class="muted">練習用，不算進番茄鐘</span></h2>
+    <section class="card"><h2>${esc(exL('timer'))} <span class="muted">練習用，不算進番茄鐘</span></h2>
       <div class="minchips">${c.timers.map(x=>tListEdit?`<span class="minchip editing">${esc(x.name)}<button class="tdel" data-act="tDelId" data-id="${esc(x.id)}" aria-label="刪除「${esc(x.name)}」"${c.timers.length<2?' disabled':''}>×</button></span>`:`<button class="sm" data-act="tPick" data-id="${esc(x.id)}" aria-pressed="${x.id===T.pid}">${esc(x.name)}</button>`).join('')}
-        ${tListEdit?`<button class="sm sec" data-act="tNew">＋ 新增</button>${DEF.timers.some(d=>!c.timers.some(x=>x.id===d.id))?'<button class="ghost sm" data-act="tRestore">恢復預設項目</button>':''}<button class="ghost sm minedit" data-act="tListT">完成</button>`:'<button class="ghost sm minedit" data-act="tListT">編輯項目</button>'}</div>
+        ${tListEdit?`<button class="sm sec" data-act="tNew">＋ 新增</button>${sceneTimers(exScene()==='custom'?'exam':exScene()).some(d=>!c.timers.some(x=>x.id===d.id))?'<button class="ghost sm" data-act="tRestore">恢復預設項目</button>':''}<button class="ghost sm minedit" data-act="tListT">完成</button>`:'<button class="ghost sm minedit" data-act="tListT">編輯項目</button>'}</div>
       ${tListEdit?'<p class="muted" style="text-align:center;margin:6px 0 0">按 × 刪除不用的項目，至少保留 1 個；按「＋ 新增」加入自己的計時。</p>':''}
       <div class="xclock" id="xTime">--:--</div>
       <div class="segs">${p.segs.map((s,i)=>`<span class="${i===T.seg?'on':i<T.seg?'past':''}">${esc(s.n)} ${mmss(s.s)}</span>`).join('')}</div>
@@ -1675,31 +1741,31 @@ function vExam(){
       ${tEditing?`<div class="tedit"><label class="f">計時名稱<input id="tName" type="text" value="${esc(p.name)}"></label><span class="muted" style="font-size:calc(12px * var(--fs,1))">每一段結束會響鈴，並自動進入下一段。</span>${p.segs.map((sg,i)=>`<div class="row"><input id="tsn${i}" type="text" value="${esc(sg.n)}" style="flex:1" aria-label="段落名稱"><input id="tsm${i}" type="number" min="0" max="300" value="${Math.floor(sg.s/60)}" aria-label="分"><span class="muted">分</span><input id="tss${i}" type="number" min="0" max="59" value="${sg.s%60}" style="width:64px" aria-label="秒"><span class="muted">秒</span><button class="ghost sm" data-act="tSegDel" data-i="${i}" aria-label="刪除這段"${p.segs.length<2?' disabled':''}>×</button></div>`).join('')}
         <div class="row sb" style="margin-top:8px"><div class="row"><button class="sm" data-act="tSegAdd">新增一段</button>${DEF.timers.some(x=>x.id===p.id)?'<button class="ghost sm" data-act="tDefault">恢復預設時間</button>':''}${c.timers.length>1?'<button class="ghost sm" data-act="tDelP">刪除這個計時</button>':''}</div><button class="sec sm" data-act="tSave">儲存</button></div></div>`:''}
     </section>
-    <section class="card"><h2>考試日期 ${XL('在月曆上看','calendar')}</h2>
+    <section class="card"><h2>${esc(exL('dates'))} ${XL('在月曆上看','calendar')}</h2>
       <div class="exlist">${c.exams.map((e,i)=>examCardHTML(e,i,t)).join('')}</div>
-      <div style="margin-top:10px"><button data-act="exAdd">新增考試或截止日</button></div>
-      <p class="muted">例如托福、研究所筆試、證照考試或申請截止日。設好日期後，這裡和「今日」會每天給你一句提醒，越接近日期，重點會跟著換。</p>
+      <div style="margin-top:10px"><button data-act="exAdd">${esc(exL('dateAdd'))}</button></div>
+      <p class="muted">${esc(exL('datesHint'))}設好日期後，這裡和「今日」會每天給你一句提醒，越接近日期，重點會跟著換。</p>
     </section>
   </div>
-  <section class="card" style="margin-bottom:16px"><div class="row sb" style="margin-bottom:12px"><h2 style="margin:0">模考紀錄 <span class="muted">${esc(sp.label)}</span></h2><div class="row"><div class="seg">${[['30','0–30'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${scale===v}">${n}</button>`).join('')}</div>${scale==='custom'?`<button class="ghost sm" data-act="csEditT">${scaleEditing?'收起':'調整計分方式'}</button>`:''}</div></div>
+  <section class="card" style="margin-bottom:16px"><div class="row sb" style="margin-bottom:12px"><h2 style="margin:0">${esc(exL('score'))} <span class="muted">${esc(sp.label)}</span></h2><div class="row">${exScale()===cfg().scale&&(exScene()==='exam'||exScene()==='custom')?`<div class="seg">${[['30','0–30'],['band','1–6 級分'],['custom','自訂']].map(([v,n])=>`<button data-act="scale" data-v="${v}" aria-pressed="${scale===v}">${n}</button>`).join('')}</div>`:''}${scale==='custom'?`<button class="ghost sm" data-act="csEditT">${scaleEditing?'收起':'調整計分方式'}</button>`:''}</div></div>
     ${scale==='custom'&&scaleEditing?`<div style="margin-bottom:14px">${scaleEditorHTML()}</div>`:''}
     <div class="row" style="margin-bottom:12px">
       <label class="f">日期<input id="mkD" type="date" value="${t}"></label>
       ${sp.secs.map(([k,n])=>`<label class="f">${esc(n)}<input id="mk_${k}" type="number" min="0" max="${ymax}" step="${sp.step}" placeholder="—"></label>`).join('')}
-      <label class="f" style="flex:1;min-width:160px">備註<input id="mkN" type="text" placeholder="例：TPO 60、官方模考"></label>
+      <label class="f" style="flex:1;min-width:160px">備註<input id="mkN" type="text" placeholder="${esc(exL('scorePh'))}"></label>
       <button class="sec" data-act="mockAdd" style="margin-top:18px">新增</button>
     </div>
     ${ms.length?`<div class="gridA"><div>${lineChart(series,{ymax,labels:ms.map(([,m])=>fmtMD(m.date))})}<div class="legend">${sp.secs.map(x=>`<span><i class="dot" style="background:var(--c${secColor(x)})"></i>${esc(x[1])}</span>`).join('')}</div></div>
-    <div class="tablewrap"><table><thead><tr><th>日期</th>${sp.secs.map(([,n])=>`<th class="num">${esc(n)}</th>`).join('')}${sp.total==='none'?'':'<th class="num">總</th>'}<th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${sp.secs.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}${sp.total==='none'?'':`<td class="num"><b>${total(m)}</b></td>`}<td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:`<p class="empty">還沒有${scale==='custom'?'這種計分方式的':''}模考紀錄。每次模考後填入分數，這裡會畫出各項的趨勢。</p>`}
+    <div class="tablewrap"><table><thead><tr><th>日期</th>${sp.secs.map(([,n])=>`<th class="num">${esc(n)}</th>`).join('')}${sp.total==='none'?'':'<th class="num">總</th>'}<th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${sp.secs.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}${sp.total==='none'?'':`<td class="num"><b>${total(m)}</b></td>`}<td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:`<p class="empty">還沒有${scale==='custom'?'這種計分方式的':''}${esc(exL('score'))}。每次${esc(exL('scoreShort'))}後填入分數，這裡會畫出各項的趨勢。</p>`}
   </section>
-  <section class="card" id="mistakes"><h2>錯題本 <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
+  <section class="card" id="mistakes"><h2>${esc(exL('book'))} <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
     <div class="fields" style="margin-bottom:10px">
-      <label class="f"><span class="row sb">科目<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS"><option value="">（選擇科目）</option>${mkSubs().map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('')}<option value="__add">＋ 自填…</option></select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、法學、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
-      <label class="f w2">題目或摘要<input id="msQ" type="text" placeholder="例：TPO 48 R2 Q7 修辭目的題"></label>
-      <label class="f">錯因<select id="msC">${CAUSES.map(x=>`<option>${x}</option>`).join('')}</select></label>
-      <label class="f" style="grid-column:1/-1">正解與學到什麼<textarea id="msA" rows="2" placeholder="下次看到這種題目要注意什麼"></textarea></label>
+      <label class="f"><span class="row sb">${esc(exL('subj'))}<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS"><option value="">（選擇科目）</option>${mkSubs().map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('')}<option value="__add">＋ 自填…</option></select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、法學、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
+      <label class="f w2">${esc(exL('item'))}<input id="msQ" type="text" placeholder="${esc(exL('itemPh'))}"></label>
+      <label class="f">${esc(exL('cause'))}<select id="msC">${exL('causes').map(x=>`<option>${esc(x)}</option>`).join('')}</select></label>
+      <label class="f" style="grid-column:1/-1">${esc(exL('answer'))}<textarea id="msA" rows="2" placeholder="${esc(exL('answerPh'))}"></textarea></label>
     </div>
-    <div class="row sb" style="margin-bottom:14px"><button class="sec" data-act="msAdd">加入錯題本</button>
+    <div class="row sb" style="margin-bottom:14px"><button class="sec" data-act="msAdd">${esc(exL('bookAdd'))}</button>
       <div class="legend">${Object.entries(causeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div></div>
     <div class="seg" style="margin-bottom:10px">${[['due','待複習 '+dueList().length],['all','全部 '+mlist.length],['master','已熟練']].map(([m,n])=>`<button data-act="msF" data-m="${m}" aria-pressed="${mkFilter===m}">${n}</button>`).join('')}</div>
     <div class="list">${shown.length?shown.map(([id,m])=>`<div class="li" style="align-items:flex-start">${mkDot(m.sub)}<div class="grow"><div><b>${esc(m.q)}</b> <span class="muted">${(m.causes||[]).join('、')}</span></div>${m.a?`<details><summary class="muted">看正解</summary><div class="qa">${esc(m.a)}</div></details>`:''}<div class="muted">第 ${m.stage+1}/${SRS.length+1} 輪・${m.due?'下次 '+fmtMD(m.due):'已熟練'}</div></div>
@@ -2093,9 +2159,11 @@ const A={
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
   tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
   tEdit:()=>{tEditing=!tEditing;render()},
+  exSceneT:()=>{exSceneOpen=!exSceneOpen;render()},
+  exScene:el=>{const from=exScene(),to=el.dataset.v;editCfg(c=>{const untouched=sameTimers(c.timers,sceneTimers(from==='custom'?'exam':from))||sameTimers(c.timers,DEF.timers);c.exScene=to;if(untouched&&!T.running){c.timers=sceneTimers(to==='custom'?'exam':to);c.tv=2}});if(!cfg().timers.some(x=>x.id===T.pid)&&!T.running){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT()}toast('已切換為「'+(el.dataset.v==='custom'?'自訂':EXS[el.dataset.v].n)+'」');render()},
   tListT:()=>{tListEdit=!tListEdit;render()},
   tDelId:el=>{const id=el.dataset.id,ts=cfg().timers;if(ts.length<2)return toast('至少保留 1 個計時');if(T.running&&T.pid===id)return toast('這個計時進行中，先暫停或重設');const t=ts.find(x=>x.id===id);editCfg(c=>{c.timers=c.timers.filter(x=>x.id!==id);c.tv=2});if(T.pid===id){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT();tEditing=false}toast('已刪除「'+(t?t.name:'')+'」');render()},
-  tRestore:()=>{editCfg(c=>{DEF.timers.forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},
+  tRestore:()=>{const sc=exScene();editCfg(c=>{sceneTimers(sc==='custom'?'exam':sc).forEach(d=>{if(!c.timers.some(x=>x.id===d.id))c.timers.push(clone(d))});c.tv=2});toast('已恢復預設項目');render()},
   tSegRead:()=>{const p=tPreset();return p.segs.map((_,i)=>({n:($('#tsn'+i).value||'計時').trim(),s:Math.max(0,(+$('#tsm'+i).value||0)*60+(+$('#tss'+i).value||0))}))},
   tSegAdd:()=>{const segs=A.tSegRead();segs.push({n:'新段落',s:600});editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t)t.segs=segs;c.tv=2});render()},
   tSegDel:el=>{const segs=A.tSegRead();segs.splice(+el.dataset.i,1);editCfg(c=>{const t=c.timers.find(x=>x.id===T.pid);if(t)t.segs=segs;c.tv=2});render()},
@@ -2108,7 +2176,7 @@ const A={
   mkSubEditT:()=>{mkSubEdit=!mkSubEdit;mkSubAdding=false;render()},
   mkSubDel:el=>{const id=el.dataset.id,t=mkSubs().find(x=>x.id===id);if(!t)return;editCfg(c=>{c.mkSubjects=mkSubs().filter(x=>x.id!==id);c.mkArchived=(c.mkArchived||[]).concat([t])});toast('已刪除「'+t.n+'」，舊的錯題仍保留');render()},
   mkSubAdd:()=>{const n=$('#mkSubNew').value.trim();if(!n)return toast('先寫科目名稱');if(mkSubs().some(x=>x.n===n))return toast('已經有「'+n+'」');const id='mk'+rid();editCfg(c=>{c.mkSubjects=mkSubs().concat([{id,n,c:mkSubs().length%12}])});mkSubAdding=false;render();setTimeout(()=>{const sel=$('#msS');if(sel)sel.value=id},20)},
-  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:cfg().scale,note:$('#mkN').value.trim()};let any=false;scoreSpec(cfg().scale).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
+  mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:exScale(),note:$('#mkN').value.trim()};let any=false;scoreSpec(exScale()).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增模考紀錄');render()},
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
   msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:(($('#msS')||{}).value||'').replace('__add',''),q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
   msF:el=>{mkFilter=el.dataset.m;render()},
@@ -2182,7 +2250,7 @@ const IN={
 };
 /* ---------- share ---------- */
 const SHARE_URL=STANDALONE?location.href.split('#')[0]:'https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe';
-const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'考試衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
+const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'目標衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
 function fbPageName(){return R.startsWith('page-')?'我的頁面':(PAGE_NAMES[R]||R)}
 function openFeedback(){
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fbT"><div class="box">
@@ -2962,10 +3030,11 @@ function emoGrid(k){
   const chip=x=>{const v=+e[x.k]||0;if(emoEdit)return `<div class="emo ${x.g} editing"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><button class="ghost sm stdel" data-act="emoDel" data-e="${esc(x.k)}" aria-label="從清單移除「${esc(x.n)}」">×</button></div>`;return `<button class="emo ${x.g}${v?' on':''}" data-act="emo" data-k="${k}" data-e="${x.k}" style="--lv:${v}" aria-label="${esc(x.n)}，強度 ${LV[v]}"><span class="en">${esc(x.n)}</span><span class="ed">${esc(x.d)}</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=v?'f':''}"></i>`).join('')}</span></button>`};
   const others=(j.emoX||[]).map((o,i)=>`<button class="emo other on" data-act="emoX" data-k="${k}" data-i="${i}" style="--lv:${o.v}" aria-label="${esc(o.n)}，強度 ${LV[o.v]}"><span class="en">${esc(o.n)}</span><span class="ed">自訂</span><span class="lv">${[1,2,3].map(n=>`<i class="${n<=o.v?'f':''}"></i>`).join('')}</span></button>`).join('');
   const strong=EMO.filter(x=>(+e[x.k]||0)>=2);
-  return `<div class="row sb" style="margin:-4px 0 12px"><p class="muted" style="margin:0">${emoEdit?'按 × 從清單移除；也可以新增常用的情緒。之前的紀錄都會保留。':'點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。'}</p><span class="row" style="gap:6px;flex:none">${emoEdit?'':`<span class="seg seg-sm">${[['brief','略'],['full','詳']].map(([v,n])=>`<button data-act="emoMode" data-v="${v}" aria-pressed="${emoMode()===v}">${n}</button>`).join('')}</span>`}<button class="ghost sm" data-act="emoEditT">${emoEdit?'完成':'編輯清單'}</button></span></div>
+  return `<div class="row sb" style="margin:-4px 0 12px"><p class="muted" style="margin:0">${emoEdit?'按 × 從清單移除；也可以新增常用的情緒。之前的紀錄都會保留。':'點一下調整強度：輕 → 中 → 強 → 清除。只是看見，不需要評判好壞。'}</p><span class="row" style="gap:6px;flex:none"><button class="ghost sm" data-act="emoEditT">${emoEdit?'完成':'編輯清單'}</button></span></div>
   ${emoEdit?`<div class="row" style="margin-bottom:12px"><input id="emoAddN" type="text" placeholder="名稱，例：期待" style="width:120px"><input id="emoAddD" type="text" placeholder="說明（選填），例：盼望、興奮" style="flex:1;min-width:140px"><select id="emoAddG"><option value="hard">需要照顧</option><option value="ease">順暢</option></select><button class="sm sec" data-act="emoListAdd">加入清單</button><button class="ghost sm" data-act="emoListReset">恢復預設</button></div>`:''}
   <h3 style="margin-top:0">需要照顧的狀態</h3><div class="emos${emoMode()==='brief'&&!emoEdit?' brief':''}">${EMO.filter(x=>x.g==='hard').map(chip).join('')}</div>
   <h3>順暢的狀態</h3><div class="emos${emoMode()==='brief'&&!emoEdit?' brief':''}">${EMO.filter(x=>x.g==='ease').map(chip).join('')}</div>
+  ${emoEdit?'':`<div class="emomore"><button class="linkbtn" data-act="emoMode" data-v="${emoMode()==='full'?'brief':'full'}" aria-expanded="${emoMode()==='full'}">${emoMode()==='full'?'收起說明 ▴':'展開說明…'}</button></div>`}
   ${emoEdit?'':`<h3>今天的其他情緒</h3><div class="emos${emoMode()==='brief'?' brief':''}">${others}<div class="row"><input id="emoNew" type="text" placeholder="自己命名，例：期待、委屈" style="width:170px"><button class="sm" data-act="emoAdd" data-k="${k}">加入</button></div></div>`}
   ${!emoEdit&&strong.length?`<div class="tips">${strong.map(x=>`<p><b>${x.n}・${LV[+e[x.k]]}</b>　${esc(x.tip)}</p>`).join('')}</div>`:''}`;
 }
@@ -3289,7 +3358,7 @@ Object.assign(C,{
   npType:el=>{comboSet(el,'other');const r=isResearch(el.value);['#npMethodWrap','#npMethodNote'].forEach(q=>{const e=$(q);if(e)e.hidden=!r})},
   npMethod:el=>{comboSet(el,'custom')},
   msS:el=>{if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
-  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},
+  examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},exPage:el=>{editCfg(c=>{c.exPage=el.value.trim().slice(0,8)});render()},exLabel:el=>{editCfg(c=>{c.exLabels=Object.assign({},c.exLabels);const v=el.value.trim();if(v)c.exLabels[el.dataset.k]=v;else delete c.exLabels[el.dataset.k]});render()},
   pjF:el=>{const f=el.dataset.f;editProj(p=>{p[f]=el.value});render();if((f==='type'&&el.value==='other')||(f==='method'&&el.value==='custom'))setTimeout(()=>{const i=$(f==='type'?'#pjTX':'#pjMX');i&&i.focus()},30)},
   stF:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id)[el.dataset.f]=el.value});if(el.dataset.f!=='name')render()},
   stDone:el=>{editProj(p=>{p.stages.find(s=>s.id===el.dataset.id).status=el.checked?'done':''});if(el.checked)toast('一個階段完成了');render()},
@@ -3306,11 +3375,11 @@ Object.assign(IN,{
 });
 
 /* ---------- navigation & visibility ---------- */
-const NAV=[['today','今日'],['plan','計畫地圖'],['exam','考試衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
-const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'考試衝刺：測驗計時、考試倒數、模考、錯題本',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
+const NAV=[['today','今日'],['plan','計畫地圖'],['exam','目標衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
+const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'目標衝刺：考試、比賽、演出或發表的倒數、分段計時、紀錄與複習',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
 function navOrder(){const def=NAV.map(n=>n[0]).filter(r=>r!=='today'),o=(cfg().navOrder||[]).filter(r=>def.includes(r));return ['today'].concat(o,def.filter(r=>!o.includes(r)))}
-function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n]));return navOrder().map(r=>m[r]).filter(Boolean)}
+function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n[0]==='exam'?['exam',exPage()]:n]));return navOrder().map(r=>m[r]).filter(Boolean)}
 function navItems(){return navOrdered().filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}
 const ICON={
   today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -3329,7 +3398,7 @@ function navBadge(r,k){
   try{const td=today(),d=day(td),j=d.j||{};
     if(r==='today'){const tp=(j.top3||[]).filter(x=>x&&x.t);if(tp.length){const dn=tp.filter(x=>x.done).length;t=`${dn}/${tp.length}`;cls=dn===tp.length?'ok':'';tip=`今天三件事完成 ${dn}/${tp.length}`}}
     else if(r==='plan'){const ds=Object.keys(S.projects||{}).map(id=>proj(id)).filter(p=>p&&p.deadline&&!p.flex).map(p=>diffDays(td,p.deadline)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的專案還有 ${n} 天到期`}}
-    else if(r==='exam'){const ds=(cfg().exams||[]).filter(e=>e.date).map(e=>diffDays(td,e.date)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的考試還有 ${n} 天`}}
+    else if(r==='exam'){const ds=(cfg().exams||[]).filter(e=>e.date).map(e=>diffDays(td,e.date)).filter(n=>n>=0);if(ds.length){const n=Math.min(...ds);t='D-'+n;cls=n<=30?'hot':'';tip=`最近的${exL('ev')}還有 ${n} 天`}}
     else if(r==='mind'){if((j.practice||[]).length){t='✓';cls='ok';tip='今天已經靜心'}}
     else if(r==='journal'){if(j.intent||(j.wins||[]).some(Boolean)||j.good||j.adjust||Object.keys(j.emo||{}).length||(j.moments||[]).length){t='✓';cls='ok';tip='今天已經寫了覺察日記'}}
     else if(r==='quiz'){if(QZ&&QZ.step>0){t=`${QZ.step}/${STEPS.length-1}`;cls='hot';tip='測驗做到一半，可以接著做'}else if(!Object.keys(S.quiz||{}).length){t='NEW';tip='還沒做過，大約 12 分鐘'}}

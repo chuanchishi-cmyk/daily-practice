@@ -1100,3 +1100,4 @@
 =夏夜蟲鳴	Summer night insects
 =鳥鳴流水	Birds by a stream
 =白噪音改用真實錄音：夏夜蟲鳴、鳥鳴流水（新增），休息時預設仍是潮汐	White noise now uses real field recordings: summer night insects and birds by a stream (new); breaks still default to ocean
+=開啟 App 時不再預先下載白噪音，省流量，離線時也不會跳出錯誤	White noise no longer downloads when the app opens, saving data and avoiding errors offline

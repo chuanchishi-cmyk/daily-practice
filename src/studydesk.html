@@ -1133,7 +1133,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.19.5'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.19.6'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1296,7 +1296,7 @@ function parkHTML(){
     ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
   </div>`;
 }
-function pStart(){MT.running?unlockAudio():freshAudio();if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
+function pStart(){MT.running?unlockAudio():freshAudio();try{nzWarm()}catch{}if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
 function pPause(){P.left=pLeft();P.running=false;savP()}
 function pReset(){P.running=false;P.left=null;P.startedAt=null;P.pauseNote='';savP()}
 function pSetMode(m){pReset();P.mode=m;savP()}
@@ -1613,6 +1613,7 @@ function meetDueHTML(){if(!isOn('plan'))return '';const due=Object.keys(S.projec
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-19',lv:'fix',t:'開啟 App 時不再預先下載白噪音，省流量，離線時也不會跳出錯誤'},
  {d:'2026-11-19',lv:'minor',t:'白噪音改用真實錄音：夏夜蟲鳴、鳥鳴流水（新增），休息時預設仍是潮汐'},
  {d:'2026-11-19',lv:'minor',t:'二十四節氣：每個節氣開始的前三天，今日頁會出現當令的植物和一句作息小語'},
  {d:'2026-11-19',lv:'minor',t:'重新整理第一次使用的介紹；使用一週和每個月初，會有一張回顧卡'},
@@ -3304,11 +3305,11 @@ function nzData(kind,sr){const key=kind+sr;if(NZDATA[key])return Promise.resolve
       const b=await new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);if(p&&p.then)p.then(ok,no)});
       d=nzNorm([0,1].map(c=>{const src=b.getChannelData(Math.min(c,b.numberOfChannels-1)),m=new Float32Array(src.length);m.set(src);return NZ_SEAMLESS[kind]?m:nzLoopify(m,Math.floor(sr*4))}),.11)}
     else d=await nzSynth(kind,sr);
-    NZDATA[key]=d;return d}catch(e){toast('白噪音載入失敗，請確認網路後再試');return null}finally{delete NZLOAD[key]}})()}
+    NZDATA[key]=d;return d}catch(e){if(nzWant())toast('白噪音載入失敗，請確認網路後再試');return null}finally{delete NZLOAD[key]}})()}
 const NZSR=44100;
 // prepare the chosen sound quietly so it is ready before the first pomodoro
 function nzWarm(){if(!noiseOn())return;const go=()=>{['work','break'].map(noiseFor).filter(k=>k!=='off').forEach(k=>nzData(k,NZSR))};(window.requestIdleCallback||setTimeout)(go,{timeout:6000})}
-setTimeout(nzWarm,4000);
+// 不在開啟 App 時預載音檔（省流量、離線不跳錯誤）；按下番茄鐘開始時才預載
 const nzWant=()=>(P.running&&!MT.running&&noiseKind()!=='off')||Date.now()<NZPREV;
 function nzStop(fast){const z=NZ;NZ=null;if(!z)return;try{const t=z.ac.currentTime;z.g.gain.cancelScheduledValues(t);z.g.gain.setValueAtTime(Math.max(.0001,z.g.gain.value),t);z.g.gain.exponentialRampToValueAtTime(.0001,t+(fast?.06:1.2));z.src.stop(t+(fast?.1:1.3))}catch{}}
 async function syncNoise(){

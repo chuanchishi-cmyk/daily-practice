@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js）
 ```
 
 ---
@@ -140,6 +140,7 @@ daily-practice/
 | 我的節奏 | `#quiz` | 時型問卷（多選、不確定選項、信心權重）、分段結果、總報告 |
 | （首次使用） | 歡迎卡第 2 張 | 選擇用途（最多 3 個，`PUR_MAX`）：讀書與工作專注／準備考試比賽演出／研究寫作／身心照顧，決定預設顯示的頁面（`PURPOSES`、`cfg.purposes`）；已取消「全部都看看」，沒選到的頁面由小建議卡慢慢介紹；設定裡可「依用途重新選擇」 |
 | 每日提醒 | 設定 → 提醒 | 不靠伺服器：產生 .ics 行事曆檔（含 RRULE 重複規則與 VALARM 提醒）或 Google 日曆連結，由手機行事曆通知（`RM_DEF`、`cfg.reminders`）；目標衝刺的日期卡可匯出 D-30/14/7/3/1 與當天 |
+| 運動 | `#sport` | 可選擇顯示（預設隱藏，用途選「運動與身體」或在設定打開）。第一次進入選項目（瑜珈、健身、慢跑、單車、游泳、日行萬步）。瑜珈：序列計時（左右自動換邊、呼吸節拍圓圈、可編輯／另存序列）＋感受紀錄；健身：動作 × 組數 × 次數 × 重量、完成一組自動組間休息、顯示上次成績、同部位 48 小時提醒、整體強度、間歇計時；慢跑／單車／游泳：距離＋時間自動算配速，每週量比上週多一成以上提醒；步數：手動填、每日目標。不舒服註記後 3 天提醒休息。紀錄在 `day.sport`，不算番茄。見第 27 節 |
 | 設定 | `#prefs` | 分組：日常使用／提醒／外觀與語言／資料與同步／分享與說明 |
 
 預設番茄設定：專注 25、短休 5、長休 15、每 4 個長休一次。
@@ -236,6 +237,7 @@ node tools/tests/meditation-sounds.js
 node tools/tests/top3-tomorrow.js
 node tools/tests/lockscreen-noise.js
 node tools/tests/jieqi-intro.js
+node tools/tests/sport.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -388,3 +390,11 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - `summer-night.mp3`（夏夜蟲鳴，key `insects`，沿用舊鍵讓原本選蟲鳴的人自動換成新錄音）與 `stream.mp3`（鳥鳴流水）是 App 作者自己的錄音，不需署名。
 - `NZ_FILE` 情境 → 檔名；`NZ_SEAMLESS` 已無縫循環的檔不再交叉淡化。舊的蟲鳴合成程式（`nzSynth`）保留但已不使用。
 - 待辦：海洋（海浪拍沙灘＋礁石）多層混音，素材下載受阻，等使用者提供錄音；燒柴、風聲暫不做。
+
+## 27. 運動頁（2026-11-19，試跑）
+
+- 資料：`day.sport=[{id,t,type,min,...}]`；yoga `{seq,feel:{flex,bal,br},note,hurt}`、gym `{ex:[{n,part,sets:[{r,w}]}],rpe,hurt}` 或 `{what:'間歇訓練'}`、run/bike/swim `{dist,min,note,hurt}`（游泳單位公尺）、steps `{steps}`（一天一筆）。
+- 設定：`cfg.sports`（選的項目）、`sportGoal`（每週天數，預設 3）、`yogaSeqs`（自訂序列；沒有就用 `YOGA_DEF` 晨間 10 分／睡前伸展）、`breath`（吸吐秒數，預設 4／6）、`restSec`（組間休息，預設 90）、`hiit`（運動／休息秒數與回數，預設 40／20／8）、`stepGoal`（預設 8000）。
+- 顯示：`sportVis` 記錄使用者是否打開過；沒打開過的人 `cfg()` 會把 `sport` 放進 hidden（新頁面不會突然出現在既有用戶的選單）。
+- 計時：`ST`（瑜珈序列、組間休息、間歇），每 250 ms 由 `tick()` 呼叫 `spTick()`；換體式／換回合響一聲 `bell(1)`，結束 `bell(2)`。進行中的健身訓練暫存在 sessionStorage `sd-gw`。目前只在畫面開著時計時（沒有背景排程），使用時建議開「計時時保持螢幕亮著」。
+- 文案原則：提醒而非醫療建議；不舒服時以休息為先。

@@ -179,6 +179,15 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .xcount{text-align:center;margin:10px 0 0;font-size:calc(13px * var(--fs,1));color:var(--muted)}
 .xcount b{color:var(--ink);font-size:calc(15px * var(--fs,1))}
 .xcount .xlink{margin-left:6px}
+.yoga-now{text-align:center}
+.ypose{font-family:var(--f-display);font-size:calc(22px * var(--fs,1));margin:6px 0 0;letter-spacing:.06em}
+.ybreath{width:120px;height:120px;margin:4px auto 6px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--focus) 14%,var(--surface));border:1.5px solid color-mix(in srgb,var(--focus) 45%,transparent);animation:ybr var(--bt) ease-in-out infinite}
+.ybreath span{font-size:calc(12px * var(--fs,1));color:var(--focus)}
+@keyframes ybr{0%{transform:scale(.72)}40%{transform:scale(1)}100%{transform:scale(.72)}}
+@media (prefers-reduced-motion:reduce){.ybreath{animation:none}}
+.gymex{padding:10px 0;border-top:1px solid var(--line)}
+.gymex:first-of-type{border-top:0}
+.gymex .chip{margin:2px 2px 2px 0}
 .t3hint{margin:8px 0 0;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -950,7 +959,7 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[],DBX=null,UIDX=null,IS_OWNER=false,FB={},fbUnsub=null;
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘'||(cn==='訂正錯題|完成練習題|練習達標次數'&&!oldCtrUsed())||!m.counters)c.counters=clone(DEF.counters);if(!m.exams||(m.exams.length===1&&m.exams[0].id==='toefl'&&!m.exams[0].date))c.exams=clone(DEF.exams);if(m.timers&&JSON.stringify(m.timers.map(t=>[t.id,t.name,t.segs]))===TOEFL_TIMERS&&exSceneRaw(m)==='exam')c.timers=clone(DEF.timers);if(!m.scale&&Object.values(S.mocks||{}).some(x=>(x.scale||'30')!=='custom'))c.scale='30';if(!m.pomo){const R=myRhythm();if(R&&R.ps)c.pomo=Object.assign({},c.pomo,{work:R.ps.w,short:R.ps.s}),c._pomoAuto=true}return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘'||(cn==='訂正錯題|完成練習題|練習達標次數'&&!oldCtrUsed())||!m.counters)c.counters=clone(DEF.counters);if(!m.exams||(m.exams.length===1&&m.exams[0].id==='toefl'&&!m.exams[0].date))c.exams=clone(DEF.exams);if(m.timers&&JSON.stringify(m.timers.map(t=>[t.id,t.name,t.segs]))===TOEFL_TIMERS&&exSceneRaw(m)==='exam')c.timers=clone(DEF.timers);if(!m.scale&&Object.values(S.mocks||{}).some(x=>(x.scale||'30')!=='custom'))c.scale='30';if(!m.sportVis&&!(c.hidden||[]).includes('sport'))c.hidden=(c.hidden||[]).concat('sport');if(!m.pomo){const R=myRhythm();if(R&&R.ps)c.pomo=Object.assign({},c.pomo,{work:R.ps.w,short:R.ps.s}),c._pomoAuto=true}return c}
 const exSceneRaw=m=>m.exScene||'exam';
 let _ctr={n:-1,v:false};function oldCtrUsed(){const ks=Object.keys(S.days);if(_ctr.n!==ks.length){_ctr={n:ks.length,v:ks.some(k=>{const c=S.days[k].counts||{};return c.fix||c.drill||c.hit})}}return _ctr.v}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
@@ -1043,7 +1052,7 @@ function syncBlockHTML(){
   </div>`;
 }
 let WSTEP=0;
-const PURPOSES=[['focus','讀書與工作專注','番茄鐘、月曆、統計、找出高效時段',['calendar','stats','quiz']],['goal','準備考試、比賽或演出','倒數、分段計時、紀錄與複習',['exam','calendar','stats']],['plan','研究寫作或長期計畫','把大計畫拆成階段與小步驟',['plan','calendar','stats']],['mind','身心照顧','靜心與覺察日記',['mind','journal']]];
+const PURPOSES=[['focus','讀書與工作專注','番茄鐘、月曆、統計、找出高效時段',['calendar','stats','quiz']],['goal','準備考試、比賽或演出','倒數、分段計時、紀錄與複習',['exam','calendar','stats']],['plan','研究寫作或長期計畫','把大計畫拆成階段與小步驟',['plan','calendar','stats']],['mind','身心照顧','靜心與覺察日記',['mind','journal']],['sport','運動與身體','瑜珈、健身、跑步，計時與紀錄',['sport']]];
 // 最多選 3 個：選太多又會回到功能太雜；沒選到的頁面之後由小建議卡慢慢介紹，也可以在設定打開
 const PUR_MAX=3;
 let WPUR=new Set();
@@ -1145,7 +1154,7 @@ function remindHTML(){const L=rmList(),on=L.filter(r=>r.on);
 function goalIcs(e){const t=today(),n=diffDays(t,e.date),k=exKind(e.name),evs=[];
   [30,14,7,3,1].filter(d=>d<n).forEach(d=>{const day=addDays(e.date,-d),ph=exPhase(d);evs.push({uid:'goal-'+e.date+'-'+d,date:day,t:'09:00',min:15,title:`${e.name||exL('ev')} D-${d}・${phName(k,ph)}`,desc:EX_FOCUS[k][ph][0]+'：'+EX_FOCUS[k][ph][1]})});
   if(n>=0)evs.push({uid:'goal-'+e.date+'-0',date:e.date,allDay:true,title:`${e.name||exL('ev')}・就是今天`,desc:EX_FOCUS[k].p0[1]});return evs}
-function editCfg(fn){const c=clone(cfg());fn(c);save('meta','main',c)}
+function editCfg(fn){const c=clone(cfg());fn(c);c.sportVis=!(c.hidden||[]).includes('sport');save('meta','main',c)}
 
 const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。',viewonly:'目前沒有雲端儲存權限，紀錄先存在這個瀏覽器。',nologin:'資料只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。',standalone:'資料存在這個瀏覽器裡。記得定期到「設定」匯出備份。'};
 let PERSIST=null;
@@ -1230,7 +1239,7 @@ applyTheme();
 function setNote(t){const n=$('#storeNote');if(n)n.textContent=t}
 
 /* ---------- routing / rendering ---------- */
-const ROUTES=['today','calendar','stats','exam','plan','journal','mind','quiz','prefs'];
+const ROUTES=['today','calendar','stats','exam','plan','journal','mind','sport','quiz','prefs'];
 let R='today',pendingRender=false;
 function route(){const h=location.hash.slice(1);R=h.startsWith('page-')||ROUTES.includes(h)?h:'today';pgAdding=false;render()}
 window.addEventListener('hashchange',route);
@@ -1362,7 +1371,7 @@ function tAdvance(){
 let lastTitle='';
 let CUR_DAY=today();
 function tick(force){
-  syncSched();syncNoise();
+  syncSched();syncNoise();try{spTick()}catch{}
   {const q=Math.floor(Date.now()/3e4);if(q!==tick._q){tick._q=q;const tk=timeKey();if(TK&&tk!==TK&&today()===CUR_DAY&&(R==='today'||R==='journal')){TK=tk;softRender()}TK=tk}}
   if(today()!==CUR_DAY&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){const o=CUR_DAY;CUR_DAY=today();if(jDay===o)jDay=CUR_DAY;if(calSel===o){calSel=CUR_DAY;calM=CUR_DAY.slice(0,7)}render();return}
   if(P.running&&Date.now()>=P.endAt){pComplete(false);return}
@@ -2431,7 +2440,7 @@ function vPrefs(){
 }
 function parseSegs(str){return str.split(/[,，、]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*?)\s*(\d+)(?::(\d{1,2}))?$/);if(!m)return null;return {n:m[1].trim()||'計時',s:(+m[2])*60+(+(m[3]||0))}}).filter(s=>s&&s.s>0)}
 
-const VIEWS={mind:vMind,today:vToday,calendar:vCalendar,stats:vStats,exam:vExam,plan:vPlan,journal:vJournal,quiz:vQuiz,prefs:vPrefs};
+const VIEWS={mind:vMind,today:vToday,calendar:vCalendar,stats:vStats,exam:vExam,plan:vPlan,journal:vJournal,sport:vSport,quiz:vQuiz,prefs:vPrefs};
 
 /* ---------- actions ---------- */
 const armed=new WeakSet();
@@ -2587,7 +2596,7 @@ const IN={
 };
 /* ---------- share ---------- */
 const SHARE_URL=STANDALONE?location.href.split('#')[0]:'https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe';
-const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'目標衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',quiz:'我的節奏',prefs:'設定'};
+const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'目標衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',sport:'運動',quiz:'我的節奏',prefs:'設定'};
 function fbPageName(){return R.startsWith('page-')?'我的頁面':(PAGE_NAMES[R]||R)}
 function openFeedback(){
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fbT"><div class="box">
@@ -3862,13 +3871,14 @@ Object.assign(IN,{
 });
 
 /* ---------- navigation & visibility ---------- */
-const NAV=[['today','今日'],['plan','計畫地圖'],['exam','目標衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['stats','統計'],['quiz','我的節奏']];
-const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'目標衝刺：考試、比賽、演出或發表的倒數、分段計時、紀錄與複習',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',quiz:'我的節奏：找出最佳狀態的測驗'};
+const NAV=[['today','今日'],['plan','計畫地圖'],['exam','目標衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['sport','運動'],['stats','統計'],['quiz','我的節奏']];
+const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'目標衝刺：考試、比賽、演出或發表的倒數、分段計時、紀錄與複習',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',sport:'運動：瑜珈序列、健身組數與休息、跑步單車游泳、每日步數',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
 function navOrder(){const def=NAV.map(n=>n[0]).filter(r=>r!=='today'),o=(cfg().navOrder||[]).filter(r=>def.includes(r));return ['today'].concat(o,def.filter(r=>!o.includes(r)))}
 function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n[0]==='exam'?['exam',exPage()]:n]));return navOrder().map(r=>m[r]).filter(Boolean)}
 function navItems(){return navOrdered().filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}
 const ICON={
+  sport:'<circle cx="13" cy="4.5" r="2"/><path d="M9 21l3-6 3 2v4M6 12l3-4h5l3 3 3-1M12 15l-2-4"/>',
   today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   stats:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
@@ -4077,6 +4087,165 @@ function gcBar(){
   return `<div class="gcbar on"><div><b>Google 日曆</b> <span class="muted">${GC.state==='auth'?'需要你授權一次，日課才能讀取行程（只讀，不會修改）。':GC.state==='loading'?'讀取中…':GC.state==='err'?esc(GC.msg):'已顯示這個月的行程'}</span></div>${GC.state==='auth'?'<button class="sec sm" data-act="gcAuth">連接 Google 日曆</button>':''}<div class="row"><label class="row" style="font-size:calc(12px * var(--fs,1))"><input type="checkbox" data-ch="gcFree" ${cfg().gcalSkipFree!==false?'checked':''}> 略過標為「空閒」的活動</label><button class="sm" data-act="gcRefresh">重新整理</button><button class="ghost sm" data-act="gcOff">隱藏</button></div></div>`;
 }
 
+/* ---------- 運動（可選擇顯示的頁面）：瑜珈、健身先做完整，慢跑／單車／游泳／萬步較簡單 ----------
+   紀錄存在當天 day.sport：[{id,t,type,min,...}]；不算進番茄與「今天專注」。不是醫療建議。 */
+const SPORTS=[['yoga','瑜珈','體式停留、呼吸節拍、左右平衡'],['gym','健身','組數 × 次數 × 重量、組間休息、進步'],['run','慢跑','距離、時間、配速'],['bike','單車','距離、時間、均速'],['swim','游泳','距離、時間、每百公尺'],['steps','日行萬步','每天的步數與目標']];
+const GYM_PARTS=['胸','背','腿','肩','手臂','核心','全身'];
+const GYM_EX=[['深蹲','腿'],['硬舉','背'],['臥推','胸'],['伏地挺身','胸'],['引體向上','背'],['划船','背'],['肩推','肩'],['側平舉','肩'],['二頭彎舉','手臂'],['三頭下壓','手臂'],['平板支撐','核心'],['捲腹','核心'],['弓箭步','腿'],['臀推','腿'],['波比跳','全身']];
+const YOGA_DEF=[
+ {id:'morning',n:'晨間 10 分',p:[['山式',30],['站姿前彎',30],['下犬式',45],['低弓箭步',30,1],['戰士二式',30,1],['三角式',30,1],['樹式',30,1],['嬰兒式',45],['大休息',90]]},
+ {id:'night',n:'睡前伸展',p:[['貓牛式',45],['嬰兒式',60],['仰臥扭轉',45,1],['鴿式',45,1],['快樂嬰兒式',45],['靠牆抬腿',90],['大休息',180]]}];
+const SP_LBL=Object.fromEntries(SPORTS.map(x=>[x[0],x[1]]));
+let spTab=null,spPick=false,spSeqEdit=false,GW=null;
+let ST={k:null,running:false}; // 進行中的運動計時（瑜珈序列、組間休息、間歇）
+function spCfg(){const c=cfg();return {sports:Array.isArray(c.sports)?c.sports:null,goal:+c.sportGoal||3,rest:+c.restSec||90,steps:+c.stepGoal||8000,breath:c.breath||[4,6],seqs:Array.isArray(c.yogaSeqs)&&c.yogaSeqs.length?c.yogaSeqs:YOGA_DEF,hiit:c.hiit||{w:40,r:20,n:8}}}
+function sportsOf(keys){const L=[];keys.forEach(k=>(day(k).sport||[]).forEach(x=>L.push(Object.assign({k},x))));return L}
+const weekKeys=k=>Array.from({length:7},(_,i)=>addDays(weekStart(k),i));
+function seqTotal(q){return q.p.reduce((a,x)=>a+x[1]*(x[2]?2:1),0)}
+function seqSteps(q){const o=[];q.p.forEach(([n,s,side])=>{if(side){o.push({n,s,side:'左側'});o.push({n,s,side:'右側'})}else o.push({n,s})});return o}
+function spRecord(type,o){const t=new Date();editDay(today(),d=>{d.sport=d.sport||[];d.sport.push(Object.assign({id:rid(),t:t.toISOString(),type},o))})}
+/* ---- timers ---- */
+function spStart(o){unlockAudio();ST=Object.assign({running:true,startAt:Date.now()},o);ST.endAt=Date.now()+ST.left*1000;delete ST.left;wakeLock(wakePref());render()}
+function spLeft(){return ST.running?Math.max(0,(ST.endAt-Date.now())/1000):(ST.left||0)}
+function spTick(){if(!ST.k)return;
+  if(ST.running&&Date.now()>=ST.endAt){
+    if(ST.k==='rest'){ST={k:null,running:false};try{bell(2)}catch{}toast('休息結束，開始下一組');render();return}
+    if(ST.k==='yoga'){const st=seqSteps(ST.q);ST.i++;if(ST.i>=st.length){const m=Math.max(1,Math.round(seqTotal(ST.q)/60));ST={k:'yogaDone',running:false,min:m,seq:ST.q.n};try{bell(2)}catch{}render();return}try{bell(1)}catch{}ST.endAt=Date.now()+st[ST.i].s*1000;render();return}
+    if(ST.k==='hiit'){ST.n++;const h=ST.h;if(ST.phase==='w'){if(ST.n>=h.n*2-1){ST={k:'hiitDone',running:false,min:Math.max(1,Math.round(h.n*(h.w+h.r)/60))};try{bell(2)}catch{}render();return}ST.phase='r';ST.endAt=Date.now()+h.r*1000}else{ST.phase='w';ST.endAt=Date.now()+h.w*1000}try{bell(1)}catch{}render();return}}
+  const el=$('#spTime');if(el)el.textContent=mmss(spLeft());}
+/* ---- view ---- */
+function vSport(){const c=spCfg(),k=today(),wk=sportsOf(weekKeys(k)),days=new Set(wk.map(x=>x.k)).size;
+  if(!c.sports||spPick)return `<header class="ph"><div><p class="eyebrow">運動</p><h1>你想記錄哪些運動？</h1></div></header>
+    <section class="card"><p class="muted" style="margin-top:0">可以複選，之後隨時能改。每種運動在意的不一樣，日課會給你對應的記錄與計時。</p>
+    <div class="purp">${SPORTS.map(([v,n,d])=>`<button class="purp-o" data-act="spChoose" data-v="${v}" aria-pressed="${(c.sports||['yoga','gym']).includes(v)}"><b>${n}</b><span>${d}</span></button>`).join('')}</div>
+    <div class="row sb" style="margin-top:14px"><label class="row" style="gap:6px">每週目標<input type="number" min="1" max="14" value="${c.goal}" data-ch="spGoal" style="width:64px">次</label><button class="pri" data-act="spPickDone">完成</button></div></section>`;
+  const tab=c.sports.includes(spTab)?spTab:c.sports[0];spTab=tab;
+  const hurt=sportsOf(Array.from({length:3},(_,i)=>addDays(k,-i))).find(x=>x.hurt);
+  return `<header class="ph"><div><p class="eyebrow">運動</p><h1>${esc(SP_LBL[tab])}</h1></div><div class="chips"><span class="chip">本週 <b>${days}</b> / ${c.goal} 天</span><button class="ghost sm" data-act="spPickOpen">選擇項目</button></div></header>
+  ${hurt?`<div class="banner" style="border-color:var(--warn)">${fmtMD(hurt.k)} 記下了身體不舒服。這幾天以休息和輕度伸展為主；疼痛持續或加劇，請找醫師或物理治療師。</div>`:''}
+  ${c.sports.length>1?`<div class="seg" style="margin-bottom:14px">${c.sports.map(v=>`<button data-act="spTab" data-v="${v}" aria-pressed="${v===tab}">${SP_LBL[v]}</button>`).join('')}</div>`:''}
+  ${tab==='yoga'?yogaHTML(c):tab==='gym'?gymHTML(c):tab==='steps'?stepsHTML(c):cardioHTML(c,tab)}
+  <section class="card" style="margin-top:16px"><h2>最近的紀錄 <span class="muted">不算進番茄</span></h2>${spRecent(tab)}</section>
+  <p class="muted" style="margin:12px 2px 0">日課的建議只是提醒，不是醫療建議。身體不舒服時請先休息。</p>`}
+function spRecent(tab){const L=sportsOf(Array.from({length:60},(_,i)=>addDays(today(),-i))).filter(x=>x.type===tab).sort((a,b)=>a.t<b.t?1:-1).slice(0,10);
+  if(!L.length)return '<p class="empty">還沒有紀錄。</p>';
+  return `<div class="list">${L.map(x=>`<div class="li"><span class="num muted" style="flex:none">${fmtMD(x.k)}</span><span class="grow">${esc(spLine(x))}${x.hurt?' <span class="pill warn">不舒服</span>':''}${x.note?`<span class="muted">・${esc(x.note)}</span>`:''}</span><button class="ghost sm" data-act="spDel" data-k="${x.k}" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`}
+function spLine(x){if(x.type==='yoga')return `${x.seq||'瑜珈'}・${x.min} 分${x.feel?`・柔軟 ${x.feel.flex||'—'}／平衡 ${x.feel.bal||'—'}／呼吸 ${x.feel.br||'—'}`:''}`;
+  if(x.type==='gym')return `${(x.ex||[]).map(e=>`${e.n} ${e.sets.length} 組`).join('、')||x.what||'訓練'}${x.min?`・${x.min} 分`:''}${x.rpe?`・強度 ${x.rpe}`:''}`;
+  if(x.type==='steps')return `${(+x.steps).toLocaleString()} 步`;
+  return `${fmtN(x.dist)} ${x.type==='swim'?'公尺':'公里'}・${x.min} 分・${paceTxt(x.type,x.dist,x.min)}`}
+function paceTxt(type,dist,min){if(!dist||!min)return '';if(type==='run'){const p=min/dist;return `配速 ${Math.floor(p)}'${pad(Math.round((p%1)*60))}"／公里`}if(type==='bike')return `均速 ${fmtN(dist/(min/60))} 公里／時`;const p=min/(dist/100);return `${Math.floor(p)}'${pad(Math.round((p%1)*60))}"／100 公尺`}
+/* yoga */
+function yogaHTML(c){const q=c.seqs.find(x=>x.id===(ST.seqId||lsGet('sd-yseq',c.seqs[0].id)))||c.seqs[0],st=seqSteps(q),[bi,bo]=c.breath;
+  if(ST.k==='yogaDone')return `<section class="card"><h2>完成「${esc(ST.seq)}」・${ST.min} 分鐘</h2><p class="muted" style="margin-top:0">記下今天身體的感覺（1 很緊／不穩，5 很舒展／很穩）。</p>
+    ${[['flex','柔軟度'],['bal','平衡'],['br','呼吸']].map(([f,n])=>`<div class="row" style="margin:6px 0"><span style="width:4em">${n}</span><div class="mood">${[1,2,3,4,5].map(v=>`<button data-act="spFeel" data-f="${f}" data-n="${v}" aria-pressed="${(ST.feel||{})[f]===v}">${v}</button>`).join('')}</div></div>`).join('')}
+    <label class="f" style="margin-top:8px">筆記<input type="text" id="spNote" placeholder="例：左側髖比較緊，下次鴿式多停一下"></label>
+    <label class="visrow" style="margin-top:8px"><input type="checkbox" id="spHurt"><span>有哪裡不舒服或疼痛</span></label>
+    <div class="row" style="margin-top:10px"><button class="pri" data-act="spYogaSave">儲存</button><button class="ghost" data-act="spCancel">不記錄</button></div></section>`;
+  const run=ST.k==='yoga',cur=run?st[ST.i]:null,nx=run?st[ST.i+1]:null;
+  return `<div class="grid2"><section class="card"><h2>序列計時 <span class="muted">每個體式停留，左右自動換邊</span></h2>
+    ${run?`<style>@keyframes ybr{0%{transform:scale(.72)}${Math.round(bi/(bi+bo)*100)}%{transform:scale(1)}100%{transform:scale(.72)}}</style><div class="yoga-now"><div class="ybreath" style="--bi:${bi}s;--bo:${bo}s;--bt:${bi+bo}s"><span>吸 ${bi}・吐 ${bo}</span></div><p class="ypose">${esc(cur.n)}${cur.side?` <span class="pill">${cur.side}</span>`:''}</p><div class="xclock" id="spTime">${mmss(spLeft())}</div><p class="muted" style="text-align:center;margin:0">${nx?`下一個：${esc(nx.n)}${nx.side?'・'+nx.side:''}`:'最後一個體式'}・${ST.i+1} / ${st.length}</p></div>
+      <div class="ctrl" style="margin-top:12px"><button class="pri" style="background:var(--focus);border-color:var(--focus);color:var(--surface)" data-act="spPause">${ST.running?'暫停':'繼續'}</button><button data-act="spSkip">下一個</button><button data-act="spStop">結束</button></div>`
+    :`<div class="seg" style="flex-wrap:wrap;margin-bottom:10px">${c.seqs.map(x=>`<button data-act="spSeq" data-id="${esc(x.id)}" aria-pressed="${x.id===q.id}">${esc(x.n)}</button>`).join('')}</div>
+      <div class="list">${q.p.map(([n,s,side],i)=>spSeqEdit?`<div class="li"><input type="text" value="${esc(n)}" data-ch="ySeqN" data-i="${i}" style="flex:1"><input type="number" min="5" max="600" value="${s}" data-ch="ySeqS" data-i="${i}" style="width:70px"><span class="muted">秒</span><label class="row" style="gap:4px"><input type="checkbox" data-ch="ySeqLR" data-i="${i}" ${side?'checked':''}>左右</label><button class="ghost sm" data-act="ySeqDel" data-i="${i}">×</button></div>`:`<div class="li"><span class="grow">${esc(n)}${side?' <span class="muted">左右各</span>':''}</span><span class="num">${s} 秒</span></div>`).join('')}</div>
+      ${spSeqEdit?`<div class="row" style="margin-top:8px"><button class="sm" data-act="ySeqAdd">新增體式</button><button class="sm" data-act="ySeqNew">另存新序列</button><button class="ghost sm" data-act="ySeqReset">恢復預設</button><button class="sec sm" data-act="ySeqEditT">完成</button></div>`:`<div class="row sb" style="margin-top:10px"><span class="muted">共 ${Math.round(seqTotal(q)/60)} 分鐘</span><span class="row"><button class="ghost sm" data-act="ySeqEditT">編輯序列</button><button class="pri" data-act="spYogaGo" data-id="${esc(q.id)}">開始</button></span></div>`}`}
+    </section>
+    <section class="card"><h2>呼吸節拍</h2><p class="muted" style="margin-top:0">停留時跟著圓圈呼吸：圓圈變大時吸氣，變小時吐氣。吐氣比吸氣長一點，比較容易放鬆。</p>
+      <div class="row"><label class="row" style="gap:4px">吸<input type="number" min="2" max="10" value="${bi}" data-ch="breath" data-i="0" style="width:60px">秒</label><label class="row" style="gap:4px">吐<input type="number" min="2" max="12" value="${bo}" data-ch="breath" data-i="1" style="width:60px">秒</label></div>
+      <h3>本週練習</h3>${spWeekBars('yoga')}</section></div>`}
+function spWeekBars(type){const ks=weekKeys(today()),rows=ks.map(k=>({key:k,label:'週'+wdName(k),parts:[{c:9,v:(day(k).sport||[]).filter(x=>x.type===type).reduce((a,x)=>a+(+x.min||0),0),n:'分鐘'}]}));return stackBars(rows,{h:110,unit:'分',minMax:20,marker:today()})}
+/* gym */
+function gymLast(name){for(let i=1;i<=90;i++){const k=addDays(today(),-i);for(const x of (day(k).sport||[]).filter(y=>y.type==='gym').reverse()){const e=(x.ex||[]).find(y=>y.n===name);if(e)return {k,e}}}return null}
+function gymHTML(c){if(!GW)GW={ex:[],start:Date.now(),rpe:null};
+  const yParts=new Set(sportsOf([addDays(today(),-1)]).filter(x=>x.type==='gym').flatMap(x=>(x.ex||[]).map(e=>e.part))),todayParts=new Set(GW.ex.map(e=>e.part));
+  const dup=[...todayParts].filter(p=>yParts.has(p)&&p!=='核心'&&p!=='全身');
+  const rest=ST.k==='rest';
+  return `<div class="grid2"><section class="card"><h2>今天的訓練 ${GW.ex.length?`<span class="muted">${GW.ex.reduce((a,e)=>a+e.sets.length,0)} 組</span>`:''}</h2>
+    ${dup.length?`<p class="banner" style="margin:0 0 10px">昨天練過${dup.join('、')}，同一個部位最好休息 48 小時，今天可以換個部位。</p>`:''}
+    ${GW.ex.map((e,i)=>{const last=gymLast(e.n);return `<div class="gymex"><div class="row sb"><b>${esc(e.n)} <span class="pill mut">${esc(e.part)}</span></b><button class="ghost sm" data-act="gymExDel" data-i="${i}" aria-label="移除">×</button></div>
+      ${last?`<p class="muted" style="margin:2px 0 6px">上次（${fmtMD(last.k)}）：${last.e.sets.map(s=>`${s.r}${s.w?'×'+s.w+'kg':''}`).join('、')}</p>`:''}
+      ${e.sets.map((s,j)=>`<span class="chip">第 ${j+1} 組 <b>${s.r}</b> 下${s.w?` × ${s.w} kg`:''}<button class="tdel" data-act="gymSetDel" data-i="${i}" data-j="${j}" aria-label="刪除這組">×</button></span>`).join(' ')}
+      <div class="row" style="margin-top:6px"><input type="number" id="gR${i}" min="1" max="200" placeholder="次數" value="${e.sets.length?e.sets[e.sets.length-1].r:(last?last.e.sets[0].r:'')}" style="width:76px"><input type="number" id="gW${i}" min="0" max="500" step="0.5" placeholder="公斤" value="${e.sets.length?(e.sets[e.sets.length-1].w||''):(last?(last.e.sets[0].w||''):'')}" style="width:80px"><button class="sec sm" data-act="gymSet" data-i="${i}">完成一組</button></div></div>`}).join('')}
+    <div class="row" style="margin-top:10px"><input type="text" id="gExN" list="gExL" placeholder="新增動作，例：深蹲" style="flex:1;min-width:8em"><datalist id="gExL">${GYM_EX.map(([n])=>`<option value="${n}">`).join('')}</datalist><select id="gExP">${GYM_PARTS.map(p=>`<option>${p}</option>`).join('')}</select><button class="sm" data-act="gymExAdd">加入</button></div>
+    ${GW.ex.length?`<div class="row" style="margin-top:12px"><span class="muted">整體強度（1 很輕鬆，10 用盡全力）</span><select id="gRpe">${['',1,2,3,4,5,6,7,8,9,10].map(v=>`<option${GW.rpe==v&&v!==''?' selected':''}>${v}</option>`).join('')}</select></div>
+    <label class="visrow" style="margin-top:8px"><input type="checkbox" id="spHurt"><span>有哪裡不舒服或疼痛</span></label>
+    <div class="row" style="margin-top:8px"><button class="pri" data-act="gymSave">完成訓練並記錄</button></div>`:''}
+    </section>
+    <section class="card"><h2>${rest?'組間休息':'計時'}</h2>
+    ${rest?`<div class="xclock run" id="spTime">${mmss(spLeft())}</div><div class="ctrl"><button data-act="spPlus" data-s="30">+30 秒</button><button data-act="spStop">跳過休息</button></div>`
+      :ST.k==='hiit'?`<p class="ypose" style="text-align:center">${ST.phase==='w'?'運動':'休息'} <span class="muted">第 ${Math.floor(ST.n/2)+1} / ${ST.h.n} 回</span></p><div class="xclock ${ST.phase==='w'?'run':''}" id="spTime">${mmss(spLeft())}</div><div class="ctrl"><button data-act="spPause">${ST.running?'暫停':'繼續'}</button><button data-act="spStop">結束</button></div>`
+      :ST.k==='hiitDone'?`<p>完成間歇訓練，約 ${ST.min} 分鐘。</p><div class="row"><button class="pri" data-act="hiitSave">記錄</button><button class="ghost" data-act="spCancel">不記錄</button></div>`
+      :`<p class="muted" style="margin-top:0">按「完成一組」會自動開始組間休息。</p><label class="row" style="gap:6px">組間休息<input type="number" min="15" max="600" step="15" value="${c.rest}" data-ch="restSec" style="width:80px">秒</label>
+        <h3>間歇計時</h3><div class="row"><label class="row" style="gap:4px">運動<input type="number" min="5" max="600" value="${c.hiit.w}" data-ch="hiit" data-f="w" style="width:64px">秒</label><label class="row" style="gap:4px">休息<input type="number" min="5" max="600" value="${c.hiit.r}" data-ch="hiit" data-f="r" style="width:64px">秒</label><label class="row" style="gap:4px"><input type="number" min="1" max="50" value="${c.hiit.n}" data-ch="hiit" data-f="n" style="width:56px">回</label><button class="sm" data-act="hiitGo">開始</button></div>`}
+    </section></div>`}
+/* cardio */
+function cardioHTML(c,type){const unit=type==='swim'?'公尺':'公里',ks=weekKeys(today()),pk=weekKeys(addDays(today(),-7));
+  const sum=keys=>sportsOf(keys).filter(x=>x.type===type).reduce((a,x)=>a+(+x.dist||0),0),w=sum(ks),pw=sum(pk);
+  const warn=pw>0&&w>pw*1.1&&type!=='swim';
+  return `<div class="grid2"><section class="card"><h2>記錄一次${esc(SP_LBL[type])}</h2>
+    <div class="row"><label class="f">距離（${unit}）<input type="number" id="cdD" min="0" step="${type==='swim'?25:0.1}" data-in="cdCalc"></label><label class="f">時間（分鐘）<input type="number" id="cdM" min="1" data-in="cdCalc"></label></div>
+    <p class="muted" id="cdPace" style="min-height:1.4em"></p>
+    <label class="f">筆記<input type="text" id="spNote" placeholder="例：河濱，最後一公里加速"></label>
+    <label class="visrow" style="margin-top:8px"><input type="checkbox" id="spHurt"><span>有哪裡不舒服或疼痛</span></label>
+    <button class="pri" data-act="cdSave" data-t="${type}" style="margin-top:8px">記錄</button></section>
+    <section class="card"><h2>本週 <span class="num">${fmtN(w)}</span> ${unit}</h2><p class="muted" style="margin-top:0">上週 ${fmtN(pw)} ${unit}。</p>
+    ${warn?'<p class="banner" style="margin:0">這週的量比上週多了一成以上。慢慢增加，比較不容易受傷。</p>':''}</section></div>`}
+function stepsHTML(c){const v=((day(today()).sport||[]).find(x=>x.type==='steps')||{}).steps||'',ks=weekKeys(today()),vals=ks.map(k=>((day(k).sport||[]).find(x=>x.type==='steps')||{}).steps||0),done=vals.filter(Boolean),avg=done.length?Math.round(done.reduce((a,b)=>a+b,0)/done.length):0;
+  return `<div class="grid2"><section class="card"><h2>今天的步數</h2><p class="muted" style="margin-top:0">從手機的健康 App 看一下，填進來就好。</p>
+    <div class="row"><input type="number" id="stpN" min="0" max="100000" value="${v}" style="width:120px"><span>步</span><button class="pri" data-act="stpSave">記錄</button></div>
+    <label class="row" style="gap:6px;margin-top:10px">每日目標<input type="number" min="1000" max="40000" step="500" value="${c.steps}" data-ch="stepGoal" style="width:96px">步</label></section>
+    <section class="card"><h2>本週平均 <span class="num">${avg.toLocaleString()}</span> 步</h2>${stackBars(ks.map((k,i)=>({key:k,label:'週'+wdName(k),parts:[{c:vals[i]>=c.steps?5:11,v:vals[i],n:'步'}]})),{h:120,unit:'步',minMax:c.steps,marker:today()})}</section></div>`}
+let spSel=null;
+function curSeqId(){const c=spCfg();return (c.seqs.find(x=>x.id===lsGet('sd-yseq',''))||c.seqs[0]).id}
+function editSeq(fn){editCfg(c=>{c.yogaSeqs=clone(spCfg().seqs);const q=c.yogaSeqs.find(x=>x.id===curSeqId())||c.yogaSeqs[0];fn(q,c)})}
+function gwSave(){try{sessionStorage.setItem('sd-gw',JSON.stringify(GW))}catch{}}
+try{GW=JSON.parse(sessionStorage.getItem('sd-gw')||'null')}catch{}
+const spHurtVal=()=>{const h=$('#spHurt');return !!(h&&h.checked)};
+const spNoteVal=()=>{const n=$('#spNote');return n?n.value.trim():''};
+Object.assign(A,{
+  spPickOpen:()=>{spPick=true;spSel=new Set(spCfg().sports||['yoga','gym']);render()},
+  spChoose:el=>{if(!spSel)spSel=new Set(spCfg().sports||['yoga','gym']);const v=el.dataset.v;spSel.has(v)?spSel.delete(v):spSel.add(v);document.querySelectorAll('[data-act=spChoose]').forEach(b=>b.setAttribute('aria-pressed',spSel.has(b.dataset.v)))},
+  spPickDone:()=>{const s=SPORTS.map(x=>x[0]).filter(v=>(spSel||new Set(spCfg().sports||['yoga','gym'])).has(v));if(!s.length)return toast('至少選一項');editCfg(c=>{c.sports=s});spPick=false;spSel=null;render()},
+  spTab:el=>{spTab=el.dataset.v;render()},
+  spSeq:el=>{lsSet('sd-yseq',el.dataset.id);render()},
+  spYogaGo:el=>{const q=spCfg().seqs.find(x=>x.id===el.dataset.id);if(!q)return;spStart({k:'yoga',q:clone(q),i:0,left:seqSteps(q)[0].s});try{bell(1)}catch{}},
+  spPause:()=>{if(ST.running){ST.left=spLeft();ST.running=false}else{ST.endAt=Date.now()+(ST.left||0)*1000;ST.running=true;unlockAudio()}render()},
+  spSkip:()=>{if(ST.k==='yoga'){ST.running=true;ST.endAt=Date.now()}},
+  spPlus:el=>{if(ST.running)ST.endAt+=(+el.dataset.s||30)*1000},
+  spStop:()=>{const el=(Date.now()-(ST.startAt||Date.now()))/1000;
+    if(ST.k==='yoga'&&el>=60){ST={k:'yogaDone',running:false,min:Math.round(el/60),seq:ST.q.n};render();return}
+    if(ST.k==='hiit'&&el>=60){ST={k:'hiitDone',running:false,min:Math.round(el/60)};render();return}
+    ST={k:null,running:false};render()},
+  spCancel:()=>{ST={k:null,running:false};render()},
+  spFeel:el=>{ST.feel=ST.feel||{};ST.feel[el.dataset.f]=+el.dataset.n;document.querySelectorAll(`[data-act=spFeel][data-f=${el.dataset.f}]`).forEach(b=>b.setAttribute('aria-pressed',b===el))},
+  spYogaSave:()=>{spRecord('yoga',{min:ST.min,seq:ST.seq,feel:ST.feel||null,note:spNoteVal(),hurt:spHurtVal()});ST={k:null,running:false};toast('已記錄，好好喝口水');render()},
+  hiitGo:()=>{const h=spCfg().hiit;spStart({k:'hiit',h,n:0,phase:'w',left:h.w});try{bell(1)}catch{}},
+  hiitSave:()=>{spRecord('gym',{min:ST.min,what:'間歇訓練'});ST={k:null,running:false};toast('已記錄');render()},
+  ySeqEditT:()=>{spSeqEdit=!spSeqEdit;render()},
+  ySeqAdd:()=>{editSeq(q=>q.p.splice(Math.max(0,q.p.length-1),0,['新體式',30]));render()},
+  ySeqDel:el=>{editSeq(q=>{if(q.p.length>1)q.p.splice(+el.dataset.i,1)});render()},
+  ySeqNew:()=>{const n=(prompt('新序列的名稱（例：午休伸展）')||'').trim();if(!n)return;const id='u'+rid();editCfg(c=>{c.yogaSeqs=clone(spCfg().seqs);const q=c.yogaSeqs.find(x=>x.id===curSeqId());c.yogaSeqs.push({id,n,p:clone(q.p)})});lsSet('sd-yseq',id);render()},
+  ySeqReset:()=>{editCfg(c=>{delete c.yogaSeqs});lsSet('sd-yseq','');spSeqEdit=false;render()},
+  spDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.sport=(d.sport||[]).filter(x=>x.id!==el.dataset.id)});render()},
+  gymExAdd:()=>{const n=$('#gExN').value.trim();if(!n)return toast('寫下動作名稱');const known=GYM_EX.find(x=>x[0]===n);GW.ex.push({n,part:known?known[1]:$('#gExP').value,sets:[]});gwSave();render()},
+  gymExDel:el=>{GW.ex.splice(+el.dataset.i,1);gwSave();render()},
+  gymSet:el=>{const i=+el.dataset.i,r=+$('#gR'+i).value,w=+$('#gW'+i).value||0;if(!r)return toast('填一下次數');GW.ex[i].sets.push({r,w});gwSave();spStart({k:'rest',left:spCfg().rest})},
+  gymSetDel:el=>{GW.ex[+el.dataset.i].sets.splice(+el.dataset.j,1);gwSave();render()},
+  gymSave:()=>{const ex=GW.ex.filter(e=>e.sets.length);if(!ex.length)return toast('還沒有完成任何一組');const rp=$('#gRpe');spRecord('gym',{ex,min:Math.min(240,Math.max(1,Math.round((Date.now()-GW.start)/60000))),rpe:rp&&rp.value?+rp.value:null,hurt:spHurtVal()});GW=null;gwSave();ST={k:null,running:false};toast('訓練完成，記得伸展和補充水分');render()},
+  cdSave:el=>{const t=el.dataset.t,d=+$('#cdD').value,m=+$('#cdM').value;if(!d||!m)return toast('填一下距離和時間');spRecord(t,{dist:d,min:Math.round(m),note:spNoteVal(),hurt:spHurtVal()});toast('已記錄');render()},
+  stpSave:()=>{const n=Math.round(+$('#stpN').value);if(!n)return toast('填一下步數');editDay(today(),d=>{d.sport=(d.sport||[]).filter(x=>x.type!=='steps');d.sport.push({id:rid(),t:new Date().toISOString(),type:'steps',steps:n})});toast(n>=spCfg().steps?'達標了，很好！':'已記錄');render()},
+});
+Object.assign(C,{
+  spGoal:el=>{editCfg(c=>{c.sportGoal=Math.max(1,Math.min(14,+el.value||3))})},
+  ySeqN:el=>{editSeq(q=>{q.p[+el.dataset.i][0]=el.value.trim()||'體式'})},
+  ySeqS:el=>{editSeq(q=>{q.p[+el.dataset.i][1]=Math.max(5,Math.min(600,+el.value||30))})},
+  ySeqLR:el=>{editSeq(q=>{const p=q.p[+el.dataset.i];if(el.checked)p[2]=1;else p.length=2})},
+  breath:el=>{editCfg(c=>{const b=(c.breath||[4,6]).slice();b[+el.dataset.i]=Math.max(2,Math.min(12,+el.value||4));c.breath=b});render()},
+  restSec:el=>{editCfg(c=>{c.restSec=Math.max(15,Math.min(600,+el.value||90))})},
+  hiit:el=>{editCfg(c=>{const h=Object.assign({w:40,r:20,n:8},c.hiit);h[el.dataset.f]=Math.max(1,+el.value||h[el.dataset.f]);c.hiit=h})},
+  stepGoal:el=>{editCfg(c=>{c.stepGoal=Math.max(1000,+el.value||8000)});render()},
+});
+Object.assign(IN,{cdCalc:()=>{const d=+$('#cdD').value,m=+$('#cdM').value,p=$('#cdPace');if(p)p.textContent=d&&m?paceTxt(spTab,d,m):''}});
 Object.assign(A,{
   pgNewOpen:openNewPage,
   pgNew:el=>newPage(el.dataset.t),

@@ -13,8 +13,9 @@ const open=async(at,o={})=>{const c=await b.newContext(Object.assign({},devices[
   const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));await pg.goto('file://'+SP+'tjq.html#today');await pg.waitForTimeout(900);return [c,pg]};
 const txt=async(pg,sel)=>pg.evaluate(s=>[...document.querySelectorAll(s)].map(e=>e.textContent.replace(/\s+/g,' ').trim()).join(' | '),sel);
 // --- 節氣 ---
-for(const [d,want] of [['2026-11-22','小雪'],['2026-11-24','小雪'],['2026-11-25',''],['2026-12-22','冬至'],['2027-02-04','立春'],['2026-11-19','']]){
+for(const [d,want] of [['2026-11-19','再過 3 天是小雪'],['2026-11-18',''],['2026-11-22','今天小雪'],['2026-11-24','小雪'],['2026-11-25',''],['2026-12-22','今天冬至'],['2027-02-04','今天立春'],['2026-09-24','明天是中秋'],['2026-09-25','中秋'],['2026-06-19','端午']]){
   const [c,pg]=await open(d);const t=await txt(pg,'.jq');ok(want?t.includes(want):!t,`${d}：${want?'顯示「'+t+'」':'不顯示節氣卡'}`);await c.close()}
+{const [c,pg]=await open('2026-12-31');const t=await txt(pg,'.todaynotes');ok(/今天進入二九/.test(t)&&/(\d+／81 瓣|畫一瓣)/.test(t),'冬至數九（12/31 進入二九）：'+t.slice(0,70));await c.close()}
 // --- 第 7 天 ---
 {const [c,pg]=await open('2026-11-19',{days:8});const t=await txt(pg,'.tipcard');ok(/日課開始認識你了/.test(t)&&/上午/.test(t),'第 8 天：回顧卡「'+t.slice(0,70)+'…」');await c.close()}
 // --- 每月回顧（12/2，11 月用了 25 天）---

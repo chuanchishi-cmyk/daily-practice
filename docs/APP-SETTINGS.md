@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js）
 ```
 
 ---
@@ -241,6 +241,7 @@ node tools/tests/jieqi-intro.js
 node tools/tests/sport.js
 node tools/tests/letter-sleep.js
 node tools/tests/today-notes.js
+node tools/tests/practice-rhythm.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -367,7 +368,10 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ## 23. 二十四節氣（2026-11-19，試跑）
 
 - 資料 `JQ`：[節氣, 代表植物, 意境, 作息小語]，從小寒開始；植物依使用者指定（立春梅花…大寒梅花）。日期公式 `jqDate()`（21 世紀壽星公式，2025–2027 已核對官方日期，誤差至多一天）。
-- 只在**每個節氣開始的前 3 天**出現（`jqNow().n<=2`），位置在今日頁標題下方、今日小語之上（`jqHTML()`），之後回到平常的樣子。開場動畫不放，以免破壞品牌畫面。
+- 出現時間：**節氣前三天到後兩天**（共六天，`jqNext().n<=3` 或 `jqNow().n<=2`）。之前顯示「再過 N 天是小雪」，當天「今天小雪」。位置在今日頁標題下方（`jqHTML()`）。開場動畫不放，以免破壞品牌畫面。
+- 插畫位置依植物樣子（`JQ_POSE`）：垂枝（梅、杏、桃、柳、臘梅、桂、石榴）從右上角垂下；直立（油菜、鳶尾、麥、向日葵、菊、蘆葦、水仙、竹）從右下角長出；其餘靠右側。
+- 傳統節日（`FEST`，2026–2040 由瀏覽器內建農曆計算產生；春節 2027 為 2/7、2030 為 2/2）：節日前兩天到當天出現，優先於節氣卡；每個節日一句應景的建議（`FEST_TXT`），中秋顯示一輪月亮。
+- 冬至數九（`shujiu()`）：冬至起 81 天，每個「九」的第一天在今日小卡加一行，練習過的日子算在消寒圖畫了一瓣。
 - 插畫：`JQ_IMG` 節氣名 → 圖檔。風格：中國傳統歲時、手繪古風、半寫實＋淡水彩、素雅；不用 AI 生成，用公有領域古典圖譜（如《植物名實圖考》《本草圖譜》、十九世紀植物版畫）調成淡雅色調，每張約 40 KB。沒有圖時顯示篆印式的節氣名（`.jqseal`）。
 - 取圖需要連 Wikimedia（commons.wikimedia.org、upload.wikimedia.org）：已建立雲端環境「daily-practice」允許這些網址，需在該環境開新的 session 才能使用。
 
@@ -431,3 +435,12 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ## 31. 提示卡片的樣式（2026-11-20）
 
 小建議、新功能、回顧、備份提醒共用 `.tipcard`：左邊一枚直排的小印（`.tipseal`，像節氣卡），印的顏色區分種類（小記＝青綠、新知＝陶土橘、回顧＝金、備份＝琥珀，`--seal`）；標題用明體（`--f-display`），內文柔和的墨色；按鈕是圓角膠囊。不用 emoji。一般提示列（`.banner`）改成實線細框、左側一個小圓點。新增同類提示時沿用這兩種樣式。
+
+## 32. 練習與番茄共用節奏（2026-11-20）
+
+- 練習計時（含訂正）的分鐘數累積在 `sd-acc`（距離上次休息，當天有效）；番茄休息開始時歸零（`pStart` 中 `accReset()`）。
+- 一組練習結束（`tRecord(true)`）→ 計時器下方出現：「開始訂正」「休息 N 分鐘」「再一組」（`tRestHTML()`）。累計滿番茄長度，或這組超過番茄長度（模擬考），提示改成「休息一下吧」；超過番茄長度的建議長休。
+- 訂正：正數計時（`TFIX`，`sd-tfix`），按「完成訂正」把分鐘數記進那組練習的 `fix`，也加進累計；45 分鐘自動停。
+- 休息：直接把今日的番茄鐘切到短休／長休並開始（循環點 +1，第 4 次長休），番茄數不折算。
+- 番茄鐘正在專注時開始練習計時：先確認，暫停番茄鐘，已專注的時間加進累計。
+- 今天專注、統計、目標衝刺頁的分鐘數都包含訂正時間。

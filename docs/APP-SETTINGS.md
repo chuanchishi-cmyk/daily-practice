@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js）
 ```
 
 ---
@@ -240,6 +240,7 @@ node tools/tests/lockscreen-noise.js
 node tools/tests/jieqi-intro.js
 node tools/tests/sport.js
 node tools/tests/letter-sleep.js
+node tools/tests/today-notes.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -393,7 +394,7 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - `NZ_FILE` 情境 → 檔名；`NZ_SEAMLESS` 已無縫循環的檔不再交叉淡化。舊的蟲鳴合成程式（`nzSynth`）保留但已不使用。
 - 待辦：海洋（海浪拍沙灘＋礁石）多層混音，素材下載受阻，等使用者提供錄音；燒柴、風聲暫不做。
 
-## 27. 運動頁（2026-11-19，試跑）
+## 27. 運動頁（2026-11-20 發佈）
 
 - 資料：`day.sport=[{id,t,type,min,...}]`；yoga `{seq,feel:{flex,bal,br},note,hurt}`、gym `{ex:[{n,part,sets:[{r,w}]}],rpe,hurt}` 或 `{what:'間歇訓練'}`、run/bike/swim `{dist,min,note,hurt}`（游泳單位公尺）、steps `{steps}`（一天一筆）。
 - 設定：`cfg.sports`（選的項目）、`sportGoal`（每週天數，預設 3）、`yogaSeqs`（自訂序列；沒有就用 `YOGA_DEF` 晨間 10 分／睡前伸展）、`breath`（吸吐秒數，預設 4／6）、`restSec`（組間休息，預設 90）、`hiit`（運動／休息秒數與回數，預設 40／20／8）、`stepGoal`（預設 8000）。
@@ -401,7 +402,7 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 計時：`ST`（瑜珈序列、組間休息、間歇），每 250 ms 由 `tick()` 呼叫 `spTick()`；換體式／換回合響一聲 `bell(1)`，結束 `bell(2)`。進行中的健身訓練暫存在 sessionStorage `sd-gw`。目前只在畫面開著時計時（沒有背景排程），使用時建議開「計時時保持螢幕亮著」。
 - 文案原則：提醒而非醫療建議；不舒服時以休息為先。
 
-## 28. 雁書（2026-11-19，試跑）
+## 28. 雁書（程式已在，`FEATURE_LETTER=false` 關閉中：讀原書核對完成後改成 true 再發佈）
 
 - 信存在寫信那天：`day.letters=[{id,t,text,due,reply,src,books,read}]`。`due`＝下一個起床時間（我的節奏的起床時間，沒有就 07:30；00:00–05:00 前寫的信，當天早上就到）。
 - 回信在起床時間過後、第一次打開今日或雁書頁時產生（`ltDeliver()`）：
@@ -411,9 +412,18 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 今日頁：有新回信時出現「你有一封回信」卡（`letterTodayHTML()`）。
 - 書庫：目前的觀點段落依各書廣為人知的核心概念改寫（原子習慣、最有生產力的一年、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、哈佛商業評論、精準表達、心流、金剛經白話講座、我可能錯了、True Love），**尚未逐頁核對原文**。下一步：從使用者雲端硬碟「閱讀書庫」讀原書，補頁碼、增加段落並核對；《故道白雲》《炎夏飄雪》《如何成為一流職場菁英》《Working Backwards》《Intentional》尚未取材。英文介面的回信內容仍為中文。
 
-## 29. 作息觀測（第一期，2026-11-19，試跑）
+## 29. 作息觀測（第一期，2026-11-20 發佈）
 
 - 早上（04:00–12:00）今日頁出現「昨晚睡得好嗎？」：入睡、起床時間（預設依我的節奏或 23:30／07:30）＋睡眠品質 1–5，存在 `day.slp={bed,wake,q}`，同時補上日記的睡眠時數（沒填過才補）。填完就消失。
 - 每週一到週三：上週記滿 4 晚以上，出現「上週的作息報告」回顧卡（`slpWeekReport()`）：平均睡眠、睡眠品質、入睡時間變動（睡眠中點標準差）、平日與週末的差距（社會時差），加一句建議。
 - 我的節奏頁上方：近 14 晚的睡眠長條圖（`slpListHTML()`）。
 - 第二期（兩週校正我的最佳狀態、變化趨勢）、第三期（從日記、雁書等文字檢視驅動力是否一致）尚未開始。
+
+## 30. 今日小卡（2026-11-20）
+
+今日頁的提醒不再各自一個區塊，合成一張「今日」小卡（`todayNotesHTML()`），不自動輪播（會動的東西搶注意力、容易錯過）。依重要程度排序：
+1. 要行動的：雁書回信（`letterLine()`）、會談結束要記錄（`meetDueLines()`，附「記錄會談」按鈕）
+2. 今日小語（`todayCoach()`，現在回傳文字）
+3. 目標倒數（`examTodayHTML()`，現在回傳 `{k,t,mile}`；里程碑日用陶土橘）
+4. 一次性的「照你調整」說明（`adaptNote()`）
+預設顯示前兩則，其餘收在「還有 N 則」，展開／收起記在 `sd-tn-open`。節氣卡、早上的睡眠紀錄（有輸入欄）、小建議卡（有按鈕）仍是獨立的卡片。

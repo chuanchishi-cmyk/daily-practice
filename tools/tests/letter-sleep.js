@@ -13,13 +13,13 @@ const adv=async(min)=>{await pg.evaluate(m=>localStorage.setItem('__adv',String(
 await pg.goto('file://'+SP+'tlt.html#today');await pg.waitForTimeout(700);
 // turn on the letter page via purposes (身心照顧)
 await go('prefs');await pg.$eval('[data-act=purOpen]',e=>e.click());await pg.waitForTimeout(200);await pg.click('.purp-o[data-k=mind]');await pg.click('[data-act=purApply]');await pg.waitForTimeout(300);
-ok(await pg.evaluate(()=>!!document.querySelector('nav.rail a[href="#letter"]')),'選「身心照顧」後，選單出現雁書');
-await go('letter');
+const LON=await pg.evaluate(()=>!!document.querySelector('nav.rail a[href="#letter"]'));
+if(!LON){console.log('skip 雁書（FEATURE_LETTER 關閉中）');await adv(9*60+30);}else{await go('letter');
 await pg.fill('#ltText','最近工作很多，晚上一直睡不著，腦袋停不下來，擔心明天的報告做不完。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(400);
 ok(/1 封信在路上/.test(await pg.textContent('main')),'寄出：信在路上');
-await adv(8*60);await go('today');ok(!(await pg.$('.ltcard')),'隔天 06:10（起床前）：還沒有回信');
+await adv(8*60);await go('today');ok(!/你有一封回信/.test((await pg.evaluate(()=>document.querySelector('.todaynotes')?.textContent||''))),'隔天 06:10（起床前）：還沒有回信');
 await adv(90);await go('today');await pg.waitForTimeout(600);await go('today');
-ok(!!(await pg.$('.ltcard')),'隔天 07:40（起床後）：今日頁出現「你有一封回信」');
+ok(/你有一封回信/.test(await pg.textContent('.todaynotes')),'隔天 07:40（起床後）：今日頁出現「你有一封回信」');
 await go('letter');await pg.click('[data-act=ltOpen]');await pg.waitForTimeout(400);
 const rep=(await pg.textContent('.letter.reply .ltbody')).trim();
 ok(rep.length>=150&&/睡不著|工作很多|腦袋/.test(rep),'回信引用了信中的話（'+rep.length+' 字）：'+rep.slice(0,60)+'…');
@@ -27,6 +27,7 @@ ok(/參考《/.test(await pg.textContent('.letter.reply .ltsrc')),'回信標示�
 await pg.click('[data-act=ltBack]');await pg.waitForTimeout(200);
 await pg.fill('#ltText','我覺得好累，有時候真的不想活了。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(400);
 ok(/1925/.test(await pg.textContent('main')),'提到自傷：立刻顯示求助專線');
+}
 // sleep log in the morning
 await go('today');ok(!!(await pg.$('.slpcard')),'早上：今日頁出現「昨晚睡得好嗎？」');
 await pg.fill('#slpB','23:30');await pg.fill('#slpW','07:00');await pg.click('[data-act=slpQ][data-n="4"]');await pg.waitForTimeout(400);

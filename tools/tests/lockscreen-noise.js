@@ -1,7 +1,7 @@
 // 鎖定畫面播放／暫停控制計時器；白噪音：休息預設潮汐、專注預設不播（舊設定沿用）；用途最多 3 個；更新紀錄
 const {chromium,devices}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
 (async()=>{const srv=require('http').createServer((q,r)=>{try{const f=SP+decodeURIComponent(q.url.split('?')[0]).replace(/^\/+/,'');const d=fs.readFileSync(f);r.writeHead(200,{'Content-Type':f.endsWith('.mp3')?'audio/mpeg':'text/html; charset=utf-8'});r.end(d)}catch{r.writeHead(404);r.end()}}).listen(0);const BASE='http://127.0.0.1:'+srv.address().port+'/';const b=await chromium.launch();const errs=[];let fail=0;
-fs.copyFileSync(require('path').join(__dirname,'../../ocean.mp3'),SP+'ocean.mp3');fs.writeFileSync(SP+'tls.html','<!doctype html><meta charset=utf-8><body>'+fs.readFileSync(SRC,'utf8'));
+['ocean.mp3','summer-night.mp3','stream.mp3'].forEach(f=>fs.copyFileSync(require('path').join(__dirname,'../../'+f),SP+f));fs.writeFileSync(SP+'tls.html','<!doctype html><meta charset=utf-8><body>'+fs.readFileSync(SRC,'utf8'));
 const ok=(cond,msg)=>{console.log((cond?'ok   ':'FAIL ')+msg);if(!cond)fail++};
 const mk=async(pre)=>{const c=await b.newContext(Object.assign({},devices['iPhone 13'],{timezoneId:'Asia/Taipei'}));
   await c.addInitScript(p=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');Object.entries(p||{}).forEach(([k,v])=>localStorage.setItem(k,v));
@@ -36,10 +36,13 @@ await c.close();
 // old user who had white noise on during focus keeps it
 [c,pg]=await mk({'sd-noise-on':'true','sd-noise-k':'"insects"'});
 await pg.click('#pToggle');await pg.waitForTimeout(6000);
-ok((await pg.evaluate(()=>window.__nz.length))>0,'舊設定「專注時播蟲鳴」沿用');
+{const L=await pg.evaluate(()=>window.__nz);ok(L.length>0&&L[0]>40*44100,'舊設定「專注時播蟲鳴」沿用，改播真實錄音（'+(L[0]/44100).toFixed(0)+' 秒循環）');}
+await pg.evaluate(()=>{location.hash='prefs'});await pg.waitForTimeout(400);await pg.evaluate(()=>window.__nz=[]);
+await pg.$eval('[data-act=noiseKind][data-m=work][data-v=stream]',e=>e.click());await pg.waitForTimeout(4000);
+{const L=await pg.evaluate(()=>window.__nz);ok(L.length>0&&L[L.length-1]>40*44100,'專注時改選「鳥鳴流水」：載入並播放（'+(L.length?(L[L.length-1]/44100).toFixed(0):0)+' 秒循環）');}
 await pg.evaluate(()=>{location.hash='prefs'});await pg.waitForTimeout(500);
 const sum=await pg.evaluate(()=>[...document.querySelectorAll('details[data-fold=sound] .fsum')].map(e=>e.textContent).join(''));
-ok(/專注夜晚蟲鳴、休息潮汐/.test(sum),'設定摘要：'+sum);
+ok(/專注鳥鳴流水、休息潮汐/.test(sum),'設定摘要：'+sum);
 const log=await pg.evaluate(()=>!!document.querySelector('details[data-fold=changelog]'));ok(log,'設定裡有「更新紀錄」');
 await c.close();
 // --- purposes: max 3, no "all" ---

@@ -35,7 +35,7 @@ daily-practice/
 ├─ i18n-en.js                ← 英文翻譯（由 tools/i18n/build-i18n.py 產生）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png
 ├─ qr.png                    ← 網站 QR code（設定頁、分享視窗使用）
-├─ ocean.mp3                 ← 白噪音「潮汐」音檔（立體聲 96kbps）（claude.ai 版發佈時要用 files 一起上傳）
+├─ ocean.mp3 / summer-night.mp3 / stream.mp3 ← 白噪音音檔（真實錄音，立體聲 96kbps；claude.ai 版發佈時要用 files 一起上傳）
 ├─ docs/APP-SETTINGS.md      ← 本文件
 └─ tools/
    ├─ build.py               ← src → index.html
@@ -152,7 +152,7 @@ daily-practice/
 |---|---|---|
 | 番茄鐘（專注、休息） | 無 | `ring()`：880/660 Hz 清脆「嘀－嘟－嘀」，**重複兩次** |
 | 測驗計時（每段、全部） | 無 | `ring()`（同上）；剩 5 分、1 分鐘時 `warnTone()` 一聲＋數字閃爍 10 秒（設定 `sd-xwarn`，預設開） |
-| 白噪音（今日番茄鐘計時時） | 專注時、休息時各選一種：不播／夜晚蟲鳴／潮汐 | **休息預設潮汐、專注預設不播**（`sd-noise-b`、`sd-noise-w`；舊版 `sd-noise-on`+`sd-noise-k` 開過的人，專注時沿用原選擇）。靜心時自動停止。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；蟲鳴以物理模型即時合成（0 KB）：不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。音量 `sd-noise-v` |
+| 白噪音（今日番茄鐘計時時） | 專注時、休息時各選一種：不播／夏夜蟲鳴／鳥鳴流水／潮汐 | **休息預設潮汐、專注預設不播**（`sd-noise-b`、`sd-noise-w`；舊版 `sd-noise-on`+`sd-noise-k` 開過的人，專注時沿用原選擇）。靜心時自動停止。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；蟲鳴以物理模型即時合成（0 KB）：不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。音量 `sd-noise-v` |
 | 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒 | `yinqing(1,0)`：一聲引磬 |
 
 技術要點（iPhone 相容）：
@@ -241,7 +241,7 @@ node tools/tests/test-timer-log.js
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
 
-6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上 `{"ocean.mp3": "ocean.mp3"}`。
+6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上 `{"ocean.mp3": "ocean.mp3", "summer-night.mp3": "summer-night.mp3", "stream.mp3": "stream.mp3"}`。
 7. 提醒使用者：手機把 App 完全關掉再開，就會換到新版。
 
 注意：如果 push 被拒（遠端有別的 session 推過），先 `git pull --rebase`。若衝突在 `index.html`，把遠端的改動合回 `src/studydesk.html` 再重新 build，不要直接覆蓋。
@@ -381,3 +381,10 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 時間照實際計時累積（`T.startedAt`、`T.used`、`T.runAt`；暫停不算、+1 分鐘會算；鎖定畫面的播放、暫停也算），最後一段以排定結束時間為準，App 晚打開不會多算。
 - **今天專注**：今日頁標頭的「今天專注」與今日小語的時數＝番茄鐘＋練習計時（番茄數不變；統計頁的番茄數、專注時間仍只算番茄，練習計時另有一張卡）。
 - 顯示：目標衝刺頁計時器下方「今天 N 組・分鐘｜本週 N 組」；今日頁標頭一個小標籤（有紀錄才出現，點了到目標衝刺頁）；統計頁一張卡（日：逐筆列出；週／月：依項目分配），名稱跟著情境（測驗計時／訓練計時…）。
+
+## 26. 白噪音改用真實錄音（2026-11-19）
+
+- 合成的聲音使用者聽起來像電子音，改用**實地錄音分層混音**：同一段原始錄音取 2–3 個不同時段，各層不同遠近（低通）、左右位置、速度微調 ±1.5–3%、緩慢強弱起伏，做成約 50 秒的無縫循環（-20 dBFS、96 kbps）。製作在 `audio/ambience` 分支，來源見該分支的 `audio/ambience/CREDITS.md`。
+- `summer-night.mp3`（夏夜蟲鳴，key `insects`，沿用舊鍵讓原本選蟲鳴的人自動換成新錄音）與 `stream.mp3`（鳥鳴流水）是 App 作者自己的錄音，不需署名。
+- `NZ_FILE` 情境 → 檔名；`NZ_SEAMLESS` 已無縫循環的檔不再交叉淡化。舊的蟲鳴合成程式（`nzSynth`）保留但已不使用。
+- 待辦：海洋（海浪拍沙灘＋礁石）多層混音，素材下載受阻，等使用者提供錄音；燒柴、風聲暫不做。

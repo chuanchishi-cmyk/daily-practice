@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js）
 ```
 
 ---
@@ -141,6 +141,7 @@ daily-practice/
 | （首次使用） | 歡迎卡第 2 張 | 選擇用途（最多 3 個，`PUR_MAX`）：讀書與工作專注／準備考試比賽演出／研究寫作／身心照顧，決定預設顯示的頁面（`PURPOSES`、`cfg.purposes`）；已取消「全部都看看」，沒選到的頁面由小建議卡慢慢介紹；設定裡可「依用途重新選擇」 |
 | 每日提醒 | 設定 → 提醒 | 不靠伺服器：產生 .ics 行事曆檔（含 RRULE 重複規則與 VALARM 提醒）或 Google 日曆連結，由手機行事曆通知（`RM_DEF`、`cfg.reminders`）；目標衝刺的日期卡可匯出 D-30/14/7/3/1 與當天 |
 | 運動 | `#sport` | 可選擇顯示（預設隱藏，用途選「運動與身體」或在設定打開）。第一次進入選項目（瑜珈、健身、慢跑、單車、游泳、日行萬步）。瑜珈：序列計時（左右自動換邊、呼吸節拍圓圈、可編輯／另存序列）＋感受紀錄；健身：動作 × 組數 × 次數 × 重量、完成一組自動組間休息、顯示上次成績、同部位 48 小時提醒、整體強度、間歇計時；慢跑／單車／游泳：距離＋時間自動算配速，每週量比上週多一成以上提醒；步數：手動填、每日目標。不舒服註記後 3 天提醒休息。紀錄在 `day.sport`，不算番茄。見第 27 節 |
+| 雁書 | `#letter` | 可選擇顯示（預設隱藏；用途「身心照顧」或設定打開）。寫信 → 起床後收到回信。見第 28 節 |
 | 設定 | `#prefs` | 分組：日常使用／提醒／外觀與語言／資料與同步／分享與說明 |
 
 預設番茄設定：專注 25、短休 5、長休 15、每 4 個長休一次。
@@ -238,6 +239,7 @@ node tools/tests/top3-tomorrow.js
 node tools/tests/lockscreen-noise.js
 node tools/tests/jieqi-intro.js
 node tools/tests/sport.js
+node tools/tests/letter-sleep.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -398,3 +400,20 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 顯示：`sportVis` 記錄使用者是否打開過；沒打開過的人 `cfg()` 會把 `sport` 放進 hidden（新頁面不會突然出現在既有用戶的選單）。
 - 計時：`ST`（瑜珈序列、組間休息、間歇），每 250 ms 由 `tick()` 呼叫 `spTick()`；換體式／換回合響一聲 `bell(1)`，結束 `bell(2)`。進行中的健身訓練暫存在 sessionStorage `sd-gw`。目前只在畫面開著時計時（沒有背景排程），使用時建議開「計時時保持螢幕亮著」。
 - 文案原則：提醒而非醫療建議；不舒服時以休息為先。
+
+## 28. 雁書（2026-11-19，試跑）
+
+- 信存在寫信那天：`day.letters=[{id,t,text,due,reply,src,books,read}]`。`due`＝下一個起床時間（我的節奏的起床時間，沒有就 07:30；00:00–05:00 前寫的信，當天早上就到）。
+- 回信在起床時間過後、第一次打開今日或雁書頁時產生（`ltDeliver()`）：
+  - claude.ai 版：用 AI 小助手（`sample`）依固定指示寫 250–400 字的書信（承接 → 好書觀點 → 小行動 → 結語，署名雁書；有自傷字眼附 1925／1995），標示「由 AI 書寫」。
+  - 網站版或 AI 不可用時：主題模板（`LT_THEMES`：焦慮、拖延習慣、讀書考試、工作分心、表達溝通、意義、失去、關係、自我懷疑、迷惘；`LT_GEN` 一般）。引用信中一句 → 承接 → 一兩段書中觀點（取前兩個主題）→ 小行動 → 結語，標示「依你信裡提到的主題整理，參考《…》」。
+- 安全：寄出時偵測 `MZ_CRISIS`／`MZ_DISTRESS`，立刻顯示求助專線，不等到隔天。
+- 今日頁：有新回信時出現「你有一封回信」卡（`letterTodayHTML()`）。
+- 書庫：目前的觀點段落依各書廣為人知的核心概念改寫（原子習慣、最有生產力的一年、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、哈佛商業評論、精準表達、心流、金剛經白話講座、我可能錯了、True Love），**尚未逐頁核對原文**。下一步：從使用者雲端硬碟「閱讀書庫」讀原書，補頁碼、增加段落並核對；《故道白雲》《炎夏飄雪》《如何成為一流職場菁英》《Working Backwards》《Intentional》尚未取材。英文介面的回信內容仍為中文。
+
+## 29. 作息觀測（第一期，2026-11-19，試跑）
+
+- 早上（04:00–12:00）今日頁出現「昨晚睡得好嗎？」：入睡、起床時間（預設依我的節奏或 23:30／07:30）＋睡眠品質 1–5，存在 `day.slp={bed,wake,q}`，同時補上日記的睡眠時數（沒填過才補）。填完就消失。
+- 每週一到週三：上週記滿 4 晚以上，出現「上週的作息報告」回顧卡（`slpWeekReport()`）：平均睡眠、睡眠品質、入睡時間變動（睡眠中點標準差）、平日與週末的差距（社會時差），加一句建議。
+- 我的節奏頁上方：近 14 晚的睡眠長條圖（`slpListHTML()`）。
+- 第二期（兩週校正我的最佳狀態、變化趨勢）、第三期（從日記、雁書等文字檢視驅動力是否一致）尚未開始。

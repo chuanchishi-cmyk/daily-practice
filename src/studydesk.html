@@ -161,6 +161,15 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .gymex{padding:10px 0;border-top:1px solid var(--line)}
 .gymex:first-of-type{border-top:0}
 .gymex .chip{margin:2px 2px 2px 0}
+.ltcard{display:flex;align-items:center;gap:12px;margin:-4px 0 14px;padding:12px 16px;border-radius:var(--r);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));background:color-mix(in srgb,var(--accent) 6%,var(--surface));color:var(--ink);text-decoration:none}
+.ltcard .grow{display:flex;flex-direction:column}
+.ltseal{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--f-display);font-size:calc(17px * var(--fs,1))}
+.letter{margin-bottom:14px}
+.letter .ltbody{white-space:pre-wrap;font-family:var(--f-display);font-size:calc(15px * var(--fs,1));line-height:2;overflow-wrap:anywhere}
+.letter.reply{background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--accent) 4%,var(--surface)))}
+.ltsrc{margin:10px 0 0;font-size:calc(12px * var(--fs,1))}
+.ltrow{width:100%;text-align:left;border:0;border-top:1px solid var(--line);border-radius:0;background:none;padding:10px 2px}
+.slpcard{margin-bottom:14px}
 .t3hint{margin:8px 0 0;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -932,7 +941,7 @@ const S={};COLLS.forEach(c=>S[c]={});
 let backend='loading',base=null,dlNS=null,canWrite=true,localWhy='',unsubs=[],DBX=null,UIDX=null,IS_OWNER=false,FB={},fbUnsub=null;
 const LKEY='studydesk-v1';
 const OLD_TIMERS='[{"id":"x1","name":"閱讀單節","segs":[{"n":"閱讀","s":1800}]},{"id":"x2","name":"聽力單節","segs":[{"n":"聽力","s":1800}]},{"id":"x3","name":"寫作單節","segs":[{"n":"寫作","s":1500}]},{"id":"x4","name":"口說一題","segs":[{"n":"準備","s":15},{"n":"作答","s":45}]},{"id":"x5","name":"整場模考","segs":[{"n":"閱讀","s":1800},{"n":"聽力","s":1800},{"n":"寫作","s":1500},{"n":"口說","s":600}]}]';
-function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘'||(cn==='訂正錯題|完成練習題|練習達標次數'&&!oldCtrUsed())||!m.counters)c.counters=clone(DEF.counters);if(!m.exams||(m.exams.length===1&&m.exams[0].id==='toefl'&&!m.exams[0].date))c.exams=clone(DEF.exams);if(m.timers&&JSON.stringify(m.timers.map(t=>[t.id,t.name,t.segs]))===TOEFL_TIMERS&&exSceneRaw(m)==='exam')c.timers=clone(DEF.timers);if(!m.scale&&Object.values(S.mocks||{}).some(x=>(x.scale||'30')!=='custom'))c.scale='30';if(!m.sportVis&&!(c.hidden||[]).includes('sport'))c.hidden=(c.hidden||[]).concat('sport');if(!m.pomo){const R=myRhythm();if(R&&R.ps)c.pomo=Object.assign({},c.pomo,{work:R.ps.w,short:R.ps.s}),c._pomoAuto=true}return c}
+function cfg(){const m=S.meta.main||{};const c=Object.assign(clone(DEF),m);if(!m.tv&&JSON.stringify(m.timers||null)===OLD_TIMERS)c.timers=clone(DEF.timers);{const sn=(m.subjects||[]).map(x=>x.name).join('|');if(sn==='閱讀|聽力|口說|寫作|論文'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心'||sn==='托福閱讀|托福聽力|托福口說|托福寫作|論文|專案進度|專注靜心|運動|閱讀')c.subjects=clone(DEF.subjects);}const cn=(m.counters||[]).map(x=>x.name).join('|');if(cn==='英文單字|跟讀句數|論文字數'||cn==='英文單字|跟讀句數|整理書摘'||(cn==='訂正錯題|完成練習題|練習達標次數'&&!oldCtrUsed())||!m.counters)c.counters=clone(DEF.counters);if(!m.exams||(m.exams.length===1&&m.exams[0].id==='toefl'&&!m.exams[0].date))c.exams=clone(DEF.exams);if(m.timers&&JSON.stringify(m.timers.map(t=>[t.id,t.name,t.segs]))===TOEFL_TIMERS&&exSceneRaw(m)==='exam')c.timers=clone(DEF.timers);if(!m.scale&&Object.values(S.mocks||{}).some(x=>(x.scale||'30')!=='custom'))c.scale='30';OPT_IN.forEach(r=>{if(!(m.optIn||{})[r]&&!(c.hidden||[]).includes(r))c.hidden=(c.hidden||[]).concat(r)});if(!m.pomo){const R=myRhythm();if(R&&R.ps)c.pomo=Object.assign({},c.pomo,{work:R.ps.w,short:R.ps.s}),c._pomoAuto=true}return c}
 const exSceneRaw=m=>m.exScene||'exam';
 let _ctr={n:-1,v:false};function oldCtrUsed(){const ks=Object.keys(S.days);if(_ctr.n!==ks.length){_ctr={n:ks.length,v:ks.some(k=>{const c=S.days[k].counts||{};return c.fix||c.drill||c.hit})}}return _ctr.v}
 function day(k){return S.days[k]||{date:k,sessions:[],j:{},counts:{}}}
@@ -1025,7 +1034,7 @@ function syncBlockHTML(){
   </div>`;
 }
 let WSTEP=0;
-const PURPOSES=[['focus','讀書與工作專注','番茄鐘、月曆、統計、找出高效時段',['calendar','stats','quiz']],['goal','準備考試、比賽或演出','倒數、分段計時、紀錄與複習',['exam','calendar','stats']],['plan','研究寫作或長期計畫','把大計畫拆成階段與小步驟',['plan','calendar','stats']],['mind','身心照顧','靜心與覺察日記',['mind','journal']],['sport','運動與身體','瑜珈、健身、跑步，計時與紀錄',['sport']]];
+const PURPOSES=[['focus','讀書與工作專注','番茄鐘、月曆、統計、找出高效時段',['calendar','stats','quiz']],['goal','準備考試、比賽或演出','倒數、分段計時、紀錄與複習',['exam','calendar','stats']],['plan','研究寫作或長期計畫','把大計畫拆成階段與小步驟',['plan','calendar','stats']],['mind','身心照顧','靜心、覺察日記與雁書',['mind','journal','letter']],['sport','運動與身體','瑜珈、健身、跑步，計時與紀錄',['sport']]];
 // 最多選 3 個：選太多又會回到功能太雜；沒選到的頁面之後由小建議卡慢慢介紹，也可以在設定打開
 const PUR_MAX=3;
 let WPUR=new Set();
@@ -1127,7 +1136,8 @@ function remindHTML(){const L=rmList(),on=L.filter(r=>r.on);
 function goalIcs(e){const t=today(),n=diffDays(t,e.date),k=exKind(e.name),evs=[];
   [30,14,7,3,1].filter(d=>d<n).forEach(d=>{const day=addDays(e.date,-d),ph=exPhase(d);evs.push({uid:'goal-'+e.date+'-'+d,date:day,t:'09:00',min:15,title:`${e.name||exL('ev')} D-${d}・${phName(k,ph)}`,desc:EX_FOCUS[k][ph][0]+'：'+EX_FOCUS[k][ph][1]})});
   if(n>=0)evs.push({uid:'goal-'+e.date+'-0',date:e.date,allDay:true,title:`${e.name||exL('ev')}・就是今天`,desc:EX_FOCUS[k].p0[1]});return evs}
-function editCfg(fn){const c=clone(cfg());fn(c);c.sportVis=!(c.hidden||[]).includes('sport');save('meta','main',c)}
+const OPT_IN=['sport','letter']; // 新頁面：使用者打開過才顯示
+function editCfg(fn){const c=clone(cfg());fn(c);c.optIn=Object.fromEntries(OPT_IN.map(r=>[r,!(c.hidden||[]).includes(r)]));save('meta','main',c)}
 
 const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。',viewonly:'目前沒有雲端儲存權限，紀錄先存在這個瀏覽器。',nologin:'資料只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。',standalone:'資料存在這個瀏覽器裡。記得定期到「設定」匯出備份。'};
 let PERSIST=null;
@@ -1212,7 +1222,7 @@ applyTheme();
 function setNote(t){const n=$('#storeNote');if(n)n.textContent=t}
 
 /* ---------- routing / rendering ---------- */
-const ROUTES=['today','calendar','stats','exam','plan','journal','mind','sport','quiz','prefs'];
+const ROUTES=['today','calendar','stats','exam','plan','journal','mind','sport','letter','quiz','prefs'];
 let R='today',pendingRender=false;
 function route(){const h=location.hash.slice(1);R=h.startsWith('page-')||ROUTES.includes(h)?h:'today';pgAdding=false;render()}
 window.addEventListener('hashchange',route);
@@ -1657,7 +1667,7 @@ function tipList(){const hid=cfg().hidden||[],ss7=Array.from({length:7},(_,i)=>(
 function focusStats(keys){let mins=0,n=0,days=0;const per={};keys.forEach(k=>{const ss=day(k).sessions||[];if(ss.length)days++;ss.forEach(x=>{mins+=+x.min||0;n++;const h=new Date(x.t).getHours();const p=h<5?'深夜':h<11?'上午':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';per[p]=(per[p]||0)+(+x.min||0)})});
   const top=Object.entries(per).sort((a,b)=>b[1]-a[1])[0];let t=0,d=0;keys.forEach(k=>{const tp=(((day(k).j||{}).top3)||[]).filter(x=>x&&x.t);t+=tp.length;d+=tp.filter(x=>x.done).length});
   const med=keys.reduce((a,k)=>a+(((day(k).j||{}).practice)||[]).reduce((x,y)=>x+(+y.min||0),0),0);return {mins,n,days,top:top&&top[1]>=50?top[0]:'',t3:t?Math.round(d/t*100):null,med}}
-function reviewCard(st,t){const age=diffDays(firstUse(),t),R=myRhythm();
+function reviewCard(st,t){const sr=slpWeekReport(st,t);if(sr)return sr;const age=diffDays(firstUse(),t),R=myRhythm();
   if(age>=7&&age<=21&&!st.done.wk1){const ks=Array.from({length:7},(_,i)=>addDays(t,-i)),f=focusStats(ks);if(f.n>=5)return {id:'wk1',kind:'review',t:'日課開始認識你了',
     b:`這一週你專注了 ${fmtMin(f.mins)}${f.top?`，多半在${f.top}`:''}。`+(R?'番茄鐘的長度和提醒時間，已經照你的作息慢慢調整了。':'花十來分鐘做「我的節奏」，日課就能照你的作息，調整番茄鐘長度和提醒時間。'),btn:R?'看我的節奏':'開始了解自己',page:'quiz'}}
   const dd=+t.slice(8,10);if(dd<=7&&age>=20){const pm=addDays(t.slice(0,8)+'01',-1).slice(0,7),id='mon-'+pm;if(!st.done[id]){const n=+pm.slice(5),ks=[];for(let k=pm+'-01';k.slice(0,7)===pm;k=addDays(k,1))ks.push(k);const f=focusStats(ks);
@@ -1683,8 +1693,10 @@ function vToday(){
   const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip"${testSum([k]).min?` title="含${esc(exL('timer'))} ${fmtMin(testSum([k]).min)}"`:''}>今天專注 <b>${fmtMin(mins+testSum([k]).min)}</b></span>${(()=>{const a=testSum([k]);return a.L.length?`<a class="chip" href="#exam">${esc(exL('timer'))} <b>${a.sets}</b> 組・${fmtMin(a.min)}</a>`:''})()}</div></header>
   ${jqHTML()}
+  ${letterTodayHTML()}
   ${todayCoach()}
   ${adaptNote(clk)}
+  ${slpMorningHTML(clk)}
   ${meetDueHTML()}
   ${clk.quiet?'':tipCardHTML()}
   ${examTodayHTML()}
@@ -2413,7 +2425,7 @@ function vPrefs(){
 }
 function parseSegs(str){return str.split(/[,，、]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*?)\s*(\d+)(?::(\d{1,2}))?$/);if(!m)return null;return {n:m[1].trim()||'計時',s:(+m[2])*60+(+(m[3]||0))}}).filter(s=>s&&s.s>0)}
 
-const VIEWS={mind:vMind,today:vToday,calendar:vCalendar,stats:vStats,exam:vExam,plan:vPlan,journal:vJournal,sport:vSport,quiz:vQuiz,prefs:vPrefs};
+const VIEWS={mind:vMind,today:vToday,calendar:vCalendar,stats:vStats,exam:vExam,plan:vPlan,journal:vJournal,sport:vSport,letter:vLetter,quiz:vQuiz,prefs:vPrefs};
 
 /* ---------- actions ---------- */
 const armed=new WeakSet();
@@ -2471,7 +2483,7 @@ const A={
   purApply:()=>{if(!applyPurpose())return toast('至少選一個');closeModal();toast('已依用途調整頁面');render()},
   tipNo:el=>{const st=tipsState();st.done[el.dataset.id]='no';st.cur=null;st.quiet=today();tipsSave(st);render()},
   tipGo:el=>{const id=el.dataset.id,st=tipsState();st.done[id]='yes';st.cur=null;st.quiet=today();tipsSave(st);
-    const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||(id==='wk1'||id.startsWith('mon-')?{page:id==='wk1'?'quiz':'stats'}:{});
+    const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||(id==='wk1'||id.startsWith('slp-')?{page:'quiz'}:id.startsWith('mon-')?{page:'stats'}:{});
     if(c.page){if(!isOn(c.page))editCfg(cc=>{cc.hidden=(cc.hidden||[]).filter(r=>r!==c.page)});location.hash=c.page;return}
     const go=c.go;if(go==='exam'){location.hash='exam';return}
     if(go==='widgets'){todayEdit=true;render();return}
@@ -2569,7 +2581,7 @@ const IN={
 };
 /* ---------- share ---------- */
 const SHARE_URL=STANDALONE?location.href.split('#')[0]:'https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe';
-const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'目標衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',sport:'運動',quiz:'我的節奏',prefs:'設定'};
+const PAGE_NAMES={today:'今日',calendar:'月曆',stats:'統計',exam:'目標衝刺',plan:'計畫地圖',journal:'覺察日記',mind:'靜心',sport:'運動',letter:'雁書',quiz:'我的節奏',prefs:'設定'};
 function fbPageName(){return R.startsWith('page-')?'我的頁面':(PAGE_NAMES[R]||R)}
 function openFeedback(){
   $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fbT"><div class="box">
@@ -3130,9 +3142,10 @@ function vQuiz(){
   const res=Object.entries(S.quiz||{}).sort((a,b)=>a[1].at<b[1].at?1:-1);
   const lab=r=>r.v===3?`${r.date}・${DRV[r.top[0]].n} × ${DRV[r.top[1]].n}`:`${r.date}・舊版`;
   const head=`<header class="ph"><div><p class="eyebrow">我的節奏</p><h1>我的最佳狀態</h1></div>${res.length?`<div class="row">${res.length>1?`<select id="qzPick" data-ch="qzPick" aria-label="選擇報告">${res.map(([id,r])=>`<option value="${id}"${id===qzView?' selected':''}>${esc(lab(r))}</option>`).join('')}</select>`:''}<button data-act="qzRestart">重新測驗</button></div>`:''}</header>`;
-  if(QZ.step>0||!res.length)return head+quizScreen();
+  if(QZ.step>0)return head+quizScreen();
+  if(!res.length)return head+slpListHTML()+quizScreen();
   const id=qzView&&S.quiz[qzView]?qzView:res[0][0];
-  return head+reportHTML(id,S.quiz[id]);
+  return head+slpListHTML()+reportHTML(id,S.quiz[id]);
 }
 Object.assign(A,{
   share:openShare,
@@ -3844,13 +3857,14 @@ Object.assign(IN,{
 });
 
 /* ---------- navigation & visibility ---------- */
-const NAV=[['today','今日'],['plan','計畫地圖'],['exam','目標衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['sport','運動'],['stats','統計'],['quiz','我的節奏']];
-const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'目標衝刺：考試、比賽、演出或發表的倒數、分段計時、紀錄與複習',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',sport:'運動：瑜珈序列、健身組數與休息、跑步單車游泳、每日步數',quiz:'我的節奏：找出最佳狀態的測驗'};
+const NAV=[['today','今日'],['plan','計畫地圖'],['exam','目標衝刺'],['calendar','月曆'],['mind','靜心'],['journal','覺察日記'],['letter','雁書'],['sport','運動'],['stats','統計'],['quiz','我的節奏']];
+const OPTIONAL={calendar:'月曆：每天的專注量、行程與 Google 日曆',stats:'統計：日、週、月的圖表與週回顧',exam:'目標衝刺：考試、比賽、演出或發表的倒數、分段計時、紀錄與複習',plan:'計畫地圖：論文、研究或任何長期計畫，拆成階段與小步驟，含書摘與會談紀錄',journal:'覺察日記：意向、身心狀態、情緒覺察、回顧',mind:'靜心：計時、練習紀錄與累積',letter:'雁書：寫一封信，起床後收到回信',sport:'運動：瑜珈序列、健身組數與休息、跑步單車游泳、每日步數',quiz:'我的節奏：找出最佳狀態的測驗'};
 const isOn=r=>!(cfg().hidden||[]).includes(r);
 function navOrder(){const def=NAV.map(n=>n[0]).filter(r=>r!=='today'),o=(cfg().navOrder||[]).filter(r=>def.includes(r));return ['today'].concat(o,def.filter(r=>!o.includes(r)))}
 function navOrdered(){const m=Object.fromEntries(NAV.map(n=>[n[0],n[0]==='exam'?['exam',exPage()]:n]));return navOrder().map(r=>m[r]).filter(Boolean)}
 function navItems(){return navOrdered().filter(([r])=>r==='today'||isOn(r)).concat(Object.entries(S.pages||{}).sort((a,b)=>(a[1].at||'')<(b[1].at||'')?-1:1).map(([id,p])=>['page-'+id,p.name||'未命名頁面',true])).concat([['prefs','設定']])}
 const ICON={
+  letter:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 8l9 6 9-6"/>',
   sport:'<circle cx="13" cy="4.5" r="2"/><path d="M9 21l3-6 3 2v4M6 12l3-4h5l3 3 3-1M12 15l-2-4"/>',
   today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -4219,6 +4233,133 @@ Object.assign(C,{
   stepGoal:el=>{editCfg(c=>{c.stepGoal=Math.max(1000,+el.value||8000)});render()},
 });
 Object.assign(IN,{cdCalc:()=>{const d=+$('#cdD').value,m=+$('#cdM').value,p=$('#cdPace');if(p)p.textContent=d&&m?paceTxt(spTab,d,m):''}});
+/* ---------- 雁書：寫一封信，起床後收到回信（可選擇顯示的頁面）----------
+   信存在寫信那天 day.letters=[{id,t,text,due,reply,src,read}]；due＝下一個起床時間（我的節奏，沒有就 07:30）
+   claude.ai 版用 AI 小助手回信；網站版依信裡的主題，從書庫觀點組成回信。提到自傷時立刻給求助資訊。 */
+const LT_THEMES=[
+ {k:'calm',re:/焦慮|擔心|想太多|睡不著|失眠|緊張|壓力|不安|害怕|恐懼|煩/,a:['讀得出來，你最近心裡一直繃著。','謝謝你把這些煩惱寫下來，光是寫下來，就已經鬆開了一點。'],
+  p:[['How to Calm Your Mind','克里斯．貝利發現，讓人焦躁的常常不是事情本身，而是一整天不停的刺激：訊息、新聞、滑不完的畫面。刺激越多，心越靜不下來。平靜不是要把煩惱想清楚，而是先讓頭腦少一點輸入，它自己會慢慢沉澱。'],
+   ['我可能錯了','納提科在森林道場學到一句話：「我可能錯了。」當腦中反覆上演最壞的情況時，可以輕輕對自己說這句話。那些擔心只是念頭，不一定是事實；不必相信每一個念頭，也就不必被它一路拖著走。']],
+  act:['今天找十分鐘，把手機放到另一個房間，只做一件慢慢的事：喝杯茶、散個步，或在日課靜心三分鐘。','睡前把擔心的事寫在紙上，寫完對自己說：「明天再處理。」把它交給明天。']},
+ {k:'habit',re:/拖延|拖著|習慣|做不到|堅持|懶|三分鐘熱度|動不起來|沒辦法開始|自律/,a:['你說很難開始，這種卡住的感覺，其實很多人都有。','看得出來你對自己有期待，所以才會這麼在意。'],
+  p:[['原子習慣','詹姆斯．克利爾建議「兩分鐘法則」：把想做的事縮小到兩分鐘就能完成，例如「讀書」變成「打開書讀一頁」。重點不是那兩分鐘做了多少，而是先成為一個「會開始的人」。每天進步一點點，一年後會差很多。'],
+   ['最有生產力的一年','克里斯．貝利每天早上只問自己：今天結束時，我想完成哪三件事？事情少了，反而比較做得完。完成一件、勾掉一件，那種踏實感，會推著你做下一件。']],
+  act:['明天把最想做的那件事，縮小成兩分鐘的版本，寫進日課「今天最重要的三件事」的第一格。','下次想拖的時候，只答應自己做一個番茄鐘，時間到了就可以停。']},
+ {k:'study',re:/考試|讀書|唸書|念書|學不會|記不住|成績|複習|功課|報告寫不出/,a:['準備考試的日子，真的很辛苦。','你這麼努力，卻還是覺得不夠，這份焦急我懂。'],
+  p:[['大腦喜歡這樣學','芭芭拉．歐克莉說，大腦有兩種模式：專注的時候在用力，放鬆、散步、洗澡時則在背後默默整理。卡住的時候，起身走一走並不是偷懶，而是讓另一種模式接手。很多解法，是在休息後才突然想通的。'],
+   ['超速學習','史考特．楊發現，最有效的學習是「直接做」和「主動回想」：與其反覆看筆記，不如闔上書，試著自己寫出來或做題目。答錯也沒關係，那正是記憶被加深的時候。']],
+  act:['明天讀完一段，先闔上書，用一分鐘寫下記得的重點，再打開對照。','每讀 25 分鐘，就起來走五分鐘，讓頭腦在背後整理。']},
+ {k:'work',re:/分心|效率|忙|工作|專注不了|手機|加班|做不完|事情太多|主管|同事/,a:['事情一件接一件，連喘口氣的時間都沒有，真的很累。','你一直在撐著，這份辛苦值得被看見。'],
+  p:[['Hyperfocus','克里斯．貝利把注意力比喻成一個小小的空間，一次只放得下少數幾件事。手機、通知、同時開著的工作，都在搶這個空間。刻意一次只做一件事，不是做得比較少，而是讓每一件都做得比較好。'],
+   ['哈佛商業評論最有影響力的30篇文章','書裡〈管理你的精力，而不是時間〉提到：時間有限，但精力可以補充。工作一段時間就真正停下來休息，比一直硬撐更有效率；忙的時候，更要照顧好身體和心情。']],
+  act:['明天第一個番茄鐘開始前，把手機調成勿擾，只開一個視窗。','今天下班前，花兩分鐘寫下明天的三件事，讓腦袋可以下班。']},
+ {k:'voice',re:/表達|說不清|開會|簡報|被否定|溝通|講話|說服|提案|被罵/,a:['想說的話說不出來，或說了沒被聽懂，那種挫折很真實。','你在意別人怎麼看，也代表你很認真看待這件事。'],
+  p:[['精準表達','高田貴久提醒，表達時先講結論，再說理由。對方最想知道的是「所以呢？」先回答這個問題，後面的細節才聽得進去。說得清楚，不靠口才，而是先想清楚：對方關心的是什麼？'],
+   ['我可能錯了','被否定的時候，可以先停一下，對自己說：「我可能錯了，對方也可能錯了。」不急著辯解，先好奇對方在意什麼。很多衝突，是在願意多聽一句之後才化解的。']],
+  act:['下次開口前，先用一句話寫下結論：「我希望……，因為……。」','把那次被否定的經驗寫進日記，下面再寫一句：「下次我可以先問……」。']},
+ {k:'meaning',re:/無聊|沒意義|提不起勁|空虛|沒動力|麻木|不知道為什麼要|厭倦/,a:['提不起勁的日子，連自己都覺得陌生吧。','你願意停下來問「為什麼」，這本身就很珍貴。'],
+  p:[['心流','契克森米哈伊研究發現，人最投入、最滿足的時刻，常常出現在「有一點挑戰，但努力一下做得到」的時候。太簡單會無聊，太難會焦慮。提不起勁，有時只是挑戰和能力沒有對上。'],
+   ['心流','他也發現，有清楚的小目標、做了馬上看得到回饋的事，最容易讓人進入狀態。不必一下子找到人生的意義，先找一件今天可以全心投入的小事。']],
+  act:['挑一件稍微有點難、但努力一下做得到的小事，今天用一個番茄鐘做它。','睡前寫下今天有一點點投入的時刻，哪怕只有五分鐘。']},
+ {k:'loss',re:/失去|分手|離開|放不下|過世|遺憾|後悔|捨不得|走了|離婚/,a:['讀到這裡，我很想先陪你安靜一下。失去，真的很痛。','放不下，是因為曾經很在乎。'],
+  p:[['金剛經白話講座','《金剛經》說：「應無所住而生其心。」王思迅解釋，意思不是要我們不在乎，而是心不被任何一件事綁住。可以想念，可以難過，但不必困在同一個地方。心可以帶著這份在乎，慢慢往前走。'],
+   ['我可能錯了','納提科說，放手不是把重要的東西丟掉，而是鬆開緊握的手。緊握的時候，手裡什麼也放不進來；稍微鬆開，生命才有空間帶來新的東西。悲傷不需要被趕走，它會在被好好感受之後，慢慢變輕。']],
+  act:['今天不必勉強自己好起來。寫幾句話給那個人或那段時光，寫完收起來。','找一個信任的人，說說你在想念的事。']},
+ {k:'love',re:/家人|朋友|另一半|伴侶|吵架|關係|孤單|寂寞|爸|媽|孩子|男友|女友/,a:['和在乎的人之間卡住，心裡最難受。','覺得孤單的時候，連一句話都特別重。'],
+  p:[['True Love','一行禪師說，愛一個人最好的禮物，是你的「在場」。真正停下來，全心聽對方說話，不急著給建議。他教了一句話：「親愛的，我在這裡陪你。」很多時候，這比任何道理都有用。'],
+   ['True Love','他也說，當自己受苦時，可以對親近的人說：「我很難受，請幫幫我。」承認自己需要幫助，不是軟弱，而是信任。']],
+  act:['今天找一個時間，放下手機，好好聽一個人說十分鐘的話。','如果還不想開口，先在日記裡寫下你想對他說的話。']},
+ {k:'doubt',re:/自卑|不夠好|比較|失敗|沒用|自責|怪自己|差勁|配不上|丟臉/,a:['你對自己好嚴格。如果是朋友這樣說自己，你會怎麼回應他？','讀得出來，你很努力了，卻還是覺得不夠。'],
+  p:[['原子習慣','詹姆斯．克利爾說，每天進步百分之一，一年後會是現在的三十七倍；每天退步百分之一，則會慢慢歸零。重點不在今天的成績，而在你走的方向。你現在願意寫這封信，就是在往前走。'],
+   ['我可能錯了','納提科說，我們腦中那個嚴厲的聲音，常常不是事實，只是習慣。可以試著聽它說完，然後對自己說：「我可能錯了。」不必馬上相信它。']],
+  act:['今天睡前，在日記「今天做到的事」寫下三件，再小都算。','下次腦中又冒出「我不夠好」時，試著把它改寫成「我正在學」。']},
+ {k:'lost',re:/迷惘|方向|不知道|選擇|未來|人生|該不該|猶豫|要不要/,a:['站在路口不知道往哪走，真的會很不安。','願意好好想清楚，就是對自己負責。'],
+  p:[['心流','契克森米哈伊說，方向不一定要先想清楚才出發；很多時候，是在投入做事的過程中，才慢慢知道自己要什麼。先往一個方向走一小步，看看感覺如何，再調整也來得及。'],
+   ['我可能錯了','納提科辭去高薪工作去當出家人，十七年後又回到世俗。他說，人生的轉彎很少是一次想好的。允許自己走一步看一步，也允許自己改變主意。']],
+  act:['在紙上寫下兩個選項，各寫三個「如果選它，一年後的我會……」。','用日課的「計畫地圖」，把其中一個方向拆成這週就能做的一小步。']},
+];
+const LT_GEN={a:['謝謝你寫信來。讀著讀著，好像也看見了你最近的日子。','收到你的信了，謝謝你願意說這些。'],
+  p:[['How to Calm Your Mind','克里斯．貝利說，平靜和效率並不衝突；心比較穩的時候，做事反而更專注。生活忙亂時，留一點空白給自己，不是浪費時間。'],
+   ['最有生產力的一年','每天只選三件最重要的事，做完就好。日子不必塞滿，踏實地完成幾件，比匆忙地趕很多件更讓人安心。']],
+  act:['今天給自己一個小小的停頓：靜心三分鐘，或出去走一走。','今晚寫下明天的三件事，然後好好睡一覺。']};
+const LT_END=['慢慢來，我們明天見。','不急，一步一步就好。','照顧好自己，也記得你並不孤單。','願你今天有一點點輕鬆。'];
+function ltPick(arr,seed){return arr[Math.abs(seed)%arr.length]}
+function ltSeed(s){let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))|0;return h}
+function ltQuote(text,re){const ss=text.split(/[。！？!?\n]/).map(x=>x.trim()).filter(Boolean);let s=(re&&ss.find(x=>re.test(x)))||ss[0]||'';s=s.replace(/^[，、\s]+/,'');return s.length>22?s.slice(0,22)+'…':s}
+function ltTemplate(text,seed){const th=LT_THEMES.filter(t=>t.re.test(text)).slice(0,2),t0=th[0]||LT_GEN,q=ltQuote(text,th[0]&&th[0].re);
+  const p1=ltPick(t0.p,seed),p2=th[1]?ltPick(th[1].p,seed+1):null,books=[...new Set([p1[0]].concat(p2?[p2[0]]:[]))];
+  const body=[(q?`你在信裡說：「${q}」`:'')+ltPick(t0.a,seed),p1[1]+(p2&&p2[0]!==p1[0]?'\n\n'+p2[1]:''),ltPick(t0.act,seed+2)+ltPick(LT_END,seed+3)].join('\n\n');
+  return {reply:body,src:'tpl',books}}
+function ltDue(){const R=myRhythm(),w=R&&R.wake!=null?R.wake:450,n=new Date(),m=n.getHours()*60+n.getMinutes(),d=new Date(n);if(!(m<w&&m<300))d.setDate(d.getDate()+1);d.setHours(Math.floor(w/60),w%60,0,0);return d.toISOString()}
+function lettersAll(){const L=[];Object.keys(S.days).forEach(k=>(day(k).letters||[]).forEach(x=>L.push(Object.assign({k},x))));return L.sort((a,b)=>a.t<b.t?1:-1)}
+function ltArrived(x){return x.due<=new Date().toISOString()}
+let LT_BUSY=false;
+async function ltDeliver(){if(LT_BUSY)return;const due=lettersAll().filter(x=>!x.reply&&ltArrived(x));if(!due.length)return;LT_BUSY=true;
+  try{let sample=null;try{sample=window.claude&&claude.use?await claude.use('sample'):null}catch{}
+    for(const x of due){let r=null;
+      if(sample){try{const res=await sample(`你是「雁書」，一位溫和、真誠的筆友。以下是一封使用者在前一天寫來的信。請用繁體中文寫一封回信：
+- 250–400 字，書信語氣，不用條列、不用標題。
+- 第一段：引用信中的一兩個詞，讓對方感覺被讀到，先同理。
+- 第二段：從一本好書的觀點換個角度（可參考：原子習慣、心流、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、我可能錯了、金剛經白話講座、True Love、精準表達），用白話說，不說教。
+- 第三段：一個今天就做得到的小行動。
+- 最後一句溫暖的結語，署名「雁書」。
+- 不做診斷、不給醫療建議。若信中有自傷或想死的念頭，溫和地鼓勵對方聯絡信任的人，並附上台灣安心專線 1925、生命線 1995（24 小時）。
+只輸出回信內容。
+
+使用者的信：
+${x.text}`,{modelTier:'default'});if(res&&res.text&&res.text.trim().length>80)r={reply:res.text.trim(),src:'ai',books:[]}}catch{}}
+      if(!r)r=ltTemplate(x.text,ltSeed(x.id));
+      editDay(x.k,d=>{const y=(d.letters||[]).find(z=>z.id===x.id);if(y)Object.assign(y,r)})}}
+  finally{LT_BUSY=false}softRender()}
+function ltUnread(){return lettersAll().filter(x=>x.reply&&!x.read&&ltArrived(x))}
+function letterTodayHTML(){if(!isOn('letter'))return '';const u=ltUnread();if(!u.length){if(lettersAll().some(x=>!x.reply&&ltArrived(x)))setTimeout(ltDeliver,50);return ''}
+  return `<a class="ltcard" href="#letter"><span class="ltseal" aria-hidden="true">雁</span><span class="grow"><b>你有一封回信</b><span class="muted">${fmtMD(u[0].k)} 寫的信，雁書回覆了。</span></span><span class="muted">→</span></a>`}
+let ltOpen=null,ltSafety=false;
+function vLetter(){if(lettersAll().some(x=>!x.reply&&ltArrived(x)))setTimeout(ltDeliver,50);
+  const L=lettersAll(),wait=L.filter(x=>!ltArrived(x)),R=myRhythm(),w=R&&R.wake!=null?R.wake:450;
+  const view=ltOpen&&L.find(x=>x.id===ltOpen);
+  if(view){if(view.reply&&!view.read)setTimeout(()=>editDay(view.k,d=>{const y=(d.letters||[]).find(z=>z.id===view.id);if(y)y.read=true}),400);
+    return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>${fmtMD(view.k)} 的信</h1></div><button class="ghost" data-act="ltBack">← 信匣</button></header>
+    <section class="card letter mine"><p class="muted">你寫的</p><div class="ltbody">${esc(view.text)}</div></section>
+    ${view.reply?`<section class="card letter reply"><p class="muted">雁書的回信</p><div class="ltbody">${esc(view.reply)}</div>${view.src==='ai'?'<p class="muted ltsrc">這封回信由 AI 書寫。</p>':`<p class="muted ltsrc">依你信裡提到的主題整理${(view.books||[]).length?'，參考《'+view.books.join('》《')+'》':''}。</p>`}</section>`
+      :`<section class="card letter"><p class="empty">信還在路上，${ltArrived(view)?'馬上就到':'明天起床後會收到回信'}。</p></section>`}`}
+  return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>寫一封信</h1></div></header>
+  ${ltSafety?`<div class="mzfb care" style="margin-bottom:14px"><b>先照顧好自己</b><p>謝謝你願意寫下來。你現在的感受很重要，請不要一個人承受。如果有傷害自己的念頭，請馬上聯絡信任的人，或撥打安心專線 1925、生命線 1995（24 小時）。</p></div>`:''}
+  <section class="card"><p class="muted" style="margin-top:0">寫下最近的心事、煩惱，或任何想說的話。信寄出後，明天${hm(w)}起床後會收到回信。</p>
+    <textarea id="ltText" rows="8" placeholder="例：最近工作很多，晚上總是睡不好，腦袋一直在想明天的事……"></textarea>
+    <div class="row sb" style="margin-top:8px"><span class="muted">信只存在你自己的紀錄裡。</span><button class="pri" data-act="ltSend">寄出</button></div></section>
+  ${wait.length?`<p class="muted" style="margin:12px 2px">有 ${wait.length} 封信在路上。</p>`:''}
+  <section class="card" style="margin-top:16px"><h2>信匣</h2>${L.length?`<div class="list">${L.map(x=>`<button class="li ltrow" data-act="ltOpen" data-id="${x.id}"><span class="num muted" style="flex:none">${fmtMD(x.k)}</span><span class="grow">${esc(x.text.slice(0,30))}${x.text.length>30?'…':''}</span>${x.reply?(x.read?'<span class="muted">已讀</span>':'<span class="pill good">新回信</span>'):'<span class="muted">在路上</span>'}</button>`).join('')}</div>`:'<p class="empty">還沒有信。</p>'}</section>`}
+Object.assign(A,{
+  ltSend:()=>{const t=$('#ltText').value.trim();if(t.length<5)return toast('多寫幾句吧');ltSafety=MZ_CRISIS.test(t)||MZ_DISTRESS.test(t);editDay(today(),d=>{d.letters=d.letters||[];d.letters.push({id:rid(),t:new Date().toISOString(),text:t,due:ltDue()})});toast('信寄出了，起床後會收到回信');render()},
+  ltOpen:el=>{ltOpen=el.dataset.id;render()},
+  ltBack:()=>{ltOpen=null;render()},
+});
+
+/* ---------- 作息觀測（第一期）：早上記一下昨晚的睡眠，每週一給作息報告 ---------- */
+const hm2m=s=>{const m=/^(\d{1,2}):(\d{2})/.exec(s||'');return m?(+m[1])*60+(+m[2]):null};
+function slpDur(x){const b=hm2m(x.bed),w=hm2m(x.wake);if(b==null||w==null)return null;let d=w-b;if(d<=0)d+=1440;return d}
+function slpMid(x){const b=hm2m(x.bed),d=slpDur(x);if(d==null)return null;let m=b+d/2;if(b<720)m+=1440;return m} // 以前一天中午為 0 點的分鐘數
+function slpMorningHTML(clk){const k=today(),x=day(k).slp;if(x&&x.wake)return '';if(clk.m<240||clk.m>=12*60)return '';
+  const R=myRhythm(),bed=R&&R.sleep!=null?R.sleep:1410,wk=R&&R.wake!=null?R.wake:450;
+  return `<section class="card slpcard"><h2>昨晚睡得好嗎？ <span class="muted">花 10 秒記一下，日課會更懂你的作息</span></h2>
+  <div class="row" style="gap:10px;align-items:flex-end"><label class="f">幾點睡著<input type="time" id="slpB" value="${hm(bed)}"></label><label class="f">幾點起床<input type="time" id="slpW" value="${hm(wk)}"></label>
+  <div><span class="muted" style="display:block;font-size:calc(12px * var(--fs,1))">睡得如何（1 很差，5 很好）</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="slpQ" data-n="${n}">${n}</button>`).join('')}</div></div></div></section>`}
+function slpWeekReport(st,t){const ws=weekStart(t),id='slp-'+ws;if(st.done[id])return null;const dow=diffDays(ws,t);if(dow>2)return null;
+  const ks=Array.from({length:7},(_,i)=>addDays(ws,i-7)),L=ks.map(k=>Object.assign({k},day(k).slp||{})).filter(x=>slpDur(x)!=null);if(L.length<4)return null;
+  const avg=L.reduce((a,x)=>a+slpDur(x),0)/L.length,mids=L.map(slpMid),mean=mids.reduce((a,b)=>a+b,0)/mids.length,sd=Math.sqrt(mids.reduce((a,b)=>a+(b-mean)**2,0)/mids.length);
+  const wd=L.filter(x=>{const d=parseD(x.k).getDay();return d>=1&&d<=4}),we=L.filter(x=>{const d=parseD(x.k).getDay();return d===5||d===6}); // 週五、六晚上
+  const mid=a=>a.length?a.map(slpMid).reduce((p,q)=>p+q,0)/a.length:null,sj=wd.length&&we.length?Math.abs(mid(we)-mid(wd))/60:0,q=L.filter(x=>x.q).map(x=>x.q),qa=q.length?q.reduce((a,b)=>a+b,0)/q.length:null;
+  const tip=avg<6.5*60?'睡眠偏少，這週試著提早 20 分鐘上床。':sd>60?'每天睡覺的時間差距比較大，固定起床時間，是讓作息穩下來最簡單的方法。':sj>=1?`假日和平日的作息差了約 ${fmtN(sj)} 小時，像是每週都在跨時區，週末試著別睡太晚。`:'作息很穩定，繼續保持。';
+  return {id,kind:'review',t:'上週的作息報告',b:`記了 ${L.length} 晚，平均睡 ${fmtN(avg/60)} 小時${qa?`，睡眠品質 ${fmtN(qa)} 分`:''}；入睡時間的變動約 ${Math.round(sd)} 分鐘。${tip}`,btn:'看我的節奏',page:'quiz'}}
+Object.assign(A,{
+  slpQ:el=>{const b=$('#slpB').value,w=$('#slpW').value;if(!b||!w)return toast('填一下時間');const x={bed:b,wake:w,q:+el.dataset.n},d=slpDur(x);
+    editDay(today(),dd=>{dd.slp=x;if(dd.j.sleep==null&&d)dd.j.sleep=Math.round(d/30)/2});toast(`記下了：睡了約 ${fmtN(d/60)} 小時`);render()},
+});
+function slpListHTML(){const ks=Array.from({length:14},(_,i)=>addDays(today(),-13+i)),L=ks.map(k=>Object.assign({k},day(k).slp||{}));if(!L.some(x=>slpDur(x)!=null))return '';
+  const rows=ks.map((k,i)=>({key:k,label:String(parseD(k).getDate()),parts:[{c:3,v:Math.round((slpDur(L[i])||0)/6)/10,n:'小時'}]}));
+  return `<section class="card" style="margin-bottom:16px"><h2>作息觀測 <span class="muted">近 14 晚的睡眠</span></h2>${stackBars(rows,{h:130,unit:'時',minMax:9,marker:today()})}
+    <p class="muted" style="margin:6px 0 0">每天早上在「今日」記一下昨晚的睡眠，每週一會收到作息報告。</p></section>`}
 Object.assign(A,{
   pgNewOpen:openNewPage,
   pgNew:el=>newPage(el.dataset.t),

@@ -138,6 +138,15 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .cr .grow{display:block;overflow-wrap:anywhere}
 .cr .grow::first-letter{color:var(--muted)}
 .cr .row{gap:4px;flex-wrap:wrap;margin-top:4px}
+.jq{display:flex;align-items:center;gap:14px;margin:-4px 0 14px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(100deg,color-mix(in srgb,var(--surface) 70%,var(--bg)),var(--bg));border:1px solid var(--line)}
+.jqart{width:88px;height:88px;object-fit:contain;flex:none;mix-blend-mode:multiply}
+:root[data-theme="dark"] .jqart{mix-blend-mode:normal;opacity:.85}
+.jqseal{flex:none;display:grid;place-items:center;width:46px;height:46px;border:1.5px solid color-mix(in srgb,var(--accent) 70%,transparent);border-radius:6px;color:var(--accent);font-family:var(--f-display);font-size:calc(14px * var(--fs,1));letter-spacing:.1em;writing-mode:vertical-rl;line-height:1.1;opacity:.85}
+.jqt{min-width:0}
+.jqh{margin:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.jqh b{font-family:var(--f-display);font-size:calc(17px * var(--fs,1));letter-spacing:.12em}
+.jqh span{font-size:calc(12px * var(--fs,1));color:var(--muted);letter-spacing:.06em}
+.jql{margin:3px 0 0;font-family:var(--f-display);font-size:calc(13.5px * var(--fs,1));line-height:1.7;color:color-mix(in srgb,var(--ink) 85%,var(--muted))}
 .adapt{margin:-6px 2px 14px;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 .adapt::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--focus);margin-right:8px;vertical-align:2px;opacity:.7}
 .t3hint{margin:8px 0 0;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
@@ -517,6 +526,8 @@ main .grid2+.setgrp{margin-top:26px}
 .addwid:hover{background:var(--sunk)}
 .tipcard{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:12px 16px;border:1px solid var(--line);border-left:3px solid var(--focus);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);animation:foldin .3s ease}
 .tipcard.isnew{border-left-color:var(--accent)}
+.tipcard.isrev{border-left-color:#c9a35a}
+.tipcard.isrev b{font-family:var(--f-display);letter-spacing:.04em}
 .tipcard .grow{flex:1 1 240px;min-width:0}
 .tipcard p{margin:3px 0 0;font-size:calc(13px * var(--fs,1))}
 .tipact{display:flex;gap:6px;flex:none}
@@ -1012,11 +1023,11 @@ function applyPurpose(){if(!WPUR.size)return false;const all=Object.keys(OPTIONA
   editCfg(c=>{c.hidden=all.filter(r=>!on.has(r));c.purposes=[...WPUR]});return true}
 function openPurpose(){WPUR=new Set((cfg().purposes||[]).filter(k=>PURPOSES.some(x=>x[0]===k)));$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="puT"><div class="box"><h2 id="puT">你想用日課做什麼？</h2><p class="muted" style="margin-top:0">最多選 ${PUR_MAX} 個。會打開對應的頁面，其他的先藏起來（資料都會保留），之後隨時可以再調整。</p>${purposeChips()}<div class="row sb" style="margin-top:14px"><button class="ghost" data-act="close">取消</button><button class="pri" data-act="purApply">套用</button></div></div></div>`}
 function WELCOME(){
-  const W=[['歡迎來到日課','每天一點，日積月累。這是一個陪你專注、推進長期計畫、照顧身心的練習空間。接下來用幾張卡片，帶你認識最重要的用法。'],['你想用日課做什麼？','選最想先開始的，最多 3 個。我們先打開對應的頁面，其他的之後會慢慢介紹，也隨時能在「設定」打開。','purpose']];
-  W.push(['每天從「今日」開始','寫下今天最重要的三件事，按下番茄鐘開始專注。暫停時可以記下停在哪裡；冒出雜念就丟進「雜念停車場」。每段結束花十秒記下做了什麼，月曆和統計會自動累積。']);
-  if(isOn('plan'))W.push(['計畫地圖：把大計畫拆小','建立計畫後（論文、研究、考證照、作品集都可以），會依完成日排好階段和小步驟，每天只要做「最小的一步」。「會談」可以預約指導教授或主管（直接在 Google 日曆確認後送出），會談結束後自動跳出紀錄表，對方的建議會變成待辦。']);
-  if(isOn('quiz'))W.push(['找出你的高效時段','「我的節奏」用大約 12 分鐘的問答，找出你一天中的精力高峰和低谷，以及最能推動你的動力，排出建議的一天。可以分段做，每段完成都會先給你結果。']);
-  W.push(['打造你自己的日課','到「設定」可以決定要顯示哪些頁面（用不到的先藏起來，資料都會保留），也能調整字體大小、畫面縮放、鈴聲音量，以及螢幕關掉時是否仍要響鈴。']);
+  // 主軸：日課會慢慢認識你，陪你找到最佳狀態——平靜地做事，踏實地累積（專注・覺察・節奏・累積）
+  const W=[['歡迎來到日課','每天一點，日積月累。日課會慢慢認識你，陪你找到自己的最佳狀態：平靜地做事，踏實地累積。'],['你想用日課做什麼？','選最想先開始的，最多 3 個。我們先打開對應的頁面，其他的之後會慢慢介紹，也隨時能在「設定」打開。','purpose']];
+  W.push(['專注：每天一點就好','寫下今天最重要的三件事，按下番茄鐘開始。每段結束花十秒記下做了什麼，一天天累積下來，看得見自己走了多遠。']);
+  W.push(['覺察：回到平靜','累了就靜心幾分鐘；晚上寫幾句日記，排好明天的三件事。慢慢會看見自己的情緒和節奏，心也比較安定。']);
+  W.push(['節奏：越用越懂你','你的作息、精神好的時段，日課都會記在心上。番茄鐘的長度、提醒的時間，會慢慢照你的習慣調整；你改了哪裡，就以你的為準。']);
   if(!STANDALONE)W.push(['你的紀錄很安全','紀錄存在你自己的私人空間，換裝置登入同一個帳號就能接著用。分享這個頁面給別人，他們也看不到你的資料。']);
   else if(gdAvail())W.push(['資料保存與同步','紀錄先存在這台裝置。到「設定 → 資料保護與同步」用 Google 帳號登入，手機和電腦就會自動同步，也等於隨時有一份雲端備份。建議把日課加到手機主畫面使用。']);
   else W.push(['資料存在這台裝置','紀錄只存在這台裝置的瀏覽器，不會上傳。建議把日課加到手機主畫面使用，並到「設定 → 資料保護」每週備份一次，可以直接存到雲端硬碟。']);
@@ -1461,6 +1472,39 @@ function top3HTML(k){
   return [0,1,2].map(i=>{const it=t[i]||{};return `<div class="t3${it.done?' done':''}"><input type="checkbox" id="t3c${k}${i}" data-ch="top3done" data-k="${k}" data-i="${i}" ${it.done?'checked':''} aria-label="完成第 ${i+1} 件"><input type="text" id="t3t${k}${i}" data-in="top3" data-k="${k}" data-i="${i}" value="${esc(it.t)}" placeholder="${(fut?['明天最重要的一件事','第二件','第三件']:['最重要的一件事','第二件','第三件'])[i]}">${it.c&&it.t?`<span class="t3c" title="已順延 ${it.c} 次">↻${it.c}</span>`:''}</div>`}).join('')
     +(long&&!fut?`<p class="t3hint">「${esc(long.t)}」已經延了 ${long.c} 天，要不要拆成更小的一步，或換個時間做？</p>`:'');
 }
+/* ---------- 二十四節氣：只在每個節氣開始的前 3 天出現，之後回到平常的樣子 ---------- */
+// [節氣, 代表植物, 意境, 作息小語]（順序從小寒開始；日期公式適用 2001–2099，誤差至多一天）
+const JQ=[
+ ['小寒','竹','虛心、堅韌','一年最冷的時候，早上起床先暖暖身，再開始第一件事。'],
+ ['大寒','梅花','迎春、不屈','冬天快走到盡頭，保持規律的作息，把力氣留給春天。'],
+ ['立春','梅花','報春、堅韌','新的節奏開始了，挑一件小事，今天就起步。'],
+ ['雨水','杏花','春雨、滋養','春雨細細的，慢慢累積就好，不必急著看到成果。'],
+ ['驚蟄','油菜花','蘇醒、生機','萬物醒來，身體也開始活絡，起來走一走再坐下來專注。'],
+ ['春分','桃花','春盛、爛漫','晝夜一樣長，也看看自己的工作和休息，是不是平衡。'],
+ ['清明','柳枝','清新、依依','天清氣明，適合整理思緒，把擱著的事寫下來。'],
+ ['穀雨','牡丹','雨潤、繁盛','春天的最後一個節氣，把開始的事情好好收個尾。'],
+ ['立夏','荷花','初夏、清雅','天亮得早，可以把最需要專注的事，排在早上。'],
+ ['小滿','鳶尾','生長、充盈','小滿是剛剛好，不求全滿，做到七八分也很好。'],
+ ['芒種','麥穗','耕耘、成熟','忙碌的時節，一次只做一件事，做完再換下一件。'],
+ ['夏至','向日葵','日光、盛陽','白天最長的一天，午後容易疲倦，留一段時間休息。'],
+ ['小暑','梔子花','清芬、夏意','天氣漸熱，專注的時間短一點也沒關係，記得喝水。'],
+ ['大暑','石榴花','熱烈、豐饒','最熱的時候，把難的事放在清晨或傍晚涼快時做。'],
+ ['立秋','菊花','高潔、清秋','秋天開始了，回頭看看這半年，想收穫什麼。'],
+ ['處暑','木槿','夏盡、秋始','暑氣漸退，作息可以慢慢調回規律。'],
+ ['白露','桂花','秋香、清露','早晚轉涼，睡前多留一點安靜的時間給自己。'],
+ ['秋分','楓葉','漸紅、轉化','晝夜又一樣長了，適合重新整理目標和節奏。'],
+ ['寒露','蘆葦','秋深、蕭瑟','秋意漸深，心容易往內收，靜心幾分鐘會很舒服。'],
+ ['霜降','山茶','耐寒、含蓄','天冷了，早上給自己多一點暖身的時間。'],
+ ['立冬','水仙','清雅、潔淨','冬天開始，萬物收藏，可以把力氣集中在最重要的事。'],
+ ['小雪','臘梅','凌寒、幽香','天黑得早，晚上可以早點收尾，把最重要的事放在白天。'],
+ ['大雪','松枝','堅貞、長青','寒冷的日子，穩穩地維持日常，就是一種力量。'],
+ ['冬至','冬青','常綠、守候','一年中夜最長的一天，好好休息，陽氣從今天開始回升。']];
+const JQ_C=[5.4055,20.12,3.87,18.73,5.63,20.646,4.81,20.1,5.52,21.04,5.678,21.37,7.108,22.83,7.5,23.13,7.646,23.042,8.318,23.438,7.438,22.36,7.18,21.94];
+const JQ_IMG={}; // 節氣名 → 插畫檔（例：'小雪':'art/jq-xiaoxue.webp'），沒有圖時顯示文字版
+function jqDate(y,i){const Y=y%100,L=i<4?Math.floor((Y-1)/4):Math.floor(Y/4);return y+'-'+pad(Math.floor(i/2)+1)+'-'+pad(Math.floor(Y*0.2422+JQ_C[i])-L)}
+function jqNow(k){const y=+k.slice(0,4);for(const yy of [y,y-1])for(let i=23;i>=0;i--){const d=jqDate(yy,i);if(d<=k)return {i,d,n:diffDays(d,k),j:JQ[i]}}return null}
+function jqHTML(){const k=today(),q=jqNow(k);if(!q||q.n>2)return '';const [nm,pl,yi,line]=q.j,img=JQ_IMG[nm];
+  return `<section class="jq" aria-label="節氣：${nm}">${img?`<img class="jqart" src="${img}" alt="${pl}" loading="lazy">`:`<span class="jqseal" aria-hidden="true">${nm}</span>`}<div class="jqt"><p class="jqh"><b>${nm}</b><span>${pl}・${yi}</span></p><p class="jql">${esc(line)}</p></div></section>`}
 /* ---------- time of day: follows the person's own sleep time (My Rhythm); without it, a typical adult day ---------- */
 const BED_DEF=1410,WAKE_DEF=450; // 23:30 睡、07:30 起
 function dayClock(){const R=myRhythm(),b=R&&R.sleep!=null?R.sleep:BED_DEF,wake=R&&R.wake!=null?R.wake:WAKE_DEF,bed=b<720?b+1440:b,d=new Date(),m=d.getHours()*60+d.getMinutes(),m2=m<720?m+1440:m;
@@ -1583,23 +1627,36 @@ function tipList(){const hid=cfg().hidden||[],ss7=Array.from({length:7},(_,i)=>(
    {id:'nzbreak',ok:firstUse()<'2026-11-19'&&allSs>=3,t:'休息時會播放潮汐聲',b:'番茄鐘休息時，預設會輕輕播放潮汐聲，幫頭腦放鬆。不需要的話，可以在設定裡關掉，也能改成專注時播放。',btn:'聲音設定',go:'sound'},
    {id:'scene',ok:isOn('exam')&&!cfg().exScene,t:'目標衝刺不只用在考試',b:'比賽、演出、發表也能用，選好情境後，用語、每日提醒和計時項目會一起換。',btn:'去選情境',go:'exam'},
    {id:'nav',ok:age>=7&&hid.length>0&&!(cfg().navOrder||[]).length,t:'選單可以照你的習慣調整',b:'在「設定 → 要顯示哪些頁面」打開其他頁面，或調整選單順序。',btn:'去設定',go:'pages'}].filter(x=>x.ok)}
+/* 回顧卡：第 7 天「日課開始認識你」、每月初「這個月的你」 */
+function focusStats(keys){let mins=0,n=0,days=0;const per={};keys.forEach(k=>{const ss=day(k).sessions||[];if(ss.length)days++;ss.forEach(x=>{mins+=+x.min||0;n++;const h=new Date(x.t).getHours();const p=h<5?'深夜':h<11?'上午':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';per[p]=(per[p]||0)+(+x.min||0)})});
+  const top=Object.entries(per).sort((a,b)=>b[1]-a[1])[0];let t=0,d=0;keys.forEach(k=>{const tp=(((day(k).j||{}).top3)||[]).filter(x=>x&&x.t);t+=tp.length;d+=tp.filter(x=>x.done).length});
+  const med=keys.reduce((a,k)=>a+(((day(k).j||{}).practice)||[]).reduce((x,y)=>x+(+y.min||0),0),0);return {mins,n,days,top:top&&top[1]>=50?top[0]:'',t3:t?Math.round(d/t*100):null,med}}
+function reviewCard(st,t){const age=diffDays(firstUse(),t),R=myRhythm();
+  if(age>=7&&age<=21&&!st.done.wk1){const ks=Array.from({length:7},(_,i)=>addDays(t,-i)),f=focusStats(ks);if(f.n>=5)return {id:'wk1',kind:'review',t:'日課開始認識你了',
+    b:`這一週你專注了 ${fmtMin(f.mins)}${f.top?`，多半在${f.top}`:''}。`+(R?'番茄鐘的長度和提醒時間，已經照你的作息慢慢調整了。':'花十來分鐘做「我的節奏」，日課就能照你的作息，調整番茄鐘長度和提醒時間。'),btn:R?'看我的節奏':'開始了解自己',page:'quiz'}}
+  const dd=+t.slice(8,10);if(dd<=7&&age>=20){const pm=addDays(t.slice(0,8)+'01',-1).slice(0,7),id='mon-'+pm;if(!st.done[id]){const n=+pm.slice(5),ks=[];for(let k=pm+'-01';k.slice(0,7)===pm;k=addDays(k,1))ks.push(k);const f=focusStats(ks);
+    if(f.days>=6){const nx=tipList().find(x=>!st.done[x.id]);return {id,kind:'review',t:`${n} 月回顧：這個月，日課更認識你了`,
+      b:`專注 ${fmtMin(f.mins)}${f.top?`，最常在${f.top}`:''}${f.t3!=null?`；三件事完成 ${f.t3}%`:''}${f.med?`；靜心 ${f.med} 分鐘`:''}。`+(nx?`下個月可以試試：${nx.t}。`:'一點一點，你已經走了不少路。'),btn:'看統計',page:'stats'}}}}
+  return null}
 function pickTip(){if(backend==='loading')return null;const st=tipsState(),t=today(),f=firstUse(),seenTip=x=>st.done[x.id];if(st.quiet===t)return null;
   // keep today's card stable for the whole day
-  if(st.cur&&st.cur.d===t){const all=WHATSNEW.map(x=>Object.assign({kind:'new'},x)).concat(tipList().map(x=>Object.assign({kind:'tip'},x)));const c=all.find(x=>x.id===st.cur.id);if(c&&!seenTip(c))return c}
+  if(st.cur&&st.cur.d===t){const rc=reviewCard(Object.assign({},st,{done:Object.assign({},st.done,{[st.cur.id]:undefined})}),t);const all=WHATSNEW.map(x=>Object.assign({kind:'new'},x)).concat(tipList().map(x=>Object.assign({kind:'tip'},x)),rc?[rc]:[]);const c=all.find(x=>x.id===st.cur.id);if(c&&!seenTip(c))return c}
   if(st.cur&&st.cur.d!==t){st.done[st.cur.id]=st.done[st.cur.id]||'shown';st.cur=null;tipsSave(st)}
   const nw=WHATSNEW.find(x=>x.lv==='major'&&!st.done[x.id]&&f<x.d&&diffDays(x.d,t)<=14);
   if(nw){WHATSNEW.forEach(x=>{if(x!==nw&&!st.done[x.id])st.done[x.id]='skip'});st.cur={id:nw.id,d:t};tipsSave(st);return Object.assign({kind:'new'},nw)}
+  const rv=reviewCard(st,t);if(rv){st.cur={id:rv.id,d:t};st.last=t;tipsSave(st);return rv}
   if(diffDays(f,t)<3)return null;
   if(st.last&&diffDays(st.last,t)<3)return null;
   const tp=tipList().find(x=>!st.done[x.id]);if(!tp)return null;
   st.cur={id:tp.id,d:t};st.last=t;tipsSave(st);return Object.assign({kind:'tip'},tp)}
 function tipCardHTML(){let c;try{c=pickTip()}catch{return ''}if(!c)return '';
-  return `<section class="tipcard${c.kind==='new'?' isnew':''}" aria-label="${c.kind==='new'?'新功能':'小建議'}"><div class="grow"><b>${c.kind==='new'?'<span class="pill good">NEW</span> ':'💡 '}${esc(c.t)}</b><p class="muted">${esc(c.b)}</p></div>
-    <div class="tipact"><button class="sm sec" data-act="tipGo" data-id="${c.id}">${esc(c.btn)}</button><button class="ghost sm" data-act="tipNo" data-id="${c.id}">${c.kind==='new'?'知道了':'不用了'}</button></div></section>`}
+  return `<section class="tipcard${c.kind==='new'?' isnew':c.kind==='review'?' isrev':''}" aria-label="${c.kind==='new'?'新功能':c.kind==='review'?'回顧':'小建議'}"><div class="grow"><b>${c.kind==='new'?'<span class="pill good">NEW</span> ':c.kind==='review'?'':'💡 '}${esc(c.t)}</b><p class="muted">${esc(c.b)}</p></div>
+    <div class="tipact"><button class="sm sec" data-act="tipGo" data-id="${c.id}">${esc(c.btn)}</button><button class="ghost sm" data-act="tipNo" data-id="${c.id}">${c.kind==='tip'?'不用了':'知道了'}</button></div></section>`}
 function vToday(){
   const clk=dayClock(),k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0),ws=todayWidgets();
   const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
+  ${jqHTML()}
   ${todayCoach()}
   ${adaptNote(clk)}
   ${meetDueHTML()}
@@ -2381,7 +2438,7 @@ const A={
   purApply:()=>{if(!applyPurpose())return toast('至少選一個');closeModal();toast('已依用途調整頁面');render()},
   tipNo:el=>{const st=tipsState();st.done[el.dataset.id]='no';st.cur=null;st.quiet=today();tipsSave(st);render()},
   tipGo:el=>{const id=el.dataset.id,st=tipsState();st.done[id]='yes';st.cur=null;st.quiet=today();tipsSave(st);
-    const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||{};
+    const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||(id==='wk1'||id.startsWith('mon-')?{page:id==='wk1'?'quiz':'stats'}:{});
     if(c.page){if(!isOn(c.page))editCfg(cc=>{cc.hidden=(cc.hidden||[]).filter(r=>r!==c.page)});location.hash=c.page;return}
     const go=c.go;if(go==='exam'){location.hash='exam';return}
     if(go==='widgets'){todayEdit=true;render();return}

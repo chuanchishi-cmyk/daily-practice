@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js）
 ```
 
 ---
@@ -235,6 +235,7 @@ node tools/tests/pomodoro-cycle.js
 node tools/tests/meditation-sounds.js
 node tools/tests/top3-tomorrow.js
 node tools/tests/lockscreen-noise.js
+node tools/tests/jieqi-intro.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
@@ -356,3 +357,18 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 有開啟的每日提醒套用作息時間時：「每日提醒的時間，也照你平常的作息排好了。」
 - 「明天的三件事」出現時間不是預設 19:30 時：「依你平常的睡覺時間，『明天的三件事』會在晚上 9 點後出現。」
 介紹卡與每月回顧（之後重整）也照這個語氣。
+
+## 23. 二十四節氣（2026-11-19，試跑）
+
+- 資料 `JQ`：[節氣, 代表植物, 意境, 作息小語]，從小寒開始；植物依使用者指定（立春梅花…大寒梅花）。日期公式 `jqDate()`（21 世紀壽星公式，2025–2027 已核對官方日期，誤差至多一天）。
+- 只在**每個節氣開始的前 3 天**出現（`jqNow().n<=2`），位置在今日頁標題下方、今日小語之上（`jqHTML()`），之後回到平常的樣子。開場動畫不放，以免破壞品牌畫面。
+- 插畫：`JQ_IMG` 節氣名 → 圖檔。風格：中國傳統歲時、手繪古風、半寫實＋淡水彩、素雅；不用 AI 生成，用公有領域古典圖譜（如《植物名實圖考》《本草圖譜》、十九世紀植物版畫）調成淡雅色調，每張約 40 KB。沒有圖時顯示篆印式的節氣名（`.jqseal`）。
+- 取圖需要連 Wikimedia（commons.wikimedia.org、upload.wikimedia.org）：已建立雲端環境「daily-practice」允許這些網址，需在該環境開新的 session 才能使用。
+
+## 24. 介紹卡與回顧卡（2026-11-19，試跑）
+
+主軸：日課會慢慢認識你，陪你找到最佳狀態——平靜地做事，踏實地累積。四個面向：專注、覺察、節奏（會照你調整）、累積。
+- **第一次使用**（`WELCOME()`）：歡迎 → 選用途 → 專注 → 覺察 → 節奏 → 資料保存。
+- **第 7 天**（`reviewCard()`，id `wk1`）：使用第 7–21 天、近 7 天至少 5 段專注時出現一次：「這一週你專注了 5 小時，多半在上午」，沒做「我的節奏」的引導去做，做過的說明已照作息調整。
+- **每月回顧**（id `mon-YYYY-MM`）：每月 1–7 日、上個月至少 6 天有專注時出現一次：專注時數、最常專注的時段、三件事完成率、靜心分鐘，加一個還沒試過的功能。
+- 回顧卡跟小建議卡共用位置（同一天只出現一張），優先於一般小建議，安靜時段不出現。

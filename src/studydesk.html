@@ -149,6 +149,9 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .jql{margin:3px 0 0;font-family:var(--f-display);font-size:calc(13.5px * var(--fs,1));line-height:1.7;color:color-mix(in srgb,var(--ink) 85%,var(--muted))}
 .adapt{margin:-6px 2px 14px;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 .adapt::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--focus);margin-right:8px;vertical-align:2px;opacity:.7}
+.xcount{text-align:center;margin:10px 0 0;font-size:calc(13px * var(--fs,1));color:var(--muted)}
+.xcount b{color:var(--ink);font-size:calc(15px * var(--fs,1))}
+.xcount .xlink{margin-left:6px}
 .t3hint{margin:8px 0 0;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -1121,7 +1124,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.19'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.19.2'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1313,10 +1316,18 @@ const savT=()=>lsSet('sd-xtimer',T);
 function tPreset(){return cfg().timers.find(t=>t.id===T.pid)||cfg().timers[0]||{id:'',name:'',segs:[{n:'計時',s:600}]}}
 function tSegSec(){const p=tPreset();return (p.segs[T.seg]||p.segs[0]||{s:0}).s}
 function tLeft(){return T.running?Math.max(0,(T.endAt-Date.now())/1000):(T.left??tSegSec())}
+/* 練習計時的紀錄：不算番茄，但記進當天（day.tests），顯示在今日、統計和目標衝刺頁
+   跑完整組記一筆；中途重設或換項目時，若已練習 5 分鐘以上，記為未完成 */
+function tRunStart(){T.runAt=Date.now();if(!T.startedAt){T.startedAt=new Date().toISOString();T.used=0}}
+function tRunStop(){if(T.runAt){T.used=(T.used||0)+Math.max(0,Date.now()-T.runAt)/1000;T.runAt=0}}
+function tRecord(full){tRunStop();const used=T.used||0,st=T.startedAt;T.startedAt=null;T.used=0;if(!st||(!full&&used<300)||used<30)return;
+  const p=tPreset(),k=ymd(new Date(st));editDay(k,d=>{d.tests=d.tests||[];d.tests.push({id:rid(),t:st,pid:p.id,name:p.name,min:Math.max(1,Math.round(used/60)),segs:full?p.segs.length:T.seg,of:p.segs.length,full:!!full})})}
+function testsOf(keys){const L=[];keys.forEach(k=>(day(k).tests||[]).forEach(x=>L.push(Object.assign({k},x))));return L}
+function testSum(keys){const L=testsOf(keys);return {sets:L.filter(x=>x.full).length,part:L.filter(x=>!x.full).length,min:L.reduce((a,x)=>a+(+x.min||0),0),L}}
 function tAdvance(){
   const p=tPreset();
   if(T.seg<p.segs.length-1){T.seg++;T.left=null;T.endAt=Date.now()+tSegSec()*1000;endSound('t',ring,'下一段：'+p.segs[T.seg].n);toast('下一段：'+p.segs[T.seg].n)}
-  else{T.running=false;T.left=0;endSound('t',ring,'測驗時間到');toast('測驗時間到')}
+  else{T.running=false;T.left=0;if(T.runAt){T.used=(T.used||0)+Math.max(0,Math.min(Date.now(),T.endAt)-T.runAt)/1000;T.runAt=0}tRecord(true);endSound('t',ring,'測驗時間到');toast('完成一組，已記錄')}
   savT();if(R==='exam')render();
 }
 
@@ -1385,9 +1396,9 @@ function msTarget(){if(P.running)return 'p';if(MT.running)return 'm';if(T.runnin
 function msPlay(){const k=msTarget();try{unlockAudio()}catch{}
   if(k==='p'&&!P.running){if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
   else if(k==='m'&&!MT.running){MT.endAt=Date.now()+mLeft()*1000;MT.running=true;savMT()}
-  else if(k==='t'&&!T.running){T.endAt=Date.now()+tLeft()*1000;T.running=true;savT()}
+  else if(k==='t'&&!T.running){T.endAt=Date.now()+tLeft()*1000;T.running=true;tRunStart();savT()}
   syncSched();syncNoise();softRender()}
-function msPause(){if(P.running)pPause();else if(MT.running){MT.left=mLeft();MT.running=false;savMT()}else if(T.running){T.left=tLeft();T.running=false;savT()}
+function msPause(){if(P.running)pPause();else if(MT.running){MT.left=mLeft();MT.running=false;savMT()}else if(T.running){T.left=tLeft();T.running=false;tRunStop();savT()}
   syncSched();syncNoise();softRender()}
 try{if('mediaSession' in navigator){const ms=navigator.mediaSession;ms.setActionHandler('play',msPlay);ms.setActionHandler('pause',msPause);
   ['stop'].forEach(a=>{try{ms.setActionHandler(a,msPause)}catch{}});['seekbackward','seekforward','previoustrack','nexttrack','seekto'].forEach(a=>{try{ms.setActionHandler(a,null)}catch{}})}}catch{}
@@ -1593,6 +1604,7 @@ function meetDueHTML(){if(!isOn('plan'))return '';const due=Object.keys(S.projec
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-19',lv:'minor',t:'目標衝刺的練習計時會記錄下來：目標衝刺頁顯示今天、本週做了幾組，也會出現在今日和統計（不算番茄）'},
  {d:'2026-11-19',lv:'minor',t:'休息時預設播放潮汐聲；專注時要不要播、播哪一種，可在設定裡選'},
  {d:'2026-11-19',lv:'fix',t:'鎖定畫面和控制中心的播放、暫停可以直接控制計時器'},
  {d:'2026-11-19',lv:'fix',t:'第一次選用途改為最多 3 個'},
@@ -1655,7 +1667,7 @@ function tipCardHTML(){let c;try{c=pickTip()}catch{return ''}if(!c)return '';
 function vToday(){
   const clk=dayClock(),k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0),ws=todayWidgets();
   const hidden=Object.keys(WIDGETS).filter(w=>!ws.includes(w)&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)));
-  return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
+  return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>今日</h1></div><div class="chips">${isOn('exam')?examChips():''}<span class="chip">今天專注 <b>${fmtMin(mins)}</b></span>${(()=>{const a=testSum([k]);return a.L.length?`<a class="chip" href="#exam">${esc(exL('timer'))} <b>${a.sets}</b> 組・${fmtMin(a.min)}</a>`:''})()}</div></header>
   ${jqHTML()}
   ${todayCoach()}
   ${adaptNote(clk)}
@@ -1785,7 +1797,7 @@ function vStats(){
   const outList=Object.entries(A.outs).map(([k,v])=>{const [sid,u]=k.split('|');return `<span class="chip">${sdot(sid)}${esc(subj(sid).name)} <b>${fmtN(v)}</b> ${esc(u)}</span>`}).join('');
   let main='';
   if(stMode==='day'){
-    main=`${isOn('mind')?mindStats([stAnchor]):''}<div class="gridA"><section class="card"><h2>專注紀錄 ${XL('在月曆上看','calendar',`data-k="${stAnchor}"`)}</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
+    main=`${testStats([stAnchor])}${isOn('mind')?mindStats([stAnchor]):''}<div class="gridA"><section class="card"><h2>專注紀錄 ${XL('在月曆上看','calendar',`data-k="${stAnchor}"`)}</h2>${sessionsHTML(stAnchor)}</section><section class="card"><h2>科目分配</h2>${subs.length?hbars(subs,i=>fmtMin(i.v)):'<p class="empty">沒有紀錄</p>'}</section></div>`;
   }else{
     const rows=keys.map(k=>({key:k,label:stMode==='week'?'週'+wdName(k):String(parseD(k).getDate()),parts:statTags(keys).map(s=>({n:s.name,c:s.c,v:(day(k).sessions||[]).filter(x=>x.sub===s.id).reduce((a,x)=>a+(+x.min||0),0)}))}));
     const hourRows=A.hours.map((v,h)=>({label:String(h),parts:[{c:0,v,n:h+' 點'}]})).slice(6,24);
@@ -1797,6 +1809,7 @@ function vStats(){
       <section class="card"><h2>什麼時段最專注 <span class="muted">6–23 點</span></h2>${A.mins?stackBars(hourRows,{h:170,every:3,per:16,minW:300}):'<p class="empty">沒有紀錄</p>'}</section>
       <section class="card"><h2>計數</h2><div class="list">${cntRows||'<p class="empty">沒有計數器</p>'}</div>${moodInsight(keys)}</section>
     </div>
+    ${testStats(keys)}
     ${isOn('mind')?mindStats(keys):''}
     ${stMode==='week'?weekReview(keys,A,subs):''}`;
   }
@@ -1810,6 +1823,11 @@ function vStats(){
     <div class="kpi"><div class="l">平均心境</div><div class="n">${avgMood}<small>/ 5</small></div></div>
   </div>${main}`;
 }
+function testStats(keys){const a=testSum(keys);if(!a.L.length&&!isOn('exam'))return '';const lbl=exL('timer');
+  if(!a.L.length)return `<section class="card" style="margin-bottom:16px"><h2>${esc(lbl)} <span class="muted">不算進番茄</span></h2><p class="empty">這段期間還沒有${esc(lbl)}紀錄。在「${esc(exPage())}」頁跑完一組就會記下來。</p></section>`;
+  const by={};a.L.forEach(x=>{const o=by[x.name]=by[x.name]||{n:x.name,v:0,c:0,sets:0};o.v+=+x.min||0;o.sets+=x.full?1:0});const rows=Object.values(by).sort((p,q)=>q.v-p.v).map((o,i)=>Object.assign(o,{c:(i*3+1)%12}));
+  const list=keys.length===1?`<div class="list">${a.L.map(x=>`<div class="li"><span class="num muted">${new Date(x.t).toTimeString().slice(0,5)}</span><span class="grow">${esc(x.name)}${x.full?'':`<span class="muted">・未完成（${x.segs}/${x.of} 段）</span>`}</span><span class="num">${fmtMin(x.min)}</span></div>`).join('')}</div>`:hbars(rows,i=>`${fmtMin(i.v)}・${i.sets} 組`);
+  return `<section class="card" style="margin-bottom:16px"><h2>${esc(lbl)} <span class="muted">不算進番茄</span> ${XL(exPage(),'exam')}</h2><div class="row" style="gap:18px;margin-bottom:10px"><span>完成 <b class="num" style="font-size:calc(20px * var(--fs,1))">${a.sets}</b> 組</span><span>共 <b class="num" style="font-size:calc(20px * var(--fs,1))">${fmtN(a.min/60)}</b> 小時</span>${a.part?`<span class="muted">另有 ${a.part} 次未完成</span>`:''}</div>${list}</section>`}
 function mindStats(keys){
   const all=keys.flatMap(k=>((day(k).j||{}).practice||[]).map(x=>Object.assign({d:k},x)));
   const tot=all.reduce((a,x)=>a+(+x.min||0),0),qs=all.filter(x=>x.q).map(x=>x.q),avgQ=qs.length?fmtN(qs.reduce((a,b)=>a+b,0)/qs.length):'—';
@@ -1995,6 +2013,7 @@ function vExam(){
       <div class="xclock" id="xTime">--:--</div>
       <div class="segs">${p.segs.map((s,i)=>`<span class="${i===T.seg?'on':i<T.seg?'past':''}">${esc(s.n)} ${mmss(s.s)}</span>`).join('')}</div>
       <div class="ctrl"><button class="pri" style="background:var(--focus);border-color:var(--focus);color:var(--surface)" data-act="tToggle">${T.running?'暫停':'開始'}</button><button data-act="tPlus">+1 分鐘</button><button data-act="tNext"${T.seg>=p.segs.length-1?' disabled':''}>下一段</button><button data-act="tReset">重設</button></div>
+      ${(()=>{const t=today(),a=testSum([t]),w=testSum(Array.from({length:7},(_,i)=>addDays(weekStart(t),i)));return `<p class="xcount">今天 <b class="num">${a.sets}</b> 組${a.min?`（${fmtMin(a.min)}）`:''}${a.part?`，另有 ${a.part} 次未完成`:''}・本週 <b class="num">${w.sets}</b> 組 ${XL('看統計','stats','data-m="week"')}</p>`})()}
       <p class="enc">${encLine(p)}</p>
       <div style="text-align:center;margin-top:4px"><button class="ghost sm" data-act="tEdit">${tEditing?'收起':'自訂「'+esc(p.name)+'」'}</button></div>
       ${tEditing?`<div class="tedit"><label class="f">計時名稱<input id="tName" type="text" value="${esc(p.name)}"></label><span class="muted" style="font-size:calc(12px * var(--fs,1))">每一段結束會響鈴，並自動進入下一段。</span>${p.segs.map((sg,i)=>`<div class="row"><input id="tsn${i}" type="text" value="${esc(sg.n)}" style="flex:1" aria-label="段落名稱"><input id="tsm${i}" type="number" min="0" max="300" value="${Math.floor(sg.s/60)}" aria-label="分"><span class="muted">分</span><input id="tss${i}" type="number" min="0" max="59" value="${sg.s%60}" style="width:64px" aria-label="秒"><span class="muted">秒</span><button class="ghost sm" data-act="tSegDel" data-i="${i}" aria-label="刪除這段"${p.segs.length<2?' disabled':''}>×</button></div>`).join('')}
@@ -2420,11 +2439,11 @@ const A={
     if(location.hash==='#'+to)render();else location.hash=to;window.scrollTo(0,0)},
   stMode:el=>{stMode=el.dataset.m;render()},
   stNav:el=>{const d=+el.dataset.d;if(!d)stAnchor=today();else if(stMode==='day')stAnchor=addDays(stAnchor,d);else if(stMode==='week')stAnchor=addDays(stAnchor,7*d);else{const x=parseD(stAnchor.slice(0,7)+'-01');x.setMonth(x.getMonth()+d);stAnchor=ymd(x)}render()},
-  tPick:el=>{if(T.running)return toast('計時進行中，先暫停或重設');T={pid:el.dataset.id,seg:0,running:false,endAt:0,left:null};savT();render()},
-  tToggle:()=>{if(!T.running)MT.running?unlockAudio():freshAudio();else unlockAudio();if(T.running){T.left=tLeft();T.running=false}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true}savT();render()},
+  tPick:el=>{if(T.running)return toast('計時進行中，先暫停或重設');tRecord(false);T={pid:el.dataset.id,seg:0,running:false,endAt:0,left:null};savT();render()},
+  tToggle:()=>{if(!T.running)MT.running?unlockAudio():freshAudio();else unlockAudio();if(T.running){T.left=tLeft();T.running=false;tRunStop()}else{if(tLeft()<=0){T.seg=0;T.left=null}T.endAt=Date.now()+tLeft()*1000;T.running=true;tRunStart()}savT();render()},
   tPlus:()=>{if(T.running)T.endAt+=60000;else T.left=tLeft()+60;savT();tick(true)},
   tNext:()=>{const p=tPreset();if(T.seg<p.segs.length-1){T.seg++;T.left=null;if(T.running)T.endAt=Date.now()+tSegSec()*1000}savT();render()},
-  tReset:()=>{T.running=false;T.seg=0;T.left=null;savT();render()},
+  tReset:()=>{tRecord(false);T.running=false;T.seg=0;T.left=null;savT();render()},
   tEdit:()=>{tEditing=!tEditing;render()},
   exSceneT:()=>{exSceneOpen=!exSceneIsOpen();render()},
   exScene:el=>{const from=exScene(),to=el.dataset.v;exSceneOpen=to==='custom';editCfg(c=>{const untouched=sameTimers(c.timers,sceneTimers(from==='custom'?'exam':from))||sameTimers(c.timers,DEF.timers);c.exScene=to;if(untouched&&!T.running){c.timers=sceneTimers(to==='custom'?'exam':to);c.tv=2}});if(!cfg().timers.some(x=>x.id===T.pid)&&!T.running){T={pid:cfg().timers[0].id,seg:0,running:false,endAt:0,left:null};savT()}toast('已切換為「'+(el.dataset.v==='custom'?'自訂':EXS[el.dataset.v].n)+'」');render()},

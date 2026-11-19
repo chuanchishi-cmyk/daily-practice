@@ -40,7 +40,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js）
 ```
 
 ---
@@ -236,6 +236,7 @@ node tools/tests/meditation-sounds.js
 node tools/tests/top3-tomorrow.js
 node tools/tests/lockscreen-noise.js
 node tools/tests/jieqi-intro.js
+node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
@@ -372,3 +373,10 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **第 7 天**（`reviewCard()`，id `wk1`）：使用第 7–21 天、近 7 天至少 5 段專注時出現一次：「這一週你專注了 5 小時，多半在上午」，沒做「我的節奏」的引導去做，做過的說明已照作息調整。
 - **每月回顧**（id `mon-YYYY-MM`）：每月 1–7 日、上個月至少 6 天有專注時出現一次：專注時數、最常專注的時段、三件事完成率、靜心分鐘，加一個還沒試過的功能。
 - 回顧卡跟小建議卡共用位置（同一天只出現一張），優先於一般小建議，安靜時段不出現。
+## 25. 目標衝刺的練習計時紀錄（2026-11-19）
+
+不算番茄，但要看得到累積：
+- 紀錄存在當天 `day.tests`：`{id, t:開始時間, pid, name, min, segs, of, full}`。
+- **跑完一整組**記一筆（`tAdvance` 最後一段結束 → `tRecord(true)`）；**中途重設或換項目**時，若已練習 5 分鐘以上記為「未完成」（`tRecord(false)`），不到 5 分鐘不記。
+- 時間照實際計時累積（`T.startedAt`、`T.used`、`T.runAt`；暫停不算、+1 分鐘會算；鎖定畫面的播放、暫停也算），最後一段以排定結束時間為準，App 晚打開不會多算。
+- 顯示：目標衝刺頁計時器下方「今天 N 組・分鐘｜本週 N 組」；今日頁標頭一個小標籤（有紀錄才出現，點了到目標衝刺頁）；統計頁一張卡（日：逐筆列出；週／月：依項目分配），名稱跟著情境（測驗計時／訓練計時…）。

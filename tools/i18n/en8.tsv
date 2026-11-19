@@ -970,3 +970,5 @@
 =完成	Completed
 =另有	plus
 =目標衝刺的練習計時會記錄下來：目標衝刺頁顯示今天、本週做了幾組，也會出現在今日和統計（不算番茄）	Goal Sprint practice timers are now recorded: see today's and this week's sets on the Goal Sprint page, plus on Today and in Stats (not counted as pomodoros)
+=練習計時的時間算進今日頁的「今天專注」	Practice timer minutes now count toward “Focused today” on Today
+=含	includes

@@ -27,6 +27,7 @@ d=await day();ok((d.tests||[]).length===2,'只練 2 分鐘就重設：不記錄'
 x=await pg.textContent('.xcount');ok(/1 次未完成/.test(x),'目標衝刺頁顯示未完成次數');
 await pg.evaluate(()=>{location.hash='today'});await pg.waitForTimeout(500);
 const chip=await pg.evaluate(()=>[...document.querySelectorAll('.ph .chip')].map(e=>e.textContent.replace(/\s+/g,' ').trim()).join(' | '));ok(/計時 1 組/.test(chip),'今日頁：'+chip);
+ok(/今天專注 56 分/.test(chip),'今天專注含練習計時 56 分');
 await pg.evaluate(()=>{location.hash='stats'});await pg.waitForTimeout(500);
 const st=await pg.evaluate(()=>[...document.querySelectorAll('section.card h2')].find(h=>/計時/.test(h.textContent))?.closest('section').textContent.replace(/\s+/g,' ').trim()||'');ok(/完成 1 組/.test(st),'統計頁（日）：'+st.slice(0,80));
 await pg.click('[data-act=stMode][data-m=week]');await pg.waitForTimeout(400);

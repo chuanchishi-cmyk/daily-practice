@@ -1,0 +1,22 @@
+// 上班情境的用語：用途選「工作上班」時，提示語改成主管、同事、客戶、專案；學術計畫仍用老師的說法
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];let fail=0;
+fs.writeFileSync(SP+'tww.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const run=async(purposes,projType)=>{const c=await b.newContext({viewport:{width:1200,height:900}});
+  await c.addInitScript(([pu,pt])=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');if(localStorage.getItem('studydesk-v1'))return;
+    localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{hidden:[],optIn:{work:true},purposes:pu}},days:{},mocks:{},mistakes:{},projects:{p1:{name:'案子',type:pt,flex:true,deadline:'',created:'2026-11-01',stages:[{id:'s',name:'一',steps:[]}],meetings:[],wins:[],prep:[],next:null}},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}}))},[purposes,projType]);
+  const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));const out={};
+  await pg.goto('file://'+SP+'tww.html#today');await pg.waitForTimeout(700);out.task=await pg.$eval('#pTask, input[data-k=task]',e=>e.placeholder).catch(()=>'');out.park=await pg.$eval('#parkIn',e=>e.placeholder);
+  await pg.goto('file://'+SP+'tww.html#plan');await pg.waitForTimeout(600);await pg.$eval('[data-act=planTab][data-t=meet]',e=>e.click());await pg.waitForTimeout(300);
+  out.who=await pg.$$eval('#nxW option',os=>os.map(o=>o.textContent).join('、'));out.prep=await pg.$eval('#prepTxt',e=>e.placeholder);
+  out.html=await pg.$eval('main',e=>e.innerHTML);await c.close();return out};
+const w=await run(['work'],'product');
+ok(/客戶的信|週會/.test(w.task),'上班：番茄鐘任務提示「'+w.task+'」');
+ok(/主管/.test(w.park)&&!/老師/.test(w.park),'上班：雜念停車場提示「'+w.park+'」');
+ok(w.who.startsWith('主管')&&/客戶/.test(w.who)&&!/指導教授/.test(w.who),'上班：會談對象「'+w.who+'」');
+ok(/主管/.test(w.prep),'上班：會前清單提示「'+w.prep+'」');
+ok(!/\$\{PH\(/.test(w.html),'沒有沒替換的程式碼殘留');
+const a=await run(['plan'],'thesis');
+ok(a.who.startsWith('指導教授'),'學術計畫：對象仍是「'+a.who.slice(0,12)+'…」');ok(/老師/.test(a.park),'學生：停車場仍是「'+a.park+'」');
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

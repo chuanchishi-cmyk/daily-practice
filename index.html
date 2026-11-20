@@ -1076,6 +1076,15 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
 
 /* ---------- defaults ---------- */
+// 上班情境：用途選了「工作上班」，或計畫是工作類型時，用主管、同事、客戶、專案的說法
+const WK=()=>(cfg().purposes||[]).includes('work');
+const ACAD_T=['thesis','article','conf','chapter','grant','project','report','apply','exam','scholar'];
+const isAcadProj=p=>!!p&&ACAD_T.includes(p.type)&&!(WK()&&p.type==='project');
+const WHO_ACAD=['指導教授','口試委員','共同作者','同儕','其他'],WHO_WORK=['主管','同事','客戶','合作夥伴','其他'];
+const whoList=p=>isAcadProj(p)?WHO_ACAD:WHO_WORK,whoDef=p=>whoList(p)[0];
+const isTeacher=w=>w==='指導教授'||w==='口試委員';
+const PH=(acad,work)=>WK()?work:acad;
+const WORK_TAGS=[{id:'W1',name:'專案',c:5,unit:''},{id:'W2',name:'會議',c:3,unit:''},{id:'W3',name:'信件與聯絡',c:1,unit:''},{id:'W4',name:'學習成長',c:10,unit:''},{id:'E',name:'運動',c:8,unit:'分'}];
 const DEF={
   subjects:[
     {id:'T',name:'論文',c:4,unit:'頁'},{id:'P',name:'專案進度',c:5,unit:''},{id:'B',name:'閱讀',c:10,unit:'頁'},
@@ -1222,7 +1231,9 @@ let WPUR=new Set();
 function purposeChips(){return `<div class="purp">${PURPOSES.map(([k,n,d])=>`<button class="purp-o" data-act="purPick" data-k="${k}" aria-pressed="${WPUR.has(k)}"><b>${n}</b><span>${d}</span></button>`).join('')}</div>`}
 function applyPurpose(){if(!WPUR.size)return false;const all=Object.keys(OPTIONAL);let on=new Set();
   if(WPUR.has('all'))on=new Set(all);else WPUR.forEach(k=>{(PURPOSES.find(x=>x[0]===k)[3]||[]).forEach(r=>on.add(r))});
-  editCfg(c=>{c.hidden=all.filter(r=>!on.has(r));c.purposes=[...WPUR]});return true}
+  editCfg(c=>{c.hidden=all.filter(r=>!on.has(r));c.purposes=[...WPUR];
+    if(WPUR.has('work')&&!WPUR.has('goal')&&!WPUR.has('plan')){const def=JSON.stringify(DEF.subjects.map(x=>x.name));if(JSON.stringify((c.subjects||[]).map(x=>x.name))===def){c.subjects=clone(WORK_TAGS);if(!WORK_TAGS.some(t=>t.id===P.sub)){P.sub='W1';savP()}}
+      if(JSON.stringify((c.counters||[]).map(x=>x.name))===JSON.stringify(DEF.counters.map(x=>x.name)))c.counters=[{id:'w1',name:'完成的任務',goal:5,step:1},{id:'c3',name:'喝水（杯）',goal:8,step:1}]}});return true}
 function openPurpose(){WPUR=new Set((cfg().purposes||[]).filter(k=>PURPOSES.some(x=>x[0]===k)));$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="puT"><div class="box"><h2 id="puT">你想用日課做什麼？</h2><p class="muted" style="margin-top:0">最多選 ${PUR_MAX} 個。會打開對應的頁面，其他的先藏起來（資料都會保留），之後隨時可以再調整。</p>${purposeChips()}<div class="row sb" style="margin-top:14px"><button class="ghost" data-act="close">取消</button><button class="pri" data-act="purApply">套用</button></div></div></div>`}
 function WELCOME(){
   // 主軸：日課會慢慢認識你，陪你找到最佳狀態——平靜地做事，踏實地累積（專注・覺察・節奏・累積）
@@ -1325,7 +1336,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.9'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.10'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1472,7 +1483,7 @@ function pomoHTML(){
       ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。計畫的標籤請到計畫地圖管理。</span>':''}
       ${tagAdding?`<div class="row" style="margin-top:6px"><input id="ptagName" type="text" placeholder="例：日文、健身、備課、讀書會" style="flex:1"><button class="sm sec" data-act="ptagSave">加入</button></div>`:''}
     </div>
-    <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
+    <label class="f wide">這顆番茄要做什麼<input id="pTask" type="text" data-ch="pfield" data-k="task" value="${esc(P.task)}" placeholder="${PH('例：讀完第三章、做一回閱讀練習','例：準備週會簡報、回覆客戶的信')}"></label>
     ${P.proj&&isOn('plan')?`<label class="f wide">階段<select id="pPhase" data-ch="pfield" data-k="phase">${phaseOptions(P.proj,P.phase)}</select></label>`:''}
   </div>
   ${pPaused()?`<div class="pausebox"><label class="f">暫停中・手邊做到哪裡？<input id="pPause" type="text" data-ch="pfield" data-k="pauseNote" value="${esc(P.pauseNote||'')}" placeholder="例：第二節寫到第三段，下一句要補引文"></label><p class="muted" style="margin:4px 0 0">寫一句就好。回來時看這行，就能馬上接上。</p></div>`:''}
@@ -1496,7 +1507,7 @@ function qnRow(x,pids){const src=x.src==='park'?(x.k===today()?'今天':fmtMD(x.
 function qnBody(){const all=qnItems(),list=all.filter(x=>qnFilter==='all'||!x.done),pids=Object.keys(S.projects),v=(($('#qnIn')||{}).value)||'';
   return `<div class="row sb"><h2 id="qnT" style="margin:0">隨手記</h2><button class="ghost sm" data-act="close" aria-label="關閉">×</button></div>
   <p class="muted" style="margin:4px 0 8px">想到什麼先記下來，等一下再處理。雜念停車場、計畫筆記、最近的覺察片段都集中在這裡。</p>
-  <textarea id="qnIn" rows="2" placeholder="例：回老師的信、查那篇文章的出處、突然想到的點子">${esc(v)}</textarea>
+  <textarea id="qnIn" rows="2" placeholder="${PH('例：回老師的信、查那篇文章的出處、突然想到的點子','例：回主管的信、確認報價、突然想到的點子')}">${esc(v)}</textarea>
   <div class="row sb" style="margin-top:6px"><div class="seg">${QN_KINDS.map(k=>`<button data-act="qnKind" data-k="${k}" aria-pressed="${qnKind===k}">${k}</button>`).join('')}</div><button class="pri sm" data-act="qnAdd">記下</button></div>
   <div class="row sb" style="margin:14px 0 6px"><b>${qnFilter==='all'?'全部':'待處理'} <span class="muted num">${list.length}</span></b><div class="seg">${[['open','待處理'],['all','全部']].map(([k,n])=>`<button data-act="qnFilter" data-v="${k}" aria-pressed="${qnFilter===k}">${n}</button>`).join('')}</div></div>
   <div class="qnlist">${list.slice(0,80).map(x=>qnRow(x,pids)).join('')||'<p class="empty">都處理完了。</p>'}</div>`}
@@ -1509,7 +1520,7 @@ function parkHTML(){
   const k=today(),it=((day(k).j||{}).park)||[],open=it.filter(x=>!x.done).length;
   return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">雜念停車場</b><span class="row" style="gap:8px"><span class="muted">${it.length?`${open} 則待處理`:''}</span><button class="linkbtn" data-act="qnOpen">全部隨手記</button></span></div>
     <p class="muted" style="margin:2px 0 8px">專心時冒出雜念或想做的事，先停在這裡。寫下來，腦袋就不必一直記著它；番茄結束後再處理。</p>
-    <div class="row"><input id="parkIn" type="text" placeholder="例：回老師的信、查那篇文章的出處、買牙膏" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">先放著</button></div>
+    <div class="row"><input id="parkIn" type="text" placeholder="${PH('例：回老師的信、查那篇文章的出處、買牙膏','例：回主管的信、確認報價、訂會議室')}" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">先放著</button></div>
     ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
   </div>`;
 }
@@ -1687,7 +1698,7 @@ function drawRecord(){
       <label class="f" style="grid-column:1/-1">記錄到<select id="rSub" data-ch="recf" data-k="sub">${tagOptions(r.sub)}<option value="__new">＋ 新增項目…</option></select></label>
       ${r.proj?`<label class="f" style="grid-column:1/-1">階段<select id="rPhase" data-ch="recf" data-k="phase">${phaseOptions(r.proj,r.phase)}</select></label>`:''}
     </div>
-    <label class="f">做了什麼<input id="rTask" type="text" value="${esc(r.task)}" placeholder="例：讀完第三章、做一回閱讀練習"></label>
+    <label class="f">做了什麼<input id="rTask" type="text" value="${esc(r.task)}" placeholder="${PH('例：讀完第三章、做一回閱讀練習','例：準備週會簡報、回覆客戶的信')}"></label>
     <div class="row">
       <label class="f">產出數量<input id="rOut" type="number" min="0" step="any" value="${esc(r.out)}" placeholder="0"></label>
       <label class="f">單位<input id="rUnit" type="text" value="${esc(ph&&ph.unit||u)}" style="width:90px"></label>
@@ -1697,7 +1708,7 @@ function drawRecord(){
     ${r.early?`<div class="whybox"><label class="f">提前結束的原因<input id="rWhy" type="text" value="${esc(r.why||'')}" placeholder="例：被訊息打斷、這段比預期早完成"></label>
       <div class="opts" style="margin-top:6px">${['被打斷','提早完成','太累了','卡住了','時間到了要出門'].map(t=>`<button class="opt sm" data-act="recWhy" data-v="${t}">${t}</button>`).join('')}</div>
       <p class="muted" style="margin:4px 0 0">記下原因，累積幾次就能看出自己常在哪裡中斷，下次提早準備。</p></div>`:''}
-    <label class="f">筆記（卡在哪、下次從哪開始）<textarea id="rNote" rows="2" placeholder="例：第三章第二節寫到一半，下次先補完那段引文">${esc(r.note)}</textarea></label>
+    <label class="f">筆記（卡在哪、下次從哪開始）<textarea id="rNote" rows="2" placeholder="${PH('例：第三章第二節寫到一半，下次先補完那段引文','例：簡報做到第 5 頁，下次先補上數據')}">${esc(r.note)}</textarea></label>
     <div class="row sb"><button class="ghost" data-act="recCancel">不記錄</button><button class="pri" data-act="recSave">儲存</button></div>
   </div></div>`;
   setTimeout(()=>{const f=$('#rOut');if(f&&!r.manual)f.focus();else{const t=$('#rTask');t&&t.focus()}},30);
@@ -1877,6 +1888,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-20',lv:'fix',t:'上班情境的用語：用途選「工作上班」時，提示改成主管、同事、客戶、專案；會談對象、筆記、紀錄標籤也跟著換（學術計畫仍用老師的說法）'},
  {d:'2026-11-20',lv:'major',t:'新頁面「工作上班」：番茄鐘、休息時護眼 20 秒、喝水、起身走走與伸展，久坐提醒，彈性補記工作時段，今天的三件事、行程與會談（在用途或設定裡打開）'},
  {d:'2026-11-20',lv:'minor',t:'運動：健身新增連續模式（計時型全程自動、次數型做完按一下就休息），鎖定螢幕也照節奏響；最近紀錄可以一列補記'},
  {d:'2026-11-20',lv:'minor',t:'雁書：「寫一封信」改名「託雁捎書」，按鈕改成「交給雁子」'},
@@ -2172,7 +2184,7 @@ function weekReview(keys,A,subs){
   <div class="grid3">
     <div><h3>這週的數字</h3><p>專注 ${fmtMin(A.mins)}、${A.n} 個番茄。${top?`花最多時間在「${esc(top.n)}」（${fmtMin(top.v)}）。`:''}</p>${projMoves?`<h3>計畫推進</h3><ul style="margin:0;padding-left:18px">${projMoves}</ul>`:''}</div>
     <div><h3>這週做到的事 <span class="muted">${wins.length} 則</span></h3>${wins.length?`<ul style="margin:0;padding-left:18px">${wins.slice(0,12).map(x=>`<li><span class="muted">${fmtMD(x.k)}</span> ${esc(x.w)}</li>`).join('')}</ul>`:'<p class="empty">這週還沒寫回顧。</p>'}</div>
-    <div><h3>下週要調整</h3><textarea id="rv${wk}" data-in="review" data-k="${wk}" rows="6" placeholder="例：口說練習排在早上；論文每天至少 1 個番茄">${esc(rv.text)}</textarea></div>
+    <div><h3>下週要調整</h3><textarea id="rv${wk}" data-in="review" data-k="${wk}" rows="6" placeholder="${PH('例：口說練習排在早上；論文每天至少 1 個番茄','例：重要的事排在上午；每天留一個番茄處理專案')}">${esc(rv.text)}</textarea></div>
   </div></section>`;
 }
 
@@ -2459,18 +2471,18 @@ const MAIL_TYPO={'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gma
 function mailCheck(e){if(!e)return {ok:true};if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))return {ok:false,msg:'Email 格式看起來不對，請再檢查一次。'};const [u,d]=e.split('@'),fx=MAIL_TYPO[d.toLowerCase()];return fx?{ok:false,sug:u+'@'+fx,msg:`是不是打成了 ${d}？`}:{ok:true}}
 function meetEnd(n){if(!n||!n.date)return null;return new Date(new Date(`${n.date}T${n.time||'10:00'}`).getTime()+(+n.dur||60)*60000)}
 function meetEnded(p){const e=meetEnd(p.next);return !!e&&Date.now()>=e.getTime()}
-function mailBody(p,n){const pr=meetPrepText(p);return `${n.who==='指導教授'?'老師':'您'}好：\n\n想和您約 ${fmtMD(n.date)}（週${wdName(n.date)}）${n.time||''}，大約 ${n.dur||60} 分鐘，以${n.mode||'面談'}的方式討論「${p.name}」的進度。若這個時間不方便，也請告訴我其他可以的時段。\n${pr?'\n'+pr+'\n':''}\n謝謝！`}
+function mailBody(p,n){const pr=meetPrepText(p);return `${isTeacher(n.who)?'老師':'您'}好：\n\n想和您約 ${fmtMD(n.date)}（週${wdName(n.date)}）${n.time||''}，大約 ${n.dur||60} 分鐘，以${n.mode||'面談'}的方式討論「${p.name}」的進度。若這個時間不方便，也請告訴我其他可以的時段。\n${pr?'\n'+pr+'\n':''}\n謝謝！`}
 function gcalUrlN(p,n){
   if(!n.date)return '';
   const st=new Date(`${n.date}T${n.time||'10:00'}`),en=new Date(st.getTime()+(+n.dur||60)*60000);
   const f=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||'指導教授'}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p)||'（日課・計畫地圖建立）')+(n.email?'&add='+encodeURIComponent(n.email):'')+(n.mode==='面談'&&n.place?'&location='+encodeURIComponent(n.place):'');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||whoDef(p)}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p)||'（日課・計畫地圖建立）')+(n.email?'&add='+encodeURIComponent(n.email):'')+(n.mode==='面談'&&n.place?'&location='+encodeURIComponent(n.place):'');
 }
 function gcalUrl(p){
   const n=p.next||{};if(!n.date)return '';
   const st=new Date(`${n.date}T${n.time||'10:00'}`),en=new Date(st.getTime()+(+n.dur||60)*60000);
   const f=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||'指導教授'}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p));
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(`${p.name}｜與${n.who||whoDef(p)}會談`)+'&dates='+f(st)+'/'+f(en)+'&details='+encodeURIComponent(meetPrepText(p));
 }
 function openTodos(p){return (p.meetings||[]).flatMap(m=>(m.todo||[]).filter(t=>!t.done).map(t=>({m,t}))).concat((p.prep||[]).filter(t=>!t.done).map(t=>({m:null,t})))}
 function meetPrepText(p){const o=openTodos(p);return o.length?'會前要完成／要問的事：\n'+o.map(x=>'・'+x.t.t).join('\n'):''}
@@ -2531,8 +2543,8 @@ function vPlan(){
     <div id="npProj">
     <p class="muted">選好類型和完成日，就會從今天排到那天，切成幾個階段和許多小步驟。每一步都小到可以在一兩次番茄鐘內完成。日期、步驟之後都能改。</p>
     <div class="fields" style="grid-template-columns:1fr 1fr;margin:12px 0">
-      <label class="f" style="grid-column:1/-1">計畫名稱<input id="npName" type="text" placeholder="例：碩士論文、研究所申請、作品集、半程馬拉松"></label>
-      <label class="f">類型<span class="combo"><select id="npType" data-ch="npType">${typeOpts('thesis')}</select><input id="npTypeX" type="text" placeholder="寫下類型，例：讀書會、健身計畫" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npType" hidden aria-label="改回選單">▾</button></span></label>
+      <label class="f" style="grid-column:1/-1">計畫名稱<input id="npName" type="text" placeholder="${PH('例：碩士論文、研究所申請、作品集、半程馬拉松','例：新品上市、年度報告、客戶提案')}"></label>
+      <label class="f">類型<span class="combo"><select id="npType" data-ch="npType">${typeOpts(WK()?'product':'thesis')}</select><input id="npTypeX" type="text" placeholder="寫下類型，例：讀書會、健身計畫" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npType" hidden aria-label="改回選單">▾</button></span></label>
       <label class="f" id="npMethodWrap">主要研究方法<span class="combo"><select id="npMethod" data-ch="npMethod">${PMETHOD_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}">${PMETHODS[k]}</option>`).join('')}</optgroup>`).join('')}</select><input id="npMethodX" type="text" placeholder="寫下方法，例：語料庫分析、模擬實驗" hidden><button type="button" class="combo-back" data-act="comboBack" data-sel="npMethod" hidden aria-label="改回選單">▾</button></span></label>
       <label class="f">預計完成日<input id="npDate" type="date" value="${addDays(today(),365)}" onchange="this.dataset.touched=1"></label>
       <div class="f" style="grid-column:1/-1"><span class="muted" style="font-size:calc(12px * var(--fs,1))">怎麼開始</span>
@@ -2560,7 +2572,7 @@ function vPlan(){
         ${isUnits(p)?'':`<div class="row sb"><h3>沒有動力？選一件 15 分鐘內能完成的事</h3><button class="ghost sm" data-act="starterEditT">${starterEdit?'完成':'編輯'}</button></div>
         <div class="starters">${starters().map(([k,n,d])=>starterEdit?`<div class="starter editing"><b>${esc(n)}</b><span>${esc(d)}</span><button class="ghost sm stdel" data-act="starterDel" data-k="${esc(k)}" aria-label="刪除「${esc(n)}」">×</button></div>`:`<button class="starter" data-act="starter" data-k="${esc(k)}" aria-pressed="${starter===k}"><b>${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
         ${starterEdit?`<div class="row" style="margin-top:10px"><input id="stNewN" type="text" placeholder="名稱，例：整理註腳" style="width:150px"><input id="stNewD" type="text" placeholder="說明，例：只整理一頁的註腳" style="flex:1"><button class="sm sec" data-act="starterAdd">加入</button><button class="ghost sm" data-act="starterReset">恢復預設</button></div>`:''}
-        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}`}`}</div></details>`})()}
+        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，${isAcadProj(p)?'例：寫了第二章開頭':'例：完成提案初稿'}）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}`}`}</div></details>`})()}
       ${isUnits(p)?unitsCard(p,cur):cur?`<section class="card stagecard">
         <div class="row sb"><div><p class="eyebrow">階段 ${p.stages.indexOf(cur)+1} / ${p.stages.length}<span class="muted" style="font-weight:400">・各階段可以同時進行</span></p><input class="stname" id="stn${cur.id}" type="text" data-ch="stF" data-f="name" data-id="${cur.id}" value="${esc(cur.name)}" aria-label="階段名稱（點一下可以改）" title="點一下可以改名稱"></div>
           ${p.flex?'':`<div class="row daterow"><input type="date" id="sts${cur.id}" data-ch="stF" data-f="start" data-id="${cur.id}" value="${esc(cur.start)}" aria-label="開始"><span class="muted">→</span><input type="date" id="ste${cur.id}" data-ch="stF" data-f="end" data-id="${cur.id}" value="${esc(cur.end)}" aria-label="結束"></div>`}</div>
@@ -2595,7 +2607,7 @@ function vPlan(){
     </aside>
   </div>
   <section class="card" style="margin-top:16px" id="planTabs">
-    <div class="seg" style="margin-bottom:14px">${[['notes',isUnits(p)?'學習筆記':'研究手記'],['quotes','書摘'],...(isUnits(p)?[]:[['meet','會談']])].map(([k,n])=>`<button data-act="planTab" data-t="${k}" aria-pressed="${planTab===k}">${n}</button>`).join('')}</div>
+    <div class="seg" style="margin-bottom:14px">${[['notes',isUnits(p)?'學習筆記':isAcadProj(p)?'研究手記':'工作筆記'],['quotes','書摘'],...(isUnits(p)?[]:[['meet','會談']])].map(([k,n])=>`<button data-act="planTab" data-t="${k}" aria-pressed="${planTab===k}">${n}</button>`).join('')}</div>
     ${planTab==='notes'||(planTab==='meet'&&isUnits(p))?notesHTML(p):planTab==='quotes'?quotesHTML(p):meetHTML(p)}
   </section>`;
 }
@@ -2604,7 +2616,7 @@ function notesHTML(p){
   const list=all.filter(([,n])=>!noteFilter||n.kind===noteFilter);
   return `<p class="muted" style="margin-top:-6px">隨手記下工作事項、靈感和卡住的問題。待辦可以打勾，也可以轉成目前階段的步驟。</p>
   <div class="row" style="margin-bottom:8px"><div class="seg" id="nkSeg">${NOTE_KINDS.map(k=>`<button data-act="nKind" data-k="${k}" aria-pressed="${(window.__nk||'待辦')===k}">${k}</button>`).join('')}</div></div>
-  <div class="row"><textarea id="noteTxt" rows="2" placeholder="例：問老師第三章要不要拆成兩節；圖書館週五還書" style="flex:1"></textarea><button class="sec" data-act="noteAdd">加入</button></div>
+  <div class="row"><textarea id="noteTxt" rows="2" placeholder="${isAcadProj(p)?'例：問老師第三章要不要拆成兩節；圖書館週五還書':'例：問主管預算上限；週五前寄報價給客戶'}" style="flex:1"></textarea><button class="sec" data-act="noteAdd">加入</button></div>
   <div class="row" style="margin:14px 0 6px"><span class="muted">篩選：</span>${['',...NOTE_KINDS].map(k=>`<button class="sm" data-act="nFilter" data-k="${k}" aria-pressed="${noteFilter===k}">${k||'全部'} ${k?all.filter(([,n])=>n.kind===k).length:all.length}</button>`).join('')}</div>
   <div class="list">${list.map(([id,n])=>`<div class="li note${n.done?' done':''}">${n.kind==='待辦'?`<input type="checkbox" data-ch="noteChk" data-id="${id}" ${n.done?'checked':''} aria-label="完成">`:''}<span class="pill ${n.kind==='問題'?'warn':n.kind==='想法'?'good':'mut'}">${n.kind}</span><div class="grow qa">${esc(n.text)}</div><span class="num muted">${fmtMD(n.d)}</span>${n.kind==='待辦'&&!n.done?`<button class="ghost sm" data-act="noteToStep" data-id="${id}">轉成步驟</button>`:''}<button class="ghost sm" data-act="noteDel" data-id="${id}" aria-label="刪除">×</button></div>`).join('')||'<p class="empty">這裡還是空的。</p>'}</div>`;
 }
@@ -2626,22 +2638,22 @@ function quotesHTML(p){
 }
 let mtOpen=false;
 function mtFormHTML(n,guided){
-  const who=n.who||'指導教授',mode=n.mode||'面談',T=who==='指導教授'||who==='口試委員'?'老師':'對方';
+  const pj=proj(curProj),A0=isAcadProj(pj),who=n.who||whoDef(pj),mode=n.mode||'面談',T=isTeacher(who)?'老師':'對方';
   return `<div class="fields" style="grid-template-columns:1fr 1fr 1fr">
       <label class="f">日期<input id="mtD" type="date" value="${esc(n.date||today())}"></label>
-      <label class="f">對象<select id="mtW">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option${x===who?' selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="f">對象<select id="mtW">${whoList(pj).concat(whoList(pj).includes(who)?[]:[who]).map(x=>`<option${x===who?' selected':''}>${x}</option>`).join('')}</select></label>
       <label class="f">形式<select id="mtM">${['面談','線上會議','電話','Email'].map(x=>`<option${x===mode?' selected':''}>${x}</option>`).join('')}</select></label>
     </div>
-    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">1</span>':''}這次討論了什麼<textarea id="mtP" rows="2" placeholder="例：第二章架構、史料取捨"></textarea></label>
-    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">2</span>':''}${T}說了什麼<textarea id="mtS" rows="3" placeholder="建議、意見、推薦的書。趁現在記憶清楚，盡量照原意記下"></textarea></label>
-    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">3</span>':''}決定了什麼<textarea id="mtX" rows="2" placeholder="例：第三章改成以時間排序"></textarea></label>
-    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">4</span>':''}接下來要做什麼（一行一項，會加入會前清單）<textarea id="mtT" rows="3" placeholder="補讀某某的研究&#10;改寫第二章第一節"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">1</span>':''}這次討論了什麼<textarea id="mtP" rows="2" placeholder="${A0?'例：第二章架構、史料取捨':'例：專案時程、分工、報價'}"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">2</span>':''}${T}說了什麼<textarea id="mtS" rows="3" placeholder="${A0?'建議、意見、推薦的書。':'建議、要求、在意的地方。'}趁現在記憶清楚，盡量照原意記下"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">3</span>':''}決定了什麼<textarea id="mtX" rows="2" placeholder="${A0?'例：第三章改成以時間排序':'例：下週三前交初版，預算維持不變'}"></textarea></label>
+    <label class="f" style="margin-top:10px">${guided?'<span class="stepn">4</span>':''}接下來要做什麼（一行一項，會加入會前清單）<textarea id="mtT" rows="3" placeholder="${A0?'補讀某某的研究&#10;改寫第二章第一節':'整理會議紀錄寄給大家&#10;修改報價單'}"></textarea></label>
     <label class="row" style="margin-top:8px;font-size:calc(13px * var(--fs,1))"><input id="mtTop" type="checkbox" ${guided?'checked':''}> 把第一項放進今天的三件事，趁熱開始</label>
     <div class="row" style="margin-top:10px"><button class="sec" data-act="mtSave">儲存紀錄${guided?'，接著安排下一步':''}</button>${guided?'':'<button class="ghost sm" data-act="mtToggle">收起</button>'}</div>`;
 }
 function meetHTML(p){
   const n=p.next||{},ms=(p.meetings||[]).slice().sort((a,b)=>a.date<b.date?1:-1),todos=openTodos(p),ended=meetEnded(p),ct=p.contacts||{};
-  const who=n.who||'指導教授',email=n.email||ct[who]||'';
+  const who=n.who||whoDef(p),email=n.email||ct[who]||'';
   if(ended)return `<section class="mdone"><p class="eyebrow">會談結束了</p><h3 style="margin:0 0 4px">和${esc(who)}的會談（${fmtMD(n.date)} ${esc(n.time||'')}）結束了</h3>
     <p class="muted" style="margin:0 0 10px">趁記憶還清楚，花五分鐘記下四件事。存好後，會帶你把待辦排進接下來的行程。</p>${mtFormHTML(n,true)}
     <p class="muted" style="margin:10px 0 0">會談改期或取消了？<button class="ghost sm" data-act="nxClear">清除這次預約</button></p></section>
@@ -2653,7 +2665,7 @@ function meetHTML(p){
         <label class="f">日期<input id="nxD" type="date" value="${esc(n.date||'')}"></label>
         <label class="f">時間<input id="nxT" type="time" value="${esc(n.time||'10:00')}"></label>
         <label class="f">長度（分）<input id="nxL" type="number" min="15" step="15" value="${esc(n.dur||60)}"></label>
-        <label class="f">對象<select id="nxW" data-ch="nxWho">${['指導教授','口試委員','共同作者','同儕','其他'].map(x=>`<option${who===x?' selected':''}>${x}</option>`).join('')}</select></label>
+        <label class="f">對象<select id="nxW" data-ch="nxWho">${whoList(p).concat(whoList(p).includes(who)?[]:[who]).map(x=>`<option${who===x?' selected':''}>${x}</option>`).join('')}</select></label>
         <label class="f">形式<select id="nxM">${['面談','線上會議','電話'].map(x=>`<option${n.mode===x?' selected':''}>${x}</option>`).join('')}</select></label>
         <label class="f">對方 Email（選填）<input id="nxE" type="email" inputmode="email" autocomplete="email" value="${esc(email)}" placeholder="name@example.com"></label>
       </div>
@@ -2671,7 +2683,7 @@ function meetHTML(p){
       <p class="muted" id="gcalMsg" style="margin:8px 0 0">${n.eventLink?`已加入日曆。<a href="${esc(n.eventLink)}" target="_blank" rel="noopener">開啟日曆活動</a>${n.meet?`・<a href="${esc(n.meet)}" target="_blank" rel="noopener">Meet 連結</a>`:''}`:n.date?`已記下 ${fmtMD(n.date)} ${esc(n.time||'')} 的會談。會談結束後，這裡會跳出紀錄表。`:''}</p>
       <h3>會前清單 <span class="muted">下次面談前要完成、要問的事</span></h3>
       <div class="list">${todos.map(x=>`<label class="li"><input type="checkbox" data-ch="todoChk" data-m="${x.m?x.m.id:''}" data-id="${x.t.id}"><span class="grow">${esc(x.t.t)}</span>${x.m?`<span class="muted num">${fmtMD(x.m.date)} 會談</span>`:''}<button class="ghost sm" data-act="todoToStep" data-m="${x.m?x.m.id:''}" data-id="${x.t.id}">轉成步驟</button></label>`).join('')||'<p class="empty">沒有未完成的事項。</p>'}</div>
-      <div class="row" style="margin-top:6px"><input id="prepTxt" type="text" placeholder="例：想問老師的問題、要先寄的章節" style="flex:1"><button class="sm" data-act="prepAdd">加入</button></div>
+      <div class="row" style="margin-top:6px"><input id="prepTxt" type="text" placeholder="${isAcadProj(p)?'例：想問老師的問題、要先寄的章節':'例：想問主管的問題、要先寄的資料'}" style="flex:1"><button class="sm" data-act="prepAdd">加入</button></div>
     </div>
     <div>
       <h3 style="margin-top:0">會談紀錄</h3>
@@ -2682,7 +2694,7 @@ function meetHTML(p){
   <div class="meetlog">${meetLogHTML(ms)}</div>`;
 }
 function meetLogHTML(ms){return ms.map(m=>`<details class="mrec"${ms[0]===m?' open':''}><summary><span class="num">${fmtMD(m.date)}</span> 與${esc(m.who||'')}・${esc(m.mode||'')}<span class="muted">${(m.todo||[]).filter(t=>!t.done).length?'・'+(m.todo||[]).filter(t=>!t.done).length+' 項待辦':''}</span></summary>
-    <div class="mbody">${m.points?`<div><b>討論</b><p class="qa">${esc(m.points)}</p></div>`:''}${m.said?`<div><b>老師說了</b><p class="qa">${esc(m.said)}</p></div>`:''}${m.decided?`<div><b>決定</b><p class="qa">${esc(m.decided)}</p></div>`:''}
+    <div class="mbody">${m.points?`<div><b>討論</b><p class="qa">${esc(m.points)}</p></div>`:''}${m.said?`<div><b>${isTeacher(m.who)?'老師':'對方'}說了</b><p class="qa">${esc(m.said)}</p></div>`:''}${m.decided?`<div><b>決定</b><p class="qa">${esc(m.decided)}</p></div>`:''}
     ${(m.todo||[]).length?`<div><b>會後待辦</b>${m.todo.map(t=>`<label class="row" style="font-size:calc(13px * var(--fs,1))"><input type="checkbox" data-ch="todoChk" data-m="${m.id}" data-id="${t.id}" ${t.done?'checked':''}> <span style="${t.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.t)}</span></label>`).join('')}</div>`:''}
     <div><button class="ghost sm" data-act="mtDel" data-id="${m.id}">刪除這次紀錄</button></div></div></details>`).join('')||'<p class="empty">每次見面後花五分鐘填寫，下次見面前就不會忘記老師說過什麼。</p>'}
 /* ---------- journal view ---------- */
@@ -4314,7 +4326,7 @@ function careHTML(){const c=careOf(today()),goal=+cfg().waterGoal||8,sit=sitMin(
     ${sit>=50?`<p class="banner" style="margin:0 0 10px">已經坐著專注了 ${sit} 分鐘，起來走走吧。</p>`:''}
     <div class="caregrid">${CARE.map(([k,n,d,ic])=>`<button class="caretile${CARE_T&&k==='eye'?' on':''}" data-act="care" data-k="${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg><b>${n}</b><span>${CARE_T&&k==='eye'?`看遠方… <b id="careT">${Math.ceil((CARE_T.end-Date.now())/1000)}</b> 秒`:d}</span><i class="num">${k==='water'?`${c.water} / ${goal} 杯`:`今天 ${c[k]} 次`}</i></button>`).join('')}</div>
     <p class="muted" style="margin:8px 0 0;font-size:calc(12px * var(--fs,1))">護眼：每專注 20 分鐘，看 6 公尺外 20 秒（20-20-20）。番茄鐘休息時，今日頁的計時下方也會提示一件。</p></section>`}
-function vWork(){const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,x)=>a+(+x.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),ev=gcOn()&&GC.events&&GC.events[k]||null;
+function vWork(){if(gcOn()&&calM===today().slice(0,7)&&GC.key!==calM&&GC.state!=='loading')setTimeout(()=>{Promise.resolve(gcLoad(false)).then(()=>{if(R==='work')render()}).catch(()=>{})},0);const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,x)=>a+(+x.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),ev=gcOn()&&GC.events&&GC.events[k]||null;
   const meets=isOn('plan')?Object.keys(S.projects||{}).map(id=>({id,p:proj(id)})).filter(x=>x.p.next&&x.p.next.date&&x.p.next.date>=k&&diffDays(k,x.p.next.date)<=7).sort((a,b)=>(a.p.next.date+(a.p.next.time||''))<(b.p.next.date+(b.p.next.time||''))?-1:1):[];
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>工作上班</h1></div><div class="chips"><span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
   <div class="grid2">

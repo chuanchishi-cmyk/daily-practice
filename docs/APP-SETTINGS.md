@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js）
 ```
 
 ---
@@ -250,6 +250,7 @@ node tools/tests/notes-rhythm.js
 node tools/tests/mz-teacher.js
 node tools/tests/sport-flow.js
 node tools/tests/work-page.js
+node tools/tests/work-words.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -523,6 +524,8 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
   - 彈性記錄：補記 15／30／60 分或自訂，打開原本的紀錄表（`openRecord`）。
   - 今天：三件事、Google 日曆行程（有連上時）、7 天內的會談（連到會前清單），以及隨手記、靜心 3 分鐘、伸展、安排會談的捷徑。
   - 測試：`tools/tests/work-page.js`。
+
+- **上班情境的用語**（2026-11-20）：`WK()`＝用途含「工作上班」。`PH(學生版, 上班版)` 切換提示語（番茄任務、紀錄筆記、雜念停車場、隨手記、週回顧、新計畫名稱，新計畫預設類型改「產品／專案」）。計畫用 `isAcadProj(p)` 判斷：學術類型（論文、期刊、申請、考試、獎學金…）用「指導教授、口試委員…／老師說了／研究手記」，其他用 `WHO_WORK`「主管、同事、客戶、合作夥伴、其他／對方說了／工作筆記」；邀約信只有對象是指導教授或口試委員時稱「老師」。套用用途時若只選了工作上班（沒選考試或計畫），且紀錄標籤、計數器還是預設值，換成「專案、會議、信件與聯絡、學習成長、運動」與「完成的任務、喝水」。工作上班頁打開時會自動載入本月 Google 日曆。測試：`tools/tests/work-words.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

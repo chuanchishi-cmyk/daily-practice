@@ -13,12 +13,12 @@ const open=async()=>{await pg.$$eval('.prcard',els=>els.forEach(e=>e.closest('de
 await open();await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();
 ok(!(await pg.isVisible('.mzt .opts')),'平常看不到老師選項（收在「看更多說明」裡）');
 await pg.$eval('.mzmore',d=>d.open=true);await pg.$eval('.mzt',d=>d.open=true);await pg.waitForTimeout(100);
-ok(await pg.isVisible('.mzt [data-v="阿姜查"]'),'展開後可以選老師');
-await pg.$eval('.mzt [data-v="阿姜查"]',e=>e.click());await pg.waitForTimeout(400);await open();
-let src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/阿姜查/.test(src),'選阿姜查：這一筆的說明改由阿姜查回應（'+src.trim().slice(0,24)+'）');
+ok(await pg.isVisible('.mzt [data-v="比約恩．納提科"]')&&!(await pg.$('.mzt [data-v="阿姜查"]')),'展開後可以選老師（只列能回應 6 種以上狀況的老師）');
+await pg.$eval('.mzt [data-v="比約恩．納提科"]',e=>e.click());await pg.waitForTimeout(400);await open();
+let src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/比約恩．納提科/.test(src),'選比約恩．納提科：這一筆的說明改由比約恩．納提科回應（'+src.trim().slice(0,24)+'）');
 await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();
-src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/阿姜查/.test(src),'之後重新回饋：不用再選，仍是阿姜查');
-ok(/回應的老師：阿姜查/.test(await pg.$eval('.mzt summary',e=>e.textContent)),'收起時只顯示一行「回應的老師：阿姜查」');
+src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/比約恩．納提科/.test(src),'之後重新回饋：不用再選，仍是比約恩．納提科');
+ok(/回應的老師：比約恩．納提科/.test(await pg.$eval('.mzt summary',e=>e.textContent)),'收起時只顯示一行「回應的老師：比約恩．納提科」');
 await pg.$eval('.mzmore',d=>d.open=true);await pg.$eval('.mzt',d=>d.open=true);await pg.$eval('.mzt [data-v=""]',e=>e.click());await pg.waitForTimeout(300);
 ok(await pg.evaluate(()=>!(JSON.parse(localStorage.getItem('studydesk-v1')).meta.main.mzTeacher)),'改回輪流');
 console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

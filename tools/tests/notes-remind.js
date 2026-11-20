@@ -1,0 +1,28 @@
+// 上班：接電話・臨時有事（先暫停番茄鐘、記來電）、隨手記可設提醒，時間到跳提示並出現在今日小卡；今日的「隨手記」（原雜念停車場）
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];let fail=0;
+fs.writeFileSync(SP+'tnm.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const c=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Asia/Taipei'});
+await c.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');
+  const D=Date;window.__off=new D('2026-11-23T10:00:00+08:00')-D.now();class FD extends D{constructor(...a){if(a.length)super(...a);else super(D.now()+window.__off)}static now(){return D.now()+window.__off}};window.Date=FD;
+  if(localStorage.getItem('studydesk-v1'))return;
+  localStorage.setItem('sd-tips',JSON.stringify({done:{'n-qn':'yes','n-work':'yes'},last:'',cur:null}));
+  localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{hidden:[],optIn:{work:true},purposes:['work']}},days:{},mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}}))});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+SP+'tnm.html#today');await pg.waitForTimeout(700);
+ok(/隨手記/.test(await pg.textContent('.park b'))&&!/雜念停車場/.test(await pg.textContent('main')),'今日頁：「雜念停車場」改名「隨手記」');
+await pg.goto('file://'+SP+'tnm.html#work');await pg.waitForTimeout(600);
+await pg.click('main [data-act=pToggle], main .pomo .pri');await pg.waitForTimeout(300);
+await pg.click('[data-act=wkCall]');await pg.waitForTimeout(400);
+const pomo=await pg.evaluate(()=>JSON.parse(localStorage.getItem('sd-pomo')));ok(!pomo.running,'接電話：番茄鐘先暫停');
+ok(await pg.isVisible('.qnbox')&&await pg.$eval('[data-act=qnKind][data-k=來電]',e=>e.getAttribute('aria-pressed'))==='true','打開隨手記，類別是「來電」');
+ok(await pg.$eval('#qnRem',e=>e.value)==='60','來電預設 1 小時後提醒（可改）');
+await pg.fill('#qnIn','王經理來電，報價改週五前給');await pg.selectOption('#qnRem','30');await pg.click('[data-act=qnAdd]');await pg.waitForTimeout(300);
+let db=await pg.evaluate(()=>JSON.parse(localStorage.getItem('studydesk-v1')));const it=db.days['2026-11-23'].j.park[0];
+ok(it.kind==='來電'&&it.remind&&Math.round((new Date(it.remind)-new Date('2026-11-23T10:00:00+08:00'))/60000)===30,'記下：來電、30 分鐘後提醒');
+await pg.click('.qnbox [data-act=close]');
+await pg.evaluate(()=>window.__off+=31*60000);await pg.goto('file://'+SP+'tnm.html#today');await pg.waitForTimeout(16500);
+ok(/提醒/.test(await pg.textContent('.todaynotes'))&&/王經理來電/.test(await pg.textContent('.todaynotes')),'時間到：今日小卡出現提醒');
+await pg.click('.todaynotes [data-act=remSnooze]');await pg.waitForTimeout(300);ok(!/王經理來電/.test((await pg.$eval('.todaynotes',e=>e.textContent).catch(()=>''))),'晚點再提醒：先收起，30 分鐘後再來');
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

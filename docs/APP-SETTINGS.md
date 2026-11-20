@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js）
 ```
 
 ---
@@ -251,6 +251,8 @@ node tools/tests/mz-teacher.js
 node tools/tests/sport-flow.js
 node tools/tests/work-page.js
 node tools/tests/work-words.js
+node tools/tests/notes-remind.js
+node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -526,6 +528,17 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
   - 測試：`tools/tests/work-page.js`。
 
 - **上班情境的用語**（2026-11-20）：`WK()`＝用途含「工作上班」。`PH(學生版, 上班版)` 切換提示語（番茄任務、紀錄筆記、雜念停車場、隨手記、週回顧、新計畫名稱，新計畫預設類型改「產品／專案」）。計畫用 `isAcadProj(p)` 判斷：學術類型（論文、期刊、申請、考試、獎學金…）用「指導教授、口試委員…／老師說了／研究手記」，其他用 `WHO_WORK`「主管、同事、客戶、合作夥伴、其他／對方說了／工作筆記」；邀約信只有對象是指導教授或口試委員時稱「老師」。套用用途時若只選了工作上班（沒選考試或計畫），且紀錄標籤、計數器還是預設值，換成「專案、會議、信件與聯絡、學習成長、運動」與「完成的任務、喝水」。工作上班頁打開時會自動載入本月 Google 日曆。測試：`tools/tests/work-words.js`。
+
+## 36b. 2026-11-20 第五批
+
+- **農曆節日與節氣**：瀏覽器內建的農曆（ICU）在新月接近午夜時會差一天（2027 春節算成 2/7）。改用天文算法（Meeus 新月與太陽視黃經，台灣時間 UTC+8；中氣定閏月，冬至所在為十一月）重算 2026–2040 的 `FEST`，並與 Google 日曆「台灣的節慶假日」2027 年逐日核對一致（除夕 2/5、春節 2/6、元宵 2/20、端午 6/9、中元 8/16、中秋 9/15、重陽 10/8、清明 4/5、冬至 12/22）。2030 春節為 2/3。節氣公式與天文計算只差 2026 雨水（2/18），以 `JQ_FIX` 修正。Google 的假日日曆只涵蓋未來兩三年，所以以計算為主、日曆為核對。
+- **節氣卡出現時間**：前兩天、當天、進入後兩天（原本前三天）。
+- **國定假日與紀念日**（`HOL`，國曆固定日＋母親節＝五月第二個週日）：前兩天到當天借用節氣卡的位置，只有文字與小印（`.jq.fest.hol`）。**優先順序**：當天的優先於預告；同一天：傳統節日 > 國定假日／紀念日 > 節氣；同一天的其他節日以小字「今天也是…」帶到（`.jqalso`）。與節氣同名的（清明）只顯示節氣。
+- **鎖定畫面暫停**：iPhone 的鎖定畫面控制跟著背景保活音（`KA`）的狀態；以前暫停計時但 KA 繼續播，系統又把按鈕切回播放。現在 `msPause` 後 `kaHold()` 讓 KA 一起暫停；KA 被系統暫停（`pause` 事件，非自己觸發）也當作暫停計時；`msPlay` 先 `keepAlive(true)`。
+- **瑜珈序列、間歇、組間休息在鎖定時也響**：`spSched()` 開始或繼續時把之後每個換步、換回合、結束的鈴聲排在音訊時鐘上；`spTick()` 換步時以原定時間累加（`endAt+=`），畫面回來能追上進度，不再重播鈴聲。鎖定畫面顯示目前體式／回合與剩餘秒數（`'s'` 目標）。
+- **隨手記（上班）**：今日的「雜念停車場」改名「隨手記」，按鈕「記下」。上班情境的類別為「待辦、來電、想法、問題」。每則可設提醒（`remind`，ISO 時間）；`remindTick()` 每 15 秒檢查，到時間 toast＋響一聲＋震動＋通知（已允許時），並列在今日小卡最上方（「處理好了」「晚點再提醒」＝延後 30 分）。限制：瀏覽器版只有 App 開著或背景計時中才能準時提醒。工作上班頁的番茄鐘下有「接電話・臨時有事」：暫停番茄鐘、打開隨手記並選好「來電」、預設 1 小時後提醒。測試：`tools/tests/notes-remind.js`。
+- **我的節奏兩個月比對**：測驗或上次更新滿 60 天、近 60 天記滿 30 晚時，用睡眠中點（有 6 晚以上週末紀錄就用週末）判斷作息類型、用專注分鐘判斷高峰時段；和報告不同時出現回顧卡「兩個月下來，你的節奏有點不一樣了」，按「更新報告」才寫入 `rhAdj.type/peak/repAt`，報告的兩格標示「依紀錄更新」。測試：`tools/tests/rhythm-report.js`。
+- **靜心回饋可指定的老師**：只列能回應 6 種以上狀況的（`MZ_PICK_MIN`），目前是聖嚴法師、馬哈希大師、比約恩．納提科（新增第 5 章〈初探寺院〉談期待特別體驗）。之前指定、現在不在名單的老師，改回輪流。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

@@ -1337,7 +1337,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.10'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.11'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1493,8 +1493,10 @@ function pomoHTML(){
   ${parkHTML()}`;
 }
 function pPaused(){return P.mode==='work'&&!P.running&&P.left!=null&&!!P.startedAt}
-/* ---------- 隨手記：雜念停車場、計畫筆記、覺察片段集中看 ---------- */
-const QN_KINDS=['待辦','想法','問題','提醒'];
+/* ---------- 隨手記：今日的隨手記（原雜念停車場）、計畫筆記、覺察片段集中看；可設提醒 ---------- */
+const QN_KINDS_S=['待辦','想法','問題','提醒'],QN_KINDS_W=['待辦','來電','想法','問題'];
+const qnKinds=()=>WK()||isOn('work')?QN_KINDS_W:QN_KINDS_S;
+let qnRemind='';
 let qnKind='待辦',qnFilter='open',qnPick=null;
 function qnItems(){const out=[],t=today();
   for(let i=0;i<30;i++){const k=addDays(t,-i),j=day(k).j||{};(j.park||[]).forEach(x=>out.push({src:'park',k,id:x.id,text:x.text,kind:x.kind||'',done:!!x.done,at:k+' '+(x.t||'')}))}
@@ -1507,11 +1509,20 @@ function qnRow(x,pids){const src=x.src==='park'?(x.k===today()?'今天':fmtMD(x.
   ${x.src==='mom'?'<a class="xlink" href="#journal" data-act="close">日記 →</a>':x.done?'':`<span class="qnact"><button class="ghost sm" data-act="qnTop" ${ref}>放進三件事</button>${pids.length&&isOn('plan')?`<button class="ghost sm" data-act="qnStep" ${ref}>轉成步驟</button>`:''}<button class="ghost sm" data-act="qnDel" ${ref} aria-label="刪除">×</button></span>`}</div>`}
 function qnBody(){const all=qnItems(),list=all.filter(x=>qnFilter==='all'||!x.done),pids=Object.keys(S.projects),v=(($('#qnIn')||{}).value)||'';
   return `<div class="row sb"><h2 id="qnT" style="margin:0">隨手記</h2><button class="ghost sm" data-act="close" aria-label="關閉">×</button></div>
-  <p class="muted" style="margin:4px 0 8px">想到什麼先記下來，等一下再處理。雜念停車場、計畫筆記、最近的覺察片段都集中在這裡。</p>
+  <p class="muted" style="margin:4px 0 8px">想到什麼先記下來，等一下再處理；需要的話設個提醒。今天的隨手記、計畫筆記、最近的覺察片段都集中在這裡。</p>
   <textarea id="qnIn" rows="2" placeholder="${PH('例：回老師的信、查那篇文章的出處、突然想到的點子','例：回主管的信、確認報價、突然想到的點子')}">${esc(v)}</textarea>
-  <div class="row sb" style="margin-top:6px"><div class="seg">${QN_KINDS.map(k=>`<button data-act="qnKind" data-k="${k}" aria-pressed="${qnKind===k}">${k}</button>`).join('')}</div><button class="pri sm" data-act="qnAdd">記下</button></div>
+  <div class="row sb" style="margin-top:6px;gap:6px"><div class="seg">${qnKinds().map(k=>`<button data-act="qnKind" data-k="${k}" aria-pressed="${qnKind===k}">${k}</button>`).join('')}</div><span class="row" style="gap:6px"><select id="qnRem" data-ch="qnRem" aria-label="提醒">${[['','不提醒'],['30','30 分鐘後'],['60','1 小時後'],['120','2 小時後'],['t','選時間…'],['am','明天早上 9 點']].map(([v,n])=>`<option value="${v}"${qnRemind===v?' selected':''}>${n}</option>`).join('')}</select><input type="time" id="qnRemT"${qnRemind==='t'?'':' hidden'} aria-label="提醒時間"><button class="pri sm" data-act="qnAdd">記下</button></span></div>
   <div class="row sb" style="margin:14px 0 6px"><b>${qnFilter==='all'?'全部':'待處理'} <span class="muted num">${list.length}</span></b><div class="seg">${[['open','待處理'],['all','全部']].map(([k,n])=>`<button data-act="qnFilter" data-v="${k}" aria-pressed="${qnFilter===k}">${n}</button>`).join('')}</div></div>
   <div class="qnlist">${list.slice(0,80).map(x=>qnRow(x,pids)).join('')||'<p class="empty">都處理完了。</p>'}</div>`}
+function qnRemAt(){const v=($('#qnRem')||{}).value||'',n=Date.now();if(!v)return '';if(v==='am'){const d=new Date();d.setDate(d.getDate()+1);d.setHours(9,0,0,0);return d.toISOString()}
+  if(v==='t'){const tv=($('#qnRemT')||{}).value;if(!tv)return '';const [h,m]=tv.split(':').map(Number),d=new Date();d.setHours(h,m,0,0);if(d.getTime()<n)d.setDate(d.getDate()+1);return d.toISOString()}return new Date(n+(+v)*60000).toISOString()}
+function remindAsk(){try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}catch{}}
+// 到時間的提醒：App 開著（或背景計時中）時跳出提示、響一聲；也出現在今日小卡
+function remindDue(){const t=today(),out=[];for(const k of [addDays(t,-1),t]){((day(k).j||{}).park||[]).forEach(x=>{if(x.remind&&!x.done&&x.remind<=new Date().toISOString())out.push(Object.assign({k},x))})}return out}
+let REM_LAST=0;
+function remindTick(){if(Date.now()-REM_LAST<15000)return;REM_LAST=Date.now();const fired=lsGet('sd-remfired',[])||[];const due=remindDue().filter(x=>!fired.includes(x.id));if(!due.length)return;
+  lsSet('sd-remfired',fired.concat(due.map(x=>x.id)).slice(-200));const x=due[0];toast('提醒：'+x.text.slice(0,40));try{unlockAudio();flTone('go')}catch{}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch{}
+  notify('日課提醒',x.text.slice(0,80));if(R==='today'||R==='work')render()}
 function qnOpen(){qnPick=null;$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="qnT"><div class="box qnbox">${qnBody()}</div></div>`;setTimeout(()=>{const i=$('#qnIn');i&&i.focus()},60)}
 function qnRefresh(){const b=$('.qnbox');if(b){const f=document.activeElement&&document.activeElement.id==='qnIn';b.innerHTML=qnBody();if(f){const i=$('#qnIn');i&&i.focus()}}render()}
 function qnEdit(d,fn){if(d.src==='park')editDay(d.k,dd=>{const a=dd.j.park=dd.j.park||[],x=a.find(y=>y.id===d.id);if(x)fn(x,a)});else if(d.src==='pnote'){const n=S.pnotes[d.id];if(!n)return;const c=clone(n);fn(c);save('pnotes',d.id,c)}}
@@ -1519,10 +1530,10 @@ function qnText(d){if(d.src==='park')return ((day(d.k).j.park||[]).find(y=>y.id=
 function qnToStep(d,pid){const t=qnText(d).slice(0,120),st=curStageOf(pid);if(!t||!st)return;const pp=clone(proj(pid)),s2=pp.stages.find(x=>x.id===st.id);s2.steps.push({id:rid(),t,done:false,due:''});save('projects',pid,pp);qnEdit(d,x=>{x.done=true});qnPick=null;toast(`已加到「${pp.name}・${st.name}」`);qnRefresh()}
 function parkHTML(){
   const k=today(),it=((day(k).j||{}).park)||[],open=it.filter(x=>!x.done).length;
-  return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">雜念停車場</b><span class="row" style="gap:8px"><span class="muted">${it.length?`${open} 則待處理`:''}</span><button class="linkbtn" data-act="qnOpen">全部隨手記</button></span></div>
-    <p class="muted" style="margin:2px 0 8px">專心時冒出雜念或想做的事，先停在這裡。寫下來，腦袋就不必一直記著它；番茄結束後再處理。</p>
-    <div class="row"><input id="parkIn" type="text" placeholder="${PH('例：回老師的信、查那篇文章的出處、買牙膏','例：回主管的信、確認報價、訂會議室')}" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">先放著</button></div>
-    ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${esc(x.text)}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
+  return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">隨手記</b><span class="row" style="gap:8px"><span class="muted">${it.length?`${open} 則待處理`:''}</span><button class="linkbtn" data-act="qnOpen">全部 →</button></span></div>
+    <p class="muted" style="margin:2px 0 8px">${PH('專心時冒出的念頭、想到要做的事，先記在這裡，腦袋就不必一直記著它；番茄結束後再處理。','臨時交辦、來電、突然想到的事，先記在這裡，需要的話設個提醒；專心做完手上的再處理。')}</p>
+    <div class="row"><input id="parkIn" type="text" placeholder="${PH('例：回老師的信、查那篇文章的出處、買牙膏','例：回主管的信、確認報價、訂會議室')}" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">記下</button></div>
+    ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${x.kind==='來電'?'<span class="pill mut">來電</span> ':''}${esc(x.text)}${x.remind&&!x.done?`<span class="muted"> ・提醒 ${new Date(x.remind).toTimeString().slice(0,5)}${x.remind.slice(0,10)!==today()?'（明天）':''}</span>`:''}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
   </div>`;
 }
 function pStart(){MT.running?unlockAudio():freshAudio();if(P.mode!=='work')accReset();try{nzWarm()}catch{}if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
@@ -1589,7 +1600,7 @@ function tAdvance(){
 let lastTitle='';
 let CUR_DAY=today();
 function tick(force){
-  syncSched();syncNoise();try{spTick()}catch{}try{careTick()}catch{}
+  syncSched();syncNoise();try{spTick()}catch{}try{careTick()}catch{}try{remindTick()}catch{}
   {const q=Math.floor(Date.now()/3e4);if(q!==tick._q){tick._q=q;const tk=timeKey();if(TK&&tk!==TK&&today()===CUR_DAY&&(R==='today'||R==='journal')){TK=tk;softRender()}TK=tk}}
   if(today()!==CUR_DAY&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){const o=CUR_DAY;CUR_DAY=today();if(jDay===o)jDay=CUR_DAY;if(calSel===o){calSel=CUR_DAY;calM=CUR_DAY.slice(0,7)}render();return}
   if(P.running&&Date.now()>=P.endAt){pComplete(false);return}
@@ -1830,7 +1841,8 @@ function adaptNote(clk){const R=myRhythm();if(!R)return '';const c=cfg(),t=today
   if(!pick&&!Object.values(v).includes(t)){pick=L.find(([id])=>!v[id]);if(pick){v[pick[0]]=t;lsSet('sd-adapt',v)}}
   return pick?pick[1]:''}
 /* 今日小卡：把提醒合成一張，依重要程度排序；預設顯示前兩則，其餘收在「還有 N 則」 */
-function todayNotesHTML(clk){const L=[],lt=letterLine();if(lt)L.push(lt);meetDueLines().forEach(x=>L.push(x));
+function remindLines(){return remindDue().map(x=>({k:'提醒',t:x.text,btn:`<span class="row" style="gap:4px"><button class="sm" data-act="remDone" data-k="${x.k}" data-id="${x.id}">處理好了</button><button class="ghost sm" data-act="remSnooze" data-k="${x.k}" data-id="${x.id}">晚點再提醒</button></span>`}))}
+function todayNotesHTML(clk){const L=remindLines(),lt=letterLine();if(lt)L.push(lt);meetDueLines().forEach(x=>L.push(x));
   const co=todayCoach();if(co)L.push({k:'今日小語',t:co});const ex=examTodayHTML();if(ex)L.push({k:ex.k,t:ex.t,href:'#exam',num:true,hot:ex.mile});const sj=shujiuLine();if(sj)L.push(sj);const ad=adaptNote(clk);if(ad)L.push({k:'日課記得',t:ad,soft:true});
   if(!L.length)return '';const open=lsGet('sd-tn-open',false)===true,more=L.length-2;
   const li=x=>`<div class="tn${x.soft?' soft':''}${x.hot?' hot':''}"><span class="tnk${x.num?' num':''}">${esc(x.k)}</span><span class="tnt">${x.href?`<a href="${x.href}">${esc(x.t)} →</a>`:esc(x.t)}</span>${x.btn||''}</div>`;
@@ -1901,6 +1913,11 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-20',lv:'minor',t:'隨手記：今日的「雜念停車場」改名「隨手記」；可以設提醒（30 分、1 小時、選時間、明早），時間到跳出提示並列在今日小卡；工作上班頁新增「接電話・臨時有事」，先暫停番茄鐘再記來電'},
+ {d:'2026-11-20',lv:'minor',t:'節氣卡：前兩天、當天、後兩天出現；國定假日與紀念日（元旦、教師節、國慶日、聖誕節等）前兩天到當天也會顯示；農曆節日依天文算法重算，並與 Google 日曆核對（2027 春節為 2/6）'},
+ {d:'2026-11-20',lv:'minor',t:'我的節奏：每兩個月比對作息類型與高峰時段，有變化時先問你要不要更新報告'},
+ {d:'2026-11-20',lv:'fix',t:'鎖定畫面：按暫停會真的暫停；瑜珈序列、間歇、組間休息的提示音也預先排好，鎖定螢幕照樣響'},
+ {d:'2026-11-20',lv:'fix',t:'靜心回饋：只列出能回應 6 種以上狀況的老師；新增比約恩．納提科談「期待特別體驗」的說明'},
  {d:'2026-11-20',lv:'fix',t:'上班情境的用語：用途選「工作上班」時，提示改成主管、同事、客戶、專案；會談對象、筆記、紀錄標籤也跟著換（學術計畫仍用老師的說法）'},
  {d:'2026-11-20',lv:'major',t:'新頁面「工作上班」：番茄鐘、休息時護眼 20 秒、喝水、起身走走與伸展，久坐提醒，彈性補記工作時段，今天的三件事、行程與會談（在用途或設定裡打開）'},
  {d:'2026-11-20',lv:'minor',t:'運動：健身新增連續模式（計時型全程自動、次數型做完按一下就休息），鎖定螢幕也照節奏響；最近紀錄可以一列補記'},
@@ -1972,7 +1989,7 @@ function tipList(){const hid=cfg().hidden||[],ss7=Array.from({length:7},(_,i)=>(
 function focusStats(keys){let mins=0,n=0,days=0;const per={};keys.forEach(k=>{const ss=day(k).sessions||[];if(ss.length)days++;ss.forEach(x=>{mins+=+x.min||0;n++;const h=new Date(x.t).getHours();const p=h<5?'深夜':h<11?'上午':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';per[p]=(per[p]||0)+(+x.min||0)})});
   const top=Object.entries(per).sort((a,b)=>b[1]-a[1])[0];let t=0,d=0;keys.forEach(k=>{const tp=(((day(k).j||{}).top3)||[]).filter(x=>x&&x.t);t+=tp.length;d+=tp.filter(x=>x.done).length});
   const med=keys.reduce((a,k)=>a+(((day(k).j||{}).practice)||[]).reduce((x,y)=>x+(+y.min||0),0),0);return {mins,n,days,top:top&&top[1]>=50?top[0]:'',t3:t?Math.round(d/t*100):null,med}}
-function reviewCard(st,t){const sr=slpWeekReport(st,t)||rhCalibCard(st,t);if(sr)return sr;const age=diffDays(firstUse(),t),R=myRhythm();
+function reviewCard(st,t){const sr=slpWeekReport(st,t)||rhReportCard(st,t)||rhCalibCard(st,t);if(sr)return sr;const age=diffDays(firstUse(),t),R=myRhythm();
   if(age>=7&&age<=21&&!st.done.wk1){const ks=Array.from({length:7},(_,i)=>addDays(t,-i)),f=focusStats(ks);if(f.n>=5)return {id:'wk1',kind:'review',t:'日課開始認識你了',
     b:`這一週你專注了 ${fmtMin(f.mins)}${f.top?`，多半在${f.top}`:''}。`+(R?'番茄鐘的長度和提醒時間，已經照你的作息慢慢調整了。':'花十來分鐘做「我的節奏」，日課就能照你的作息，調整番茄鐘長度和提醒時間。'),btn:R?'看我的節奏':'開始了解自己',page:'quiz'}}
   const dd=+t.slice(8,10);if(dd<=7&&age>=20){const pm=addDays(t.slice(0,8)+'01',-1).slice(0,7),id='mon-'+pm;if(!st.done[id]){const n=+pm.slice(5),ks=[];for(let k=pm+'-01';k.slice(0,7)===pm;k=addDays(k,1))ks.push(k);const f=focusStats(ks);
@@ -2062,7 +2079,7 @@ function dayDetail(k){
   ${sessionsHTML(k)}
   <div style="margin:8px 0 4px"><button class="sm" data-act="manual" data-k="${k}">補登這天</button> <a class="btn sm" href="#journal" data-act="toJournal" data-k="${k}">寫這天的日記</a> ${isOn('stats')?`<a class="btn sm" href="#stats" data-act="go" data-to="stats" data-m="week" data-k="${k}">看這週統計</a>`:''}</div>
   ${c.counters.some(x=>+((d.counts||{})[x.id]))?`<h3>計數</h3>${c.counters.filter(x=>+((d.counts||{})[x.id])).map(x=>`<div class="row sb"><span>${esc(x.name)}</span><span class="num">${+((d.counts||{})[x.id])||0}${x.goal?' / '+x.goal:''}</span></div>`).join('')}`:''}
-  ${(j.park||[]).length?`<h3>雜念停車場</h3><div class="list">${j.park.map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="num muted">${esc(x.t)}</span><span class="grow${x.done?' muted':''}">${esc(x.text)}</span></div>`).join('')}</div>`:''}
+  ${(j.park||[]).length?`<h3>隨手記</h3><div class="list">${j.park.map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="num muted">${esc(x.t)}</span><span class="grow${x.done?' muted':''}">${esc(x.text)}</span></div>`).join('')}</div>`:''}
   <h3>三件事</h3>${(j.top3||[]).filter(x=>x&&x.t).length?`<div class="list">${(j.top3||[]).filter(x=>x&&x.t).map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="grow${x.done?' muted':''}">${esc(x.t)}</span></div>`).join('')}</div>`:'<p class="empty">這天沒有寫三件事。</p>'}
   ${(j.moments||[]).length?`<h3>覺察片段</h3><div class="list">${j.moments.map(m=>`<div class="li" style="align-items:flex-start"><span class="num muted">${esc(m.t||'')}</span><div class="grow">${m.e?`<span class="chip">${esc(emoName(m.e))}</span> `:''}${esc(m.w||'')}${m.b||m.r?`<div class="muted">${m.b?'身體：'+esc(m.b):''}${m.b&&m.r?'・':''}${m.r?'回應：'+esc(m.r):''}</div>`:''}</div></div>`).join('')}</div>`:''}
   <details class="dayfold"${j.intent||j.mood||wins.length||j.good||j.adjust?'':' hidden'}><summary>覺察日記${j.mood?` <span class="muted">心境 ${j.mood}</span>`:''}</summary>
@@ -2807,9 +2824,12 @@ const A={
   ptoggle:()=>{const was=P.running;const pend=$('#ptagName');if(!was&&pend&&pend.value.trim())A.ptagSave();was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
   parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false})});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
   qnOpen:()=>qnOpen(),
-  qnKind:el=>{qnKind=el.dataset.k;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'))},
+  qnKind:el=>{qnKind=el.dataset.k;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));const i=$('#qnIn');if(i)i.placeholder=qnKind==='來電'?'誰打來、說了什麼、要回覆什麼，例：王經理來電，報價改週五前給':'想到什麼先寫下來';if(qnKind==='來電'&&$('#qnRem')&&!$('#qnRem').value){$('#qnRem').value='60'}},
+  remDone:el=>{editDay(el.dataset.k,d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.done=true});toast('處理好了');render()},
+  remSnooze:el=>{editDay(el.dataset.k,d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.remind=new Date(Date.now()+30*60000).toISOString()});lsSet('sd-remfired',(lsGet('sd-remfired',[])||[]).filter(i=>i!==el.dataset.id));toast('30 分鐘後再提醒');render()},
+  wkCall:()=>{if(P.running&&P.mode==='work')pPause();qnKind='來電';qnOpen();setTimeout(()=>{const r=$('#qnRem');if(r&&!r.value)r.value='60'},80);toast('番茄鐘先暫停了，回來按開始就能接著');render()},
   qnFilter:el=>{qnFilter=el.dataset.v;qnRefresh()},
-  qnAdd:()=>{const i=$('#qnIn'),t=(i&&i.value||'').trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,kind:qnKind,done:false})});i.value='';toast('記下了');qnRefresh();setTimeout(()=>{const j=$('#qnIn');j&&j.focus()},30)},
+  qnAdd:()=>{const i=$('#qnIn'),t=(i&&i.value||'').trim();if(!t)return toast('先寫下想到的事');const n=new Date(),rm=qnRemAt();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push(Object.assign({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,kind:qnKind,done:false},rm?{remind:rm}:{}))});if(rm){remindAsk();toast('記下了，'+new Date(rm).toTimeString().slice(0,5)+' 提醒你')}qnRemind='';i.value='';toast('記下了');qnRefresh();setTimeout(()=>{const j=$('#qnIn');j&&j.focus()},30)},
   qnDel:el=>{if(!twoStep(el))return;const d=el.dataset;if(d.src==='park')editDay(d.k,dd=>{dd.j.park=(dd.j.park||[]).filter(x=>x.id!==d.id)});else if(d.src==='pnote')remove('pnotes',d.id);qnRefresh()},
   qnTop:el=>{const d=el.dataset,t=qnText(d).slice(0,80);if(!t)return;let where='';
     for(const k of [today(),addDays(today(),1)]){let ok=false;editDay(k,dd=>{const a=dd.j.top3=dd.j.top3||[];const i=[0,1,2].find(i=>!(a[i]&&a[i].t));if(i!==undefined){a[i]={t,done:false};ok=true}});if(ok){where=k===today()?'今天':'明天';break}}
@@ -2860,6 +2880,7 @@ const A={
   tipNo:el=>{const st=tipsState();st.done[el.dataset.id]='no';st.cur=null;st.quiet=today();tipsSave(st);render()},
   tipGo:el=>{const id=el.dataset.id,st=tipsState();st.done[id]='yes';st.cur=null;st.quiet=today();tipsSave(st);
     if(id.startsWith('cal-')){rhApply();return}
+    if(id.startsWith('rep-')){rhReportApply();return}
     if(id==='n-qn'){render();qnOpen();return}
     const c=WHATSNEW.find(x=>x.id===id)||tipList().find(x=>x.id===id)||(id==='letter'?{page:'letter'}:id==='wk1'||id.startsWith('slp-')?{page:'quiz'}:id.startsWith('mon-')?{page:'stats'}:{});
     if(c.page){if(!isOn(c.page))editCfg(cc=>{cc.hidden=(cc.hidden||[]).filter(r=>r!==c.page)});location.hash=c.page;return}
@@ -3453,8 +3474,8 @@ function reportHTML(id,r){
   if(E.dip===2&&M.peak!=='b3'&&M.peak!=='b4')notes.push('你幾乎每天午後都會低潮。13–15 點不要排需要深度思考的事，改做例行事務，或先小睡 15 分鐘。');
   if(M.ed.ok&&M.ed.studyTop&&M.ed.studyTop!==M.peak)notes.push(`你最常專注工作的時段是 <b>${blName(M.ed.studyTop)}</b>，但精力高峰在 <b>${blName(M.peak)}</b>。試著把最難的任務移到高峰。`);
   return `<div class="kpis">
-    <div class="kpi"><div class="l">作息類型</div><div class="n" style="font-family:var(--f-display)">${T0.n}</div></div>
-    <div class="kpi"><div class="l">高峰時段</div><div class="n" style="font-size:calc(20px * var(--fs,1))">${(()=>{const t=blName(M.peak),m=String(t).match(/^([^\d]+?)\s*(\d.*)$/);return m?`<span style="font-family:var(--f-display);font-size:1.15em">${m[1]}</span> ${m[2]}`:esc(t)})()}</div></div>
+    <div class="kpi"><div class="l">作息類型${((S.meta.main||{}).rhAdj||{}).type?' <span class="muted">依紀錄更新</span>':''}</div><div class="n" style="font-family:var(--f-display)">${(TYPE5[((S.meta.main||{}).rhAdj||{}).type]||T0).n}</div></div>
+    <div class="kpi"><div class="l">高峰時段${((S.meta.main||{}).rhAdj||{}).peak?' <span class="muted">依紀錄更新</span>':''}</div><div class="n" style="font-size:calc(20px * var(--fs,1))">${(()=>{const t=blName(((S.meta.main||{}).rhAdj||{}).peak||M.peak),m=String(t).match(/^([^\d]+?)\s*(\d.*)$/);return m?`<span style="font-family:var(--f-display);font-size:1.15em">${m[1]}</span> ${m[2]}`:esc(t)})()}</div></div>
     <div class="kpi"><div class="l">建議番茄長度</div><div class="n">${ps.w}<small>分 + 休息 ${ps.s} 分</small></div></div>
     <div class="kpi"><div class="l">核心驅動</div><div class="n" style="font-family:var(--f-display);word-break:keep-all;line-height:1.3">${coreK.map(k=>DRV[k].n).join(' × ')}</div></div>
   </div>
@@ -3895,6 +3916,7 @@ const MZ_M={
   {m:'靜心不是要讓情緒消失，而是在情緒裡也能有一點空間。情緒低落、身心疲累時，不適合硬撐著坐，先讓身體休息、讓呼吸平順下來，再回來練習。也可以用很簡單的方式陪伴自己：慢慢走一段路，或只是感覺三次呼吸，告訴自己「現在是這樣，沒關係」。如果難過一直持續，請和信任的人或專業人員聊聊。難過時，也可以把練習改成慈心：在心裡對自己說「願我平安，願我好好照顧自己」，就像安慰一位朋友那樣。',s:'參考聖嚴法師《禪的體驗‧禪的開示》頁 36'},
   {m:'有位曾經歷憂鬱的老師說，很難熬的夜裡，他的老師只是微笑地說：「好好睡吧，也許明天早上你就會感覺很不一樣。」事情也真的如此。沒有什麼是永遠不變的，最艱難的時候也一樣。練習不能保證我們永遠順利，但能讓我們身處難受之中，心不完全被它帶走。所以今天就先好好休息、照顧自己，不需要逼自己馬上好起來。如果低落持續很多天，記得找信任的人聊聊，或尋求專業協助。',s:'比約恩．納提科《我可能錯了》第 6 章；《阿姜查的禪修世界（二）》'}],
  expect:[
+  {m:'納提科第一次在寺院靜坐時，心裡嘀咕：「怎麼這麼無聊？不是應該發生什麼事嗎？」他說，很多人剛開始都犯同樣的錯，以為腦袋會靜下來；其實只要活著，念頭就會不斷冒出來，這再正常不過。練習不是等待特別的體驗，而是看見念頭來了，輕輕對自己說：「嘿，那個念頭又來了，那就放掉它吧。」帶著一點幽默，別把每個念頭都看得太認真。',s:'比約恩．納提科《我可能錯了》第5章〈初探寺院〉'},
   {m:'有學生坐出一次很好的狀態，之後一直想再回去，他的老師說：「我沒辦法使你每一次打坐，都能得到輕靈明淨；我只能告訴你，每次打坐，不求效果，不怕壞境界，也不求好境界現前。」他也用破繭來比喻：蝴蝶若急著鑽出繭殼，反而可能提前死在繭中。練習需要時間，急不來。練習比較像種花：每天澆水，花什麼時候開，不用一直去看。下次坐下時，試著把目標從「要坐得好」換成「要清楚知道」，不管狀態如何，知道就是做對了。',s:'聖嚴法師《禪的生活》頁 108–109、203–204'},
   {m:'試著不期待好的經驗，也不排斥壞的經驗，因為每一種經驗，都能幫我們更了解自己。希望練習更順利、想要特別的體驗時，可以在心裡知道「期待、期待」，然後回到呼吸。有些人只想付出一點、得到很多，但練習比較像種地：先整地、拔草，種子才會慢慢長出來。只要持續整地、澆水，土壤準備好了，該長的自然會長出來。下次坐下前，可以對自己說一句：「今天怎麼樣都好，我只是來看看。」',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 46；《Ⅱ》；焦諦卡禪師《禪修之旅》第一講'}],
  judge:[
@@ -3942,7 +3964,9 @@ function mzFeedback(x){
 const MZ_TEACHERS=['聖嚴法師','馬哈希大師','帕奧禪師','阿姜查','比約恩．納提科','焦諦卡禪師','虛雲老和尚'];
 const mzTeacher=v=>{const s=v.s||'';let best='',at=1e9;MZ_TEACHERS.forEach(t=>{const i=s.indexOf(t);if(i>=0&&i<at){at=i;best=t}});return best||s.slice(0,6)};
 const mzTeacherCount=t=>Object.values(MZ_M).filter(vs=>vs.some(v=>mzTeacher(v)===t)).length;
-function mzPickVariant(vs){const pref=cfg().mzTeacher,hit=pref&&vs.find(v=>mzTeacher(v)===pref);if(hit)return hit;if(vs.length<2)return vs[0];const hist=lsGet('sd-mzt',[])||[];
+const MZ_PICK_MIN=6; // 能回應 6 種以上狀況的老師才列入可指定的名單（其餘仍會在輪流時出現）
+const mzPickable=()=>MZ_TEACHERS.filter(t=>mzTeacherCount(t)>=MZ_PICK_MIN);
+function mzPickVariant(vs){const pref=mzPickable().includes(cfg().mzTeacher)?cfg().mzTeacher:'',hit=pref&&vs.find(v=>mzTeacher(v)===pref);if(hit)return hit;if(vs.length<2)return vs[0];const hist=lsGet('sd-mzt',[])||[];
   const age=v=>{const i=hist.lastIndexOf(mzTeacher(v));return i<0?-1:i};
   const pick=vs.slice().sort((a,b)=>age(a)-age(b))[0];lsSet('sd-mzt',hist.concat(mzTeacher(pick)).slice(-8));return pick}
 // 第一句：該狀況自己的承接語＋幾句溫和的通用開頭，避免和上一次一樣
@@ -3953,11 +3977,11 @@ function mzCardHTML(f){const care=f.k==='crisis'||f.k==='distress';
   return `<div class="mzfb${care?' care':''}"><b>${f.k==='crisis'?'請先照顧自己':'給你的回饋'}</b>
     <p>${f.a?`<span class="mzack">${esc(f.a)}</span>`:''}${esc(f.b||f.t||'')}</p>
     ${f.m?`<details class="mzmore"><summary><span class="c">看更多說明…</span><span class="o">收起 ▴</span></summary><p>${esc(f.m)}</p><span class="mzsrc">出處：${esc(f.s||'')}</span>${mzTeacherPick(f)}</details>`:''}</div>`}
-function mzTeacherPick(f){const pref=cfg().mzTeacher||'',miss=pref&&f.s&&mzTeacher({s:f.s})!==pref;
+function mzTeacherPick(f){const pref=mzPickable().includes(cfg().mzTeacher)?cfg().mzTeacher:'',miss=pref&&f.s&&mzTeacher({s:f.s})!==pref;
   return `<details class="mzt"><summary>${pref?`回應的老師：${esc(pref)}`:'想指定回應的老師？'}</summary>
     <p class="muted" style="margin:6px 0 0;font-size:calc(12px * var(--fs,1))">選好之後，之後的說明會優先引用這位老師的教導；這位老師沒談到的狀況，會由其他老師回應${miss?'（這一次就是這樣）':''}。</p>
-    <div class="opts">${[['','輪流']].concat(MZ_TEACHERS.map(t=>[t,t])).map(([v,n])=>`<button class="opt sm" data-act="mzTeach" data-v="${esc(v)}" aria-pressed="${pref===v}">${esc(n)}${v?`<span class="muted"> ${mzTeacherCount(v)}</span>`:''}</button>`).join('')}</div>
-    <p class="muted" style="margin:4px 0 0;font-size:calc(11px * var(--fs,1))">數字是這位老師談到的狀況數（共 ${Object.keys(MZ_M).length} 種）。</p></details>`}
+    <div class="opts">${[['','輪流']].concat(mzPickable().map(t=>[t,t])).map(([v,n])=>`<button class="opt sm" data-act="mzTeach" data-v="${esc(v)}" aria-pressed="${pref===v}">${esc(n)}${v?`<span class="muted"> ${mzTeacherCount(v)}</span>`:''}</button>`).join('')}</div>
+    <p class="muted" style="margin:4px 0 0;font-size:calc(11px * var(--fs,1))">數字是這位老師談到的狀況數（共 ${Object.keys(MZ_M).length} 種）。能回應 6 種以上的老師才列在這裡，其他老師仍會在輪流時出現；之後從原書補齊，就會加入。</p></details>`}
 function lastNext(){for(let i=0;i<21;i++){const k=addDays(today(),-i),ps=(((day(k).j||{}).practice)||[]).slice().reverse();const p=ps.find(x=>x.next&&x.next.trim());if(p)return {k,p}}return null}
 function practiceCard(d,x){return `<div class="prcard">
     <div class="mrec2">
@@ -4142,7 +4166,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{qnRem:el=>{qnRemind=el.value;const t=$('#qnRemT');if(t){t.hidden=el.value!=='t';if(!t.hidden)t.focus()}},flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -4344,7 +4368,7 @@ function vWork(){if(gcOn()&&calM===today().slice(0,7)&&GC.key!==calM&&GC.state!=
   return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>工作上班</h1></div><div class="chips"><span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
   <div class="grid2">
     <div class="stack">
-      <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}${breakTipHTML()}</section>
+      <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}${breakTipHTML()}<div class="row" style="margin-top:10px"><button class="sm" data-act="wkCall">接電話・臨時有事</button><span class="muted" style="font-size:calc(12px * var(--fs,1))">先暫停番茄鐘，記下來電或交辦</span></div></section>
       <section class="card"><div class="row sb"><h2 style="margin:0">彈性記錄</h2></div><p class="muted" style="margin:6px 0 10px">開會、處理信件、臨時被叫走，沒有開番茄鐘也能補記一段；長休、短休和白噪音都沿用設定。</p>
         <div class="row" style="flex-wrap:wrap"><button class="sm" data-act="wkRec" data-m="15">補記 15 分</button><button class="sm" data-act="wkRec" data-m="30">30 分</button><button class="sm" data-act="wkRec" data-m="60">1 小時</button><button class="ghost sm" data-act="wkRec" data-m="0">自訂…</button></div></section>
     </div>
@@ -4402,7 +4426,7 @@ function myRhythm(){const rs=Object.values(S.quiz||{}).filter(r=>r&&r.v===3&&r.v
   const r=rs.sort((a,b)=>(a.at||'')<(b.at||'')?1:-1)[0],key=(r.at||'')+today()+Object.keys(S.days).length+JSON.stringify((S.meta.main||{}).rhAdj||'');if(_rh.k===key)return _rh.v;
   let v=null;try{const M=energyModel(r.energy),sl=M.sl,win=sl.work||sl.free,core=DK.filter(k=>r.vals.layerOf[k]==='core'),top=(r.top||[]).filter(k=>DRV[k]);
     v={type:sl.type,typeN:TYPE5[sl.type].n,peak:M.peak,low:M.low,idea:M.idea,ps:pomoSuggest(r.energy.span),drv:(core.length?core:top.slice(0,2)),wake:win?win.off%1440:null,sleep:win?win.on%1440:null}}catch{}
-  const adj=(S.meta.main||{}).rhAdj;if(v&&adj){['sleep','wake','peak'].forEach(f=>{if(adj[f]!=null)v[f]=adj[f]});v.adj=adj}
+  const adj=(S.meta.main||{}).rhAdj;if(v&&adj){['sleep','wake','peak'].forEach(f=>{if(adj[f]!=null)v[f]=adj[f]});if(adj.type&&TYPE5[adj.type]){v.type=adj.type;v.typeN=TYPE5[adj.type].n}v.adj=adj}
   _rh={k:key,v};return v}
 const blOfNow=()=>{const h=new Date().getHours();return (BL.find(b=>{const e=b.h+b.len;return e>24?(h>=b.h||h<e-24):(h>=b.h&&h<e)})||{}).k||null};
 const drvPick=(R,salt)=>{if(!R||!R.drv.length)return null;const d=Math.floor(Date.now()/864e5)+(salt||0);return R.drv[d%R.drv.length]};
@@ -4910,6 +4934,19 @@ function rhCalibCard(st,t){const R=myRhythm();if(!R)return null;const id='cal-'+
   const r0=Object.values(S.quiz||{}).filter(r=>r&&r.v===3).sort((a,b)=>(a.at||'')<(b.at||'')?1:-1)[0];if(r0&&r0.date&&diffDays(r0.date,t)<14)return null;if(R.adj&&R.adj.at&&diffDays(R.adj.at,t)<14)return null;
   const x=rhCalib();if(!x)return null;
   return {id,kind:'review',t:'兩週的作息，跟「我的節奏」有點不同',b:`依最近兩週記錄的 ${x.c.n} 晚${x.ch.peak?'和專注紀錄':''}：${rhCalibText(x)}。要照實際的作息更新嗎？更新後，提醒時間、今日小語和建議的時段都會跟著調整。`,btn:'更新我的節奏',no:'先不要'}}
+// 每兩個月：用近 60 天的紀錄看作息類型與高峰時段有沒有變，先問使用者要不要更新報告上的數字
+function rhTypeOf(end,n){const ks=Array.from({length:n},(_,i)=>addDays(end,-i)),L=ks.map(k=>Object.assign({k},day(k).slp||{})).filter(x=>slpDur(x)!=null);if(L.length<30)return null;
+  const we=L.filter(x=>{const d=parseD(x.k).getDay();return d===6||d===0}),use=we.length>=6?we:L,msf=use.reduce((a,x)=>a+slpMid(x),0)/use.length/60-12;
+  return msf<3?'e2':msf<4?'e1':msf<5?'m':msf<6?'l1':'l2'}
+function rhReport(t){const R=myRhythm();if(!R)return null;const r0=Object.values(S.quiz||{}).filter(r=>r&&r.v===3).sort((a,b)=>(a.at||'')<(b.at||'')?1:-1)[0];if(!r0)return null;
+  const adj=(S.meta.main||{}).rhAdj||{},base=adj.repAt||r0.date;if(!base||diffDays(base,t)<60)return null;
+  const ty=rhTypeOf(t,60);if(!ty)return null;const per=rhPeriod(t,60),M=energyModel(r0.energy),curT=adj.type||M.sl.type,curP=adj.peak||M.peak,ch={};
+  if(ty!==curT)ch.type=ty;if(per.peak&&per.peak!==curP)ch.peak=per.peak;if(!Object.keys(ch).length)return null;
+  return {ch,curT,curP,per,ty}}
+function rhReportCard(st,t){const x=rhReport(t);if(!x)return null;const id='rep-'+Math.floor(parseD(t).getTime()/864e5/60);if(st.done[id])return null;
+  const a=[];if(x.ch.type)a.push(`作息類型 ${TYPE5[x.curT].n} → ${TYPE5[x.ch.type].n}`);if(x.ch.peak)a.push(`高峰時段 ${blName(x.curP)} → ${blName(x.ch.peak)}`);
+  return {id,kind:'review',t:'兩個月下來，你的節奏有點不一樣了',b:`依最近兩個月記錄的 ${x.per.n} 晚睡眠${x.ch.peak?'和專注紀錄':''}：${a.join('、')}。要更新「我的節奏」報告上的數字嗎？`,btn:'更新報告',no:'先不要'}}
+function rhReportApply(){const x=rhReport(today());if(!x)return;editCfg(c=>{const o=Object.assign({},c.rhAdj||{});Object.assign(o,x.ch,{repAt:today(),at:o.at||today()});if(x.per.bed!=null)o.sleep=Math.round(x.per.bed/15)*15%1440;if(x.per.wake!=null)o.wake=Math.round(x.per.wake/15)*15%1440;c.rhAdj=o});toast('報告已更新');render()}
 function rhTrendHTML(){const t=today(),P=[0,1,2,3].map(i=>rhPeriod(addDays(t,-14*i),14)).filter(x=>x.n>=3);const R=myRhythm(),x=R?rhCalib():null;
   if(!P.length&&!(R&&R.adj))return '';
   return `<section class="card" style="margin-bottom:16px"><h2>作息的變化 <span class="muted">每兩週一格</span></h2>

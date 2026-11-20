@@ -21,7 +21,7 @@ const tabs=await pg.$$eval('[data-act=spTab]',e=>e.map(x=>x.textContent));ok(tab
 // yoga: run the bedtime sequence by jumping time
 await pg.click('[data-act=spSeq][data-id=night]');await pg.waitForTimeout(200);
 await pg.click('[data-act=spYogaGo]');await pg.waitForTimeout(300);
-const steps=[];for(let i=0;i<20;i++){const t=await pg.evaluate(()=>{const p=document.querySelector('.ypose');return p?p.textContent.trim():''});if(!t)break;steps.push(t);await pg.evaluate(()=>window.__off+=181000);await pg.waitForTimeout(450)}
+const steps=[];for(let i=0;i<20;i++){const t=await pg.evaluate(()=>{const p=document.querySelector('.ypose');return p?p.textContent.trim():''});if(!t)break;steps.push(t);await pg.evaluate(()=>{const m=(document.querySelector('#spTime')||{}).textContent||'0:01';const [a,b]=m.split(':').map(Number);window.__off+=((a||0)*60+(b||0))*1000+600});await pg.waitForTimeout(450)}
 ok(steps.length===9&&steps.some(s=>/仰臥扭轉\s*左側/.test(s))&&steps.some(s=>/仰臥扭轉\s*右側/.test(s)),'睡前伸展：9 個步驟，左右自動換邊（'+steps.slice(0,4).join('→')+'…）');
 ok(/完成「睡前伸展」/.test(await pg.textContent('main')),'序列結束：出現感受紀錄');
 await pg.click('[data-act=spFeel][data-f=flex][data-n="4"]');await pg.fill('#spNote','左髖較緊');await pg.click('[data-act=spYogaSave]');await pg.waitForTimeout(300);

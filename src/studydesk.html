@@ -1610,7 +1610,10 @@ let KA=null,KAOFF=null;
 function silentWav(){const n=8000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>[...s].forEach((c,i)=>b[o+i]=c.charCodeAt(0));
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
   for(let i=0;i<n;i++)b[44+i]=128;let s='';b.forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s)}
-function keepAlive(on){try{if(on){if(!KA){KA=new Audio(silentWav());KA.loop=true;KA.setAttribute('playsinline','');KA.volume=0;KA.muted=false}if(KA.paused)KA.play().catch(()=>{})}else if(KA&&!KA.paused)KA.pause()}catch{}}
+function kaRunning(){return P.running||MT.running||T.running||(['flow','yoga','hiit','rest'].includes(ST.k)&&ST.running)}
+function keepAlive(on){try{if(on){if(!KA){KA=new Audio(silentWav());KA.loop=true;KA.setAttribute('playsinline','');KA.volume=0;KA.muted=false;
+      KA.addEventListener('pause',()=>{if(KA._self){KA._self=false;return}if(kaRunning())msPause()})}if(KA.paused)KA.play().catch(()=>{})}else if(KA&&!KA.paused){KA._self=true;KA.pause()}}catch{}}
+function kaHold(){try{if(KA&&!KA.paused){KA._self=true;KA.pause()}}catch{}} // 暫停時讓背景音也停，鎖定畫面才會顯示「已暫停」
 let WL=null;
 async function wakeLock(on){try{if(on&&!WL&&navigator.wakeLock&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){await WL.release();WL=null}}catch{WL=null}}
 let MSK=null;
@@ -1619,17 +1622,19 @@ function mediaMeta(t,sub,st,pos){try{if(!('mediaSession' in navigator))return;co
   try{ms.playbackState=t?st:'none'}catch{}
   try{if(t&&pos&&ms.setPositionState)ms.setPositionState({duration:Math.max(1,pos[0]),position:Math.min(pos[0],Math.max(0,pos[1])),playbackRate:1})}catch{}}catch{}}
 /* lock screen / Control Center play-pause: drive the timer, not the silent keep-alive audio */
-function msTarget(){if(P.running)return 'p';if(MT.running)return 'm';if(T.running)return 't';if(ST.k==='flow')return 'f';
+function msTarget(){if(P.running)return 'p';if(MT.running)return 'm';if(T.running)return 't';if(ST.k==='flow')return 'f';if(['yoga','hiit','rest'].includes(ST.k))return 's';
   if(P.left!=null&&P.left>0)return 'p';if(MT.left!=null&&MT.left>0)return 'm';if(T.left!=null&&T.left>0)return 't';return ''}
-function msPlay(){const k=msTarget();try{unlockAudio()}catch{}
+function msPlay(){const k=msTarget();try{unlockAudio()}catch{}keepAlive(true);
   if(k==='f'){if(!ST.running)flowPause();return}
+  if(k==='s'){if(!ST.running)A.spPause();return}
   if(k==='p'&&!P.running){if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
   else if(k==='m'&&!MT.running){MT.endAt=Date.now()+mLeft()*1000;MT.running=true;if(MT.wfLeft>0){smallWoodfish(MT.wfLeft,6);MT.wfLeft=0}savMT()}
   else if(k==='t'&&!T.running){T.endAt=Date.now()+tLeft()*1000;T.running=true;tRunStart();savT()}
   syncSched();syncNoise();softRender()}
-function msPause(){if(!P.running&&!MT.running&&!T.running&&ST.k==='flow'){const x=ST.steps[ST.i];if(ST.running&&x.ph==='work'&&x.sec==null)flowSet();else flowPause();return}
+function msPause(){if(!P.running&&!MT.running&&!T.running&&ST.k==='flow'){const x=ST.steps[ST.i];if(ST.running&&x.ph==='work'&&x.sec==null)flowSet();else{flowPause();kaHold()}return}
+  if(!P.running&&!MT.running&&!T.running&&['yoga','hiit','rest'].includes(ST.k)){if(ST.running)A.spPause();kaHold();return}
   if(P.running)pPause();else if(MT.running){MT.left=mLeft();MT.running=false;MT.wfLeft=wfCancel();savMT()}else if(T.running){T.left=tLeft();T.running=false;tRunStop();savT()}
-  syncSched();syncNoise();softRender()}
+  syncSched();syncNoise();kaHold();softRender()}
 try{if('mediaSession' in navigator){const ms=navigator.mediaSession;ms.setActionHandler('play',msPlay);ms.setActionHandler('pause',msPause);
   ['stop'].forEach(a=>{try{ms.setActionHandler(a,msPause)}catch{}});['seekbackward','seekforward','previoustrack','nexttrack','seekto'].forEach(a=>{try{ms.setActionHandler(a,null)}catch{}})}}catch{}
 // keep scheduled end sounds in step with the timers
@@ -1641,12 +1646,12 @@ function syncSched(){
   if(T.running&&xwarnOn()){const tot=tSegSec();[300,60].forEach(th=>{if(tot>th+5&&T.endAt-th*1000>Date.now()+200)want['w'+th]={end:T.endAt-th*1000,fn:warnTone}})}
   ['p','t','m','w300','w60'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
-  const any=P.running||T.running||MT.running||(ST.k==='flow'&&ST.running);
+  const any=kaRunning();
   // paused: keep the lock-screen controls for a few minutes so the timer can be resumed from there
   const tg=msTarget();
-  if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!(P.running||T.running||MT.running||ST.k==='flow'))keepAlive(false)},tg?300000:20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
+  if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!kaRunning())keepAlive(false)},tg?300000:20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
   wakeLock(any&&wakePref());
-  if(tg==='f'){}else if(!tg)mediaMeta(null);else{const run=tg==='p'?P.running:tg==='m'?MT.running:T.running,left=tg==='p'?pLeft():tg==='m'?mLeft():tLeft(),tot=tg==='p'?modeSec(P.mode):tg==='m'?MT.min*60:tSegSec(),mins=Math.ceil(left/60);
+  if(tg==='f'||tg==='s'){}else if(!tg)mediaMeta(null);else{const run=tg==='p'?P.running:tg==='m'?MT.running:T.running,left=tg==='p'?pLeft():tg==='m'?mLeft():tLeft(),tot=tg==='p'?modeSec(P.mode):tg==='m'?MT.min*60:tSegSec(),mins=Math.ceil(left/60);
     const en=window.APPLANG==='en',nm=tg==='p'?(en?(P.mode==='work'?'Pomodoro · Focus':'Pomodoro · Break'):(P.mode==='work'?'番茄鐘・專注':'番茄鐘・休息')):tg==='m'?(en?'Meditation':'靜心'):(en?'Timer':exL('timerRun').replace(/中$/,''));
     mediaMeta(nm+(run?(en?'':'中'):(en?' · Paused':'・已暫停')),(en?mins+' min left · Rike':'剩 '+mins+' 分・日課'),run?'playing':'paused',[tot,tot-left])}
 }
@@ -4512,7 +4517,11 @@ function seqTotal(q){return q.p.reduce((a,x)=>a+x[1]*(x[2]?2:1),0)}
 function seqSteps(q){const o=[];q.p.forEach(([n,s,side])=>{if(side){o.push({n,s,side:'左側'});o.push({n,s,side:'右側'})}else o.push({n,s})});return o}
 function spRecord(type,o){const t=new Date();editDay(today(),d=>{d.sport=d.sport||[];d.sport.push(Object.assign({id:rid(),t:t.toISOString(),type},o))})}
 /* ---- timers ---- */
-function spStart(o){unlockAudio();ST=Object.assign({running:true,startAt:Date.now()},o);ST.endAt=Date.now()+ST.left*1000;delete ST.left;wakeLock(wakePref());render()}
+function spSched(){Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);if(!AC||!ST.running||!ST.endAt)return;let t=(ST.endAt-Date.now())/1000;
+  if(ST.k==='rest'){schedule('sp_end',t,()=>bell(2));return}
+  if(ST.k==='yoga'){const st=seqSteps(ST.q);for(let i=ST.i+1;i<st.length;i++){schedule('sp'+i,t,()=>bell(1));t+=st[i].s}schedule('sp_end',t,()=>bell(2));return}
+  if(ST.k==='hiit'){const h=ST.h;let n=ST.n,ph=ST.phase;for(let g=0;g<400;g++){n++;if(ph==='w'&&n>=h.n*2-1){schedule('sp_end',t,()=>bell(2));return}ph=ph==='w'?'r':'w';schedule('sp'+n,t,()=>bell(1));t+=ph==='w'?h.w:h.r}}}
+function spStart(o){unlockAudio();keepAlive(true);ST=Object.assign({running:true,startAt:Date.now()},o);ST.endAt=Date.now()+ST.left*1000;delete ST.left;spSched();wakeLock(wakePref());syncSched();render()}
 function spLeft(){return ST.running?Math.max(0,(ST.endAt-Date.now())/1000):(ST.left||0)}
 /* 健身連續模式：計時型（每組固定秒數，自動銜接）／次數型（做完按「完成這組」，休息自動倒數）。
    開始或繼續時，把接下來所有提示音排在音訊時鐘上，鎖定螢幕也照樣響。 */
@@ -4547,10 +4556,11 @@ function spTick(){if(!ST.k)return;
       flowMeta();render();return}
     const el=$('#spTime');if(el)el.textContent=ST.endAt!=null?mmss(ST.running?spLeft():(ST.left||0)):mmss((Date.now()-ST.workAt)/1000);if(ST.endAt!=null&&ST.running)flowMeta();return}
   if(ST.running&&Date.now()>=ST.endAt){
-    if(ST.k==='rest'){ST={k:null,running:false};try{bell(2)}catch{}toast('休息結束，開始下一組');render();return}
-    if(ST.k==='yoga'){const st=seqSteps(ST.q);ST.i++;if(ST.i>=st.length){const m=Math.max(1,Math.round(seqTotal(ST.q)/60));ST={k:'yogaDone',running:false,min:m,seq:ST.q.n};try{bell(2)}catch{}render();return}try{bell(1)}catch{}ST.endAt=Date.now()+st[ST.i].s*1000;render();return}
-    if(ST.k==='hiit'){ST.n++;const h=ST.h;if(ST.phase==='w'){if(ST.n>=h.n*2-1){ST={k:'hiitDone',running:false,min:Math.max(1,Math.round(h.n*(h.w+h.r)/60))};try{bell(2)}catch{}render();return}ST.phase='r';ST.endAt=Date.now()+h.r*1000}else{ST.phase='w';ST.endAt=Date.now()+h.w*1000}try{bell(1)}catch{}render();return}}
-  const el=$('#spTime');if(el)el.textContent=mmss(spLeft());}
+    if(ST.k==='rest'){ST={k:null,running:false};toast('休息結束，開始下一組');render();return}
+    if(ST.k==='yoga'){const st=seqSteps(ST.q);ST.i++;if(ST.i>=st.length){const m=Math.max(1,Math.round(seqTotal(ST.q)/60));ST={k:'yogaDone',running:false,min:m,seq:ST.q.n};render();return}ST.endAt=ST.endAt+st[ST.i].s*1000;render();return}
+    if(ST.k==='hiit'){ST.n++;const h=ST.h;if(ST.phase==='w'){if(ST.n>=h.n*2-1){ST={k:'hiitDone',running:false,min:Math.max(1,Math.round(h.n*(h.w+h.r)/60))};render();return}ST.phase='r';ST.endAt=ST.endAt+h.r*1000}else{ST.phase='w';ST.endAt=ST.endAt+h.w*1000}render();return}}
+  const el=$('#spTime');if(el)el.textContent=mmss(spLeft());
+  if(['yoga','hiit','rest'].includes(ST.k)){const nm=ST.k==='rest'?'組間休息':ST.k==='hiit'?(ST.phase==='w'?'間歇・運動':'間歇・休息'):((seqSteps(ST.q)[ST.i]||{}).n||'瑜珈');mediaMeta(nm+(ST.running?'':'・已暫停'),`剩 ${Math.ceil(spLeft())} 秒・日課運動`,ST.running?'playing':'paused')}}
 /* ---- view ---- */
 function vSport(){const c=spCfg(),k=today(),wk=sportsOf(weekKeys(k)),days=new Set(wk.map(x=>x.k)).size;
   if(!c.sports||spPick)return `<header class="ph"><div><p class="eyebrow">運動</p><h1>你想記錄哪些運動？</h1></div></header>
@@ -4670,14 +4680,14 @@ Object.assign(A,{
   spTab:el=>{spTab=el.dataset.v;render()},
   spSeq:el=>{lsSet('sd-yseq',el.dataset.id);render()},
   spYogaGo:el=>{const q=spCfg().seqs.find(x=>x.id===el.dataset.id);if(!q)return;spStart({k:'yoga',q:clone(q),i:0,left:seqSteps(q)[0].s});try{bell(1)}catch{}},
-  spPause:()=>{if(ST.running){ST.left=spLeft();ST.running=false}else{ST.endAt=Date.now()+(ST.left||0)*1000;ST.running=true;unlockAudio()}render()},
-  spSkip:()=>{if(ST.k==='yoga'){ST.running=true;ST.endAt=Date.now()}},
-  spPlus:el=>{if(ST.running)ST.endAt+=(+el.dataset.s||30)*1000},
-  spStop:()=>{const el=(Date.now()-(ST.startAt||Date.now()))/1000;
+  spPause:()=>{if(ST.running){ST.left=spLeft();ST.running=false;Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched)}else{ST.endAt=Date.now()+(ST.left||0)*1000;ST.running=true;unlockAudio();keepAlive(true);spSched()}syncSched();render()},
+  spSkip:()=>{if(ST.k!=='yoga')return;const st=seqSteps(ST.q);if(ST.i+1>=st.length){Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);ST.running=true;ST.endAt=Date.now();return}ST.i++;ST.running=true;ST.endAt=Date.now()+st[ST.i].s*1000;try{bell(1)}catch{}spSched();render()},
+  spPlus:el=>{if(ST.running){ST.endAt+=(+el.dataset.s||30)*1000;spSched()}},
+  spStop:()=>{Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);const el=(Date.now()-(ST.startAt||Date.now()))/1000;
     if(ST.k==='yoga'&&el>=60){ST={k:'yogaDone',running:false,min:Math.round(el/60),seq:ST.q.n};render();return}
     if(ST.k==='hiit'&&el>=60){ST={k:'hiitDone',running:false,min:Math.round(el/60)};render();return}
     ST={k:null,running:false};render()},
-  spCancel:()=>{ST={k:null,running:false};render()},
+  spCancel:()=>{Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);ST={k:null,running:false};render()},
   spQuick:el=>{const t=el.dataset.t,w=($('#sqW').value||'').trim(),m=+$('#sqM').value||0,f=+$('#sqF').value||null;if(!m)return toast('填一下分鐘數');spRecord(t,t==='yoga'?{seq:w||'瑜珈',min:m,feel:f?{flex:f}:null}:{what:w||'訓練',min:m,rpe:f?f*2:null});toast('記下了');render()},
   flKind:el=>{flowKind=el.dataset.v;lsSet('sd-flowk',flowKind);render()},
   flGo:()=>flowStart(),

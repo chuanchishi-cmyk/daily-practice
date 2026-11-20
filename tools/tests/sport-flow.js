@@ -34,4 +34,11 @@ await pg.click('[data-act=flPause]');await pg.waitForTimeout(1500);const t1=awai
 await pg.click('[data-act=flPause]');await pg.click('[data-act=flSkip]');await pg.waitForTimeout(300);ok(/第 2 \/ 2 組/.test(await pg.textContent('.flownow')),'跳過休息：進入第 2 組');
 await pg.click('[data-act=flSet]');await pg.waitForTimeout(300);ok(/做完了/.test(await pg.textContent('main')),'最後一組完成：結束');
 await pg.screenshot({path:SP+'flow.png'});
+// 瑜珈序列、間歇：開始時也把之後的提示音排好（鎖定螢幕也響）
+await pg.evaluate(()=>{const S=JSON.parse(localStorage.getItem('studydesk-v1'));S.meta.main.sports=['yoga','gym'];S.meta.main.hiit={w:5,r:3,n:3};localStorage.setItem('studydesk-v1',JSON.stringify(S))});await pg.reload();await pg.waitForTimeout(700);
+await pg.click('[data-act=spTab][data-v=yoga]');await pg.waitForTimeout(200);await pg.evaluate(()=>window.__st=[]);await pg.click('[data-act=spYogaGo]');await pg.waitForTimeout(400);
+let far=Math.max(...await pg.evaluate(()=>window.__st));ok(far>=300,'瑜珈序列：開始時排好之後每個體式的鈴聲（最遠 '+Math.round(far)+' 秒後）');
+await pg.click('[data-act=spStop]');await pg.waitForTimeout(200);await pg.$eval('[data-act=spCancel]',e=>e.click()).catch(()=>{});
+await pg.click('[data-act=spTab][data-v=gym]');await pg.waitForTimeout(200);await pg.click('[data-act=flKind][data-v=hiit]');await pg.waitForTimeout(200);await pg.evaluate(()=>window.__st=[]);await pg.click('[data-act=hiitGo]');await pg.waitForTimeout(400);
+far=Math.max(...await pg.evaluate(()=>window.__st));ok(far>=20,'間歇：開始時排好每一回的鈴聲（最遠 '+Math.round(far)+' 秒後）');
 console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

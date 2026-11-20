@@ -176,6 +176,7 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .jq.p-side .jqart{top:50%;transform:translateY(-50%);object-position:right center}
 @media (max-width:600px){.jq.has-art{padding-right:96px}.jq.has-art .jqart{width:100px;height:100px;right:2px;top:50%;bottom:auto;transform:translateY(-50%)}}
 .jq.fest{background:linear-gradient(100deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--bg));border-color:color-mix(in srgb,var(--accent) 25%,var(--line))}
+.jq .jqalso{display:block;margin-top:4px;font-size:calc(11.5px * var(--fs,1));color:var(--muted)}
 .jq .jqseal.fseal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);opacity:1}
 .jqmoon{flex:none;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 36%,#fffaf0,#f3dfae 55%,#e2c27d);box-shadow:0 0 0 6px color-mix(in srgb,#f3dfae 25%,transparent),0 0 24px 6px color-mix(in srgb,#f3dfae 45%,transparent)}
 :root[data-theme="dark"] .jq.has-art .jqart{mix-blend-mode:normal;opacity:.9;width:84px;height:84px;right:14px;top:50%;bottom:auto;transform:translateY(-50%);border-radius:10px;-webkit-mask-image:none;mask-image:none;box-shadow:0 2px 10px rgba(0,0,0,.35)}
@@ -1636,7 +1637,10 @@ let KA=null,KAOFF=null;
 function silentWav(){const n=8000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>[...s].forEach((c,i)=>b[o+i]=c.charCodeAt(0));
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
   for(let i=0;i<n;i++)b[44+i]=128;let s='';b.forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s)}
-function keepAlive(on){try{if(on){if(!KA){KA=new Audio(silentWav());KA.loop=true;KA.setAttribute('playsinline','');KA.volume=0;KA.muted=false}if(KA.paused)KA.play().catch(()=>{})}else if(KA&&!KA.paused)KA.pause()}catch{}}
+function kaRunning(){return P.running||MT.running||T.running||(['flow','yoga','hiit','rest'].includes(ST.k)&&ST.running)}
+function keepAlive(on){try{if(on){if(!KA){KA=new Audio(silentWav());KA.loop=true;KA.setAttribute('playsinline','');KA.volume=0;KA.muted=false;
+      KA.addEventListener('pause',()=>{if(KA._self){KA._self=false;return}if(kaRunning())msPause()})}if(KA.paused)KA.play().catch(()=>{})}else if(KA&&!KA.paused){KA._self=true;KA.pause()}}catch{}}
+function kaHold(){try{if(KA&&!KA.paused){KA._self=true;KA.pause()}}catch{}} // 暫停時讓背景音也停，鎖定畫面才會顯示「已暫停」
 let WL=null;
 async function wakeLock(on){try{if(on&&!WL&&navigator.wakeLock&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){await WL.release();WL=null}}catch{WL=null}}
 let MSK=null;
@@ -1645,17 +1649,19 @@ function mediaMeta(t,sub,st,pos){try{if(!('mediaSession' in navigator))return;co
   try{ms.playbackState=t?st:'none'}catch{}
   try{if(t&&pos&&ms.setPositionState)ms.setPositionState({duration:Math.max(1,pos[0]),position:Math.min(pos[0],Math.max(0,pos[1])),playbackRate:1})}catch{}}catch{}}
 /* lock screen / Control Center play-pause: drive the timer, not the silent keep-alive audio */
-function msTarget(){if(P.running)return 'p';if(MT.running)return 'm';if(T.running)return 't';if(ST.k==='flow')return 'f';
+function msTarget(){if(P.running)return 'p';if(MT.running)return 'm';if(T.running)return 't';if(ST.k==='flow')return 'f';if(['yoga','hiit','rest'].includes(ST.k))return 's';
   if(P.left!=null&&P.left>0)return 'p';if(MT.left!=null&&MT.left>0)return 'm';if(T.left!=null&&T.left>0)return 't';return ''}
-function msPlay(){const k=msTarget();try{unlockAudio()}catch{}
+function msPlay(){const k=msTarget();try{unlockAudio()}catch{}keepAlive(true);
   if(k==='f'){if(!ST.running)flowPause();return}
+  if(k==='s'){if(!ST.running)A.spPause();return}
   if(k==='p'&&!P.running){if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
   else if(k==='m'&&!MT.running){MT.endAt=Date.now()+mLeft()*1000;MT.running=true;if(MT.wfLeft>0){smallWoodfish(MT.wfLeft,6);MT.wfLeft=0}savMT()}
   else if(k==='t'&&!T.running){T.endAt=Date.now()+tLeft()*1000;T.running=true;tRunStart();savT()}
   syncSched();syncNoise();softRender()}
-function msPause(){if(!P.running&&!MT.running&&!T.running&&ST.k==='flow'){const x=ST.steps[ST.i];if(ST.running&&x.ph==='work'&&x.sec==null)flowSet();else flowPause();return}
+function msPause(){if(!P.running&&!MT.running&&!T.running&&ST.k==='flow'){const x=ST.steps[ST.i];if(ST.running&&x.ph==='work'&&x.sec==null)flowSet();else{flowPause();kaHold()}return}
+  if(!P.running&&!MT.running&&!T.running&&['yoga','hiit','rest'].includes(ST.k)){if(ST.running)A.spPause();kaHold();return}
   if(P.running)pPause();else if(MT.running){MT.left=mLeft();MT.running=false;MT.wfLeft=wfCancel();savMT()}else if(T.running){T.left=tLeft();T.running=false;tRunStop();savT()}
-  syncSched();syncNoise();softRender()}
+  syncSched();syncNoise();kaHold();softRender()}
 try{if('mediaSession' in navigator){const ms=navigator.mediaSession;ms.setActionHandler('play',msPlay);ms.setActionHandler('pause',msPause);
   ['stop'].forEach(a=>{try{ms.setActionHandler(a,msPause)}catch{}});['seekbackward','seekforward','previoustrack','nexttrack','seekto'].forEach(a=>{try{ms.setActionHandler(a,null)}catch{}})}}catch{}
 // keep scheduled end sounds in step with the timers
@@ -1667,12 +1673,12 @@ function syncSched(){
   if(T.running&&xwarnOn()){const tot=tSegSec();[300,60].forEach(th=>{if(tot>th+5&&T.endAt-th*1000>Date.now()+200)want['w'+th]={end:T.endAt-th*1000,fn:warnTone}})}
   ['p','t','m','w300','w60'].forEach(k=>{const w=want[k],x=SCH[k];if(!w){if(x&&!(AC&&AC.currentTime>=x.at-.3))cancelSched(k);return}
     if(AC&&(!x||Math.abs(x.endAt-w.end)>1500))schedule(k,(w.end-Date.now())/1000,w.fn)});
-  const any=P.running||T.running||MT.running||(ST.k==='flow'&&ST.running);
+  const any=kaRunning();
   // paused: keep the lock-screen controls for a few minutes so the timer can be resumed from there
   const tg=msTarget();
-  if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!(P.running||T.running||MT.running||ST.k==='flow'))keepAlive(false)},tg?300000:20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
+  if(!any){if(!KAOFF)KAOFF=setTimeout(()=>{KAOFF=null;if(!kaRunning())keepAlive(false)},tg?300000:20000)}else if(KAOFF){clearTimeout(KAOFF);KAOFF=null}
   wakeLock(any&&wakePref());
-  if(tg==='f'){}else if(!tg)mediaMeta(null);else{const run=tg==='p'?P.running:tg==='m'?MT.running:T.running,left=tg==='p'?pLeft():tg==='m'?mLeft():tLeft(),tot=tg==='p'?modeSec(P.mode):tg==='m'?MT.min*60:tSegSec(),mins=Math.ceil(left/60);
+  if(tg==='f'||tg==='s'){}else if(!tg)mediaMeta(null);else{const run=tg==='p'?P.running:tg==='m'?MT.running:T.running,left=tg==='p'?pLeft():tg==='m'?mLeft():tLeft(),tot=tg==='p'?modeSec(P.mode):tg==='m'?MT.min*60:tSegSec(),mins=Math.ceil(left/60);
     const en=window.APPLANG==='en',nm=tg==='p'?(en?(P.mode==='work'?'Pomodoro · Focus':'Pomodoro · Break'):(P.mode==='work'?'番茄鐘・專注':'番茄鐘・休息')):tg==='m'?(en?'Meditation':'靜心'):(en?'Timer':exL('timerRun').replace(/中$/,''));
     mediaMeta(nm+(run?(en?'':'中'):(en?' · Paused':'・已暫停')),(en?mins+' min left · Rike':'剩 '+mins+' 分・日課'),run?'playing':'paused',[tot,tot-left])}
 }
@@ -1770,30 +1776,37 @@ const JQ_C=[5.4055,20.12,3.87,18.73,5.63,20.646,4.81,20.1,5.52,21.04,5.678,21.37
 // 插畫：毛利梅園《梅園草木花譜》、岩崎灌園《本草圖譜》（江戶時代，公有領域），出處見 art/jieqi/CREDITS.md
 const JQ_PY='xiaohan dahan lichun yushui jingzhe chunfen qingming guyu lixia xiaoman mangzhong xiazhi xiaoshu dashu liqiu chushu bailu qiufen hanlu shuangjiang lidong xiaoxue daxue dongzhi'.split(' ');
 const JQ_IMG=Object.fromEntries(JQ.map((x,i)=>[x[0],'art/jieqi/'+JQ_PY[i]+'.webp']));
-function jqDate(y,i){const Y=y%100,L=i<4?Math.floor((Y-1)/4):Math.floor(Y/4);return y+'-'+pad(Math.floor(i/2)+1)+'-'+pad(Math.floor(Y*0.2422+JQ_C[i])-L)}
+const JQ_FIX={'2026-3':'2026-02-18'}; // 天文計算與 Google 日曆核對後的修正
+function jqDate(y,i){if(JQ_FIX[y+'-'+i])return JQ_FIX[y+'-'+i];const Y=y%100,L=i<4?Math.floor((Y-1)/4):Math.floor(Y/4);return y+'-'+pad(Math.floor(i/2)+1)+'-'+pad(Math.floor(Y*0.2422+JQ_C[i])-L)}
 function jqNow(k){const y=+k.slice(0,4);for(const yy of [y,y-1])for(let i=23;i>=0;i--){const d=jqDate(yy,i);if(d<=k)return {i,d,n:diffDays(d,k),j:JQ[i]}}return null}
 // 節氣卡：節氣前三天到後兩天（共六天）；之前「再過 N 天是…」，當天「今天…」
 // 插畫依植物的樣子放在不同角落：垂枝從右上角垂下、直立的從右下角長出、橫展的靠右側
 const JQ_POSE={梅花:'hang',杏花:'hang',桃花:'hang',柳枝:'hang',臘梅:'hang',桂花:'hang',石榴花:'hang',油菜花:'up',鳶尾:'up',麥穗:'up',向日葵:'up',菊花:'up',蘆葦:'up',水仙:'up',竹:'up'};
 function jqNext(k){const y=+k.slice(0,4);for(const yy of [y,y+1])for(let i=0;i<24;i++){const d=jqDate(yy,i);if(d>k)return {i,d,n:diffDays(k,d),j:JQ[i]}}return null}
-// 傳統節日（農曆，由瀏覽器內建的農曆計算產生 2026–2040）
-const FEST={春節:['2026-02-17','2027-02-07','2028-01-26','2029-02-13','2030-02-02','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],
- 元宵:['2026-03-03','2027-02-21','2028-02-09','2029-02-27','2030-02-16','2031-02-06','2032-02-25','2033-02-14','2034-03-05','2035-02-22','2036-02-11','2037-03-01','2038-02-18','2039-02-07','2040-02-26'],
- 端午:['2026-06-19','2027-06-09','2028-05-28','2029-06-16','2030-06-05','2031-06-24','2032-06-12','2033-06-01','2034-06-20','2035-06-10','2036-05-30','2037-06-18','2038-06-07','2039-05-27','2040-06-14'],
- 七夕:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],
- 中秋:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20'],
- 重陽:['2026-10-18','2027-10-08','2028-10-26','2029-10-16','2030-10-05','2031-10-24','2032-10-12','2033-10-01','2034-10-20','2035-10-09','2036-10-27','2037-10-17','2038-10-07','2039-10-26','2040-10-14']};
+// 傳統節日（農曆，依天文算法以台灣時間 UTC+8 計算新月與中氣，2026–2040；2027 年已與 Google 日曆「台灣的節慶假日」逐日核對）
+const FEST={春節:['2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],元宵:['2026-03-03','2027-02-20','2028-02-09','2029-02-27','2030-02-17','2031-02-06','2032-02-25','2033-02-14','2034-03-05','2035-02-22','2036-02-11','2037-03-01','2038-02-18','2039-02-07','2040-02-26'],端午:['2026-06-19','2027-06-09','2028-05-28','2029-06-16','2030-06-05','2031-06-24','2032-06-12','2033-06-01','2034-06-20','2035-06-10','2036-05-30','2037-06-18','2038-06-07','2039-05-27','2040-06-14'],七夕:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],中秋:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20'],重陽:['2026-10-18','2027-10-08','2028-10-26','2029-10-16','2030-10-05','2031-10-24','2032-10-12','2033-10-01','2034-10-20','2035-10-09','2036-10-27','2037-10-17','2038-10-07','2039-10-26','2040-10-14']};
 const FEST_TXT={春節:['新春','新的一年開始了。寫下今年想慢慢培養的一個習慣，每天做一點就好。'],元宵:['燈節','月圓燈明。把這個月最想完成的一件事，當成一盞燈掛在心上。'],端午:['午日','端午正午陽氣最盛。把最需要力氣的事放在上午，午後記得休息、多喝水。'],七夕:['乞巧','古人在七夕乞求巧藝。今天適合練一項想學的技能，哪怕只有一個番茄鐘。'],中秋:['月圓','月圓的夜晚，放下手機，陪家人或自己，靜靜看一會兒月亮。'],重陽:['登高','重陽登高望遠。出去走走、爬段樓梯，也打個電話問候長輩。']};
+// 台灣的國定假日與紀念日（國曆）：前兩天到當天，借用節氣卡的位置，只有文字
+const HOL={'01-01':['元旦','新的一年','新年第一天，不必急著立很多目標，先寫下一件想慢慢做的事。'],'02-28':['和平紀念日','紀念與反思','放慢腳步，給自己一段安靜的時間，想想珍惜的人與事。'],'03-08':['婦女節','','謝謝生命中照顧過你的女性，也記得好好照顧自己。'],'04-04':['兒童節','童心','找一件小時候喜歡的事做做看，玩也是一種休息。'],'05-01':['勞動節','辛苦了','辛苦了。今天記得把休息也排進行程。'],'08-08':['父親節','','打通電話或傳個訊息給爸爸，說聲謝謝。'],'09-28':['教師節','謝師','想起一位影響過你的老師，寫一句謝謝，或把學到的分享給別人。'],'10-10':['國慶日','','放假的日子，留一段時間給自己，也留一段給家人朋友。'],'10-25':['臺灣光復節','',  '留一點空白給自己，散步、看看天空。'],'12-25':['聖誕節','行憲紀念日','一年快到尾聲，寫下今年最想感謝的三件事。']};
+function holOn(d){const md=d.slice(5);if(HOL[md])return HOL[md];const t=parseD(d);if(md.slice(0,2)==='05'&&t.getDay()===0&&t.getDate()>7&&t.getDate()<=14)return ['母親節','','謝謝媽媽。今天傳個訊息或一起吃頓飯吧。'];return null}
+function holNow(k){for(let x=0;x>=-2;x--){const d=addDays(k,-x),h=holOn(d);if(h)return {n:h[0],sub:h[1],line:h[2],d,x}}return null}
 function festNow(k){for(const [n,ds] of Object.entries(FEST))for(const d of ds){const x=diffDays(d,k);if(x>=-2&&x<=0)return {n,d,x}}return null}
 // 冬至數九：九九消寒圖每天畫一瓣，八十一天畫完。練習過的日子算畫了一瓣
 function shujiu(k){const y=+k.slice(0,4);for(const yy of [y,y-1]){const d=jqDate(yy,23),x=diffDays(d,k);if(x>=0&&x<81){let pet=0;for(let i=0;i<=x;i++){const dd=day(addDays(d,i));if((dd.sessions||[]).length||(dd.tests||[]).length||((dd.j||{}).practice||[]).length||(dd.sport||[]).length)pet++}return {x,nine:Math.floor(x/9)+1,dayIn:x%9+1,pet}}}return null}
 const NINE='一二三四五六七八九';
-function jqHTML(){const k=today(),f=festNow(k);
-  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${f.n==='中秋'?' moon':''}" aria-label="節日：${f.n}">${f.n==='中秋'?'<span class="jqmoon" aria-hidden="true"></span>':`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}</p></div></section>`}
-  let q=jqNow(k),pre=null;const nx=jqNext(k);if(nx&&nx.n<=3)pre=nx;if(!pre&&(!q||q.n>2))return '';const t=pre||q,[nm,pl,yi,line]=t.j,img=JQ_IMG[nm],pose=JQ_POSE[pl]||'side';
+function jqHTML(){const k=today(),f0=festNow(k),h=holNow(k),q0=jqNow(k),nx0=jqNext(k);
+  // 優先順序：當天的優先於預告；同一天：傳統節日 > 國定假日 > 節氣。同一天的其他節日以一行小字帶到
+  const jqToday=q0&&q0.n===0?q0.j[0]:null,also=[];
+  const cand=[f0&&{t:'f',x:f0.x,r:f0.x===0?1:4,n:f0.n},h&&!(jqToday&&h.n.startsWith(jqToday))&&{t:'h',x:h.x,r:h.x===0?2:5,n:h.n},jqToday&&{t:'j',x:0,r:3,n:jqToday}].filter(Boolean).sort((a,b)=>a.r-b.r);
+  const top=cand[0];cand.slice(1).forEach(c=>{if(c.x===top.x)also.push(c.n)});
+  const alsoTxt=also.length?`<span class="jqalso">${top.x===0?'今天也是':'同一天也是'}${also.map(esc).join('、')}</span>`:'';
+  const f=top&&top.t==='f'?f0:null;
+  if(top&&top.t==='h')return `<section class="jq fest hol" aria-label="節日：${esc(h.n)}"><span class="jqseal fseal" aria-hidden="true">${esc(h.n.replace(/節$|日$/,'').replace('紀念','').slice(0,2))}</span><div class="jqt"><p class="jqh"><b>${h.x<0?`${-h.x===1?'明天':'後天'}是${esc(h.n)}`:esc(h.n)}</b>${h.sub?`<span>${esc(h.sub)}</span>`:''}</p><p class="jql">${esc(h.line)}${alsoTxt}</p></div></section>`;
+  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${f.n==='中秋'?' moon':''}" aria-label="節日：${f.n}">${f.n==='中秋'?'<span class="jqmoon" aria-hidden="true"></span>':`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}${alsoTxt}</p></div></section>`}
+  let q=q0,pre=null;const nx=nx0;if(nx&&nx.n<=2)pre=nx;if(!pre&&(!q||q.n>2))return '';const t=pre||q,[nm,pl,yi,line]=t.j,img=JQ_IMG[nm],pose=JQ_POSE[pl]||'side';
   const sj=nm==='冬至'&&!pre?shujiu(k):null;
   const head=pre?`再過 ${pre.n} 天是${nm}`:q.n===0?`今天${nm}`:nm;
-  return `<section class="jq${img?' has-art p-'+pose:''}" aria-label="節氣：${nm}">${img?`<img class="jqart" src="${img}" alt="${pl}" loading="lazy">`:`<span class="jqseal" aria-hidden="true">${nm}</span>`}<div class="jqt"><p class="jqh"><b>${head}</b><span>${pl}・${yi}</span></p><p class="jql">${esc(line)}${sj?`　冬至起數九，像畫消寒圖一樣，每天一點。`:''}</p></div></section>`}
+  return `<section class="jq${img?' has-art p-'+pose:''}" aria-label="節氣：${nm}">${img?`<img class="jqart" src="${img}" alt="${pl}" loading="lazy">`:`<span class="jqseal" aria-hidden="true">${nm}</span>`}<div class="jqt"><p class="jqh"><b>${head}</b><span>${pl}・${yi}</span></p><p class="jql">${esc(line)}${sj?`　冬至起數九，像畫消寒圖一樣，每天一點。`:''}${!pre&&q.n===0?alsoTxt:''}</p></div></section>`}
 function shujiuLine(){const s=shujiu(today());if(!s||s.x===0||s.dayIn!==1)return null;return {k:'數九',t:s.pet?`今天進入${NINE[s.nine-1]}九。從冬至起的 ${s.x+1} 天裡，你有 ${s.pet} 天在練習，消寒圖已畫了 ${s.pet}／81 瓣。`:`今天進入${NINE[s.nine-1]}九。從今天起，每練習一天，就在消寒圖上畫一瓣。`}}
 /* ---------- time of day: follows the person's own sleep time (My Rhythm); without it, a typical adult day ---------- */
 const BED_DEF=1410,WAKE_DEF=450; // 23:30 睡、07:30 起
@@ -4531,7 +4544,11 @@ function seqTotal(q){return q.p.reduce((a,x)=>a+x[1]*(x[2]?2:1),0)}
 function seqSteps(q){const o=[];q.p.forEach(([n,s,side])=>{if(side){o.push({n,s,side:'左側'});o.push({n,s,side:'右側'})}else o.push({n,s})});return o}
 function spRecord(type,o){const t=new Date();editDay(today(),d=>{d.sport=d.sport||[];d.sport.push(Object.assign({id:rid(),t:t.toISOString(),type},o))})}
 /* ---- timers ---- */
-function spStart(o){unlockAudio();ST=Object.assign({running:true,startAt:Date.now()},o);ST.endAt=Date.now()+ST.left*1000;delete ST.left;wakeLock(wakePref());render()}
+function spSched(){Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);if(!AC||!ST.running||!ST.endAt)return;let t=(ST.endAt-Date.now())/1000;
+  if(ST.k==='rest'){schedule('sp_end',t,()=>bell(2));return}
+  if(ST.k==='yoga'){const st=seqSteps(ST.q);for(let i=ST.i+1;i<st.length;i++){schedule('sp'+i,t,()=>bell(1));t+=st[i].s}schedule('sp_end',t,()=>bell(2));return}
+  if(ST.k==='hiit'){const h=ST.h;let n=ST.n,ph=ST.phase;for(let g=0;g<400;g++){n++;if(ph==='w'&&n>=h.n*2-1){schedule('sp_end',t,()=>bell(2));return}ph=ph==='w'?'r':'w';schedule('sp'+n,t,()=>bell(1));t+=ph==='w'?h.w:h.r}}}
+function spStart(o){unlockAudio();keepAlive(true);ST=Object.assign({running:true,startAt:Date.now()},o);ST.endAt=Date.now()+ST.left*1000;delete ST.left;spSched();wakeLock(wakePref());syncSched();render()}
 function spLeft(){return ST.running?Math.max(0,(ST.endAt-Date.now())/1000):(ST.left||0)}
 /* 健身連續模式：計時型（每組固定秒數，自動銜接）／次數型（做完按「完成這組」，休息自動倒數）。
    開始或繼續時，把接下來所有提示音排在音訊時鐘上，鎖定螢幕也照樣響。 */
@@ -4566,10 +4583,11 @@ function spTick(){if(!ST.k)return;
       flowMeta();render();return}
     const el=$('#spTime');if(el)el.textContent=ST.endAt!=null?mmss(ST.running?spLeft():(ST.left||0)):mmss((Date.now()-ST.workAt)/1000);if(ST.endAt!=null&&ST.running)flowMeta();return}
   if(ST.running&&Date.now()>=ST.endAt){
-    if(ST.k==='rest'){ST={k:null,running:false};try{bell(2)}catch{}toast('休息結束，開始下一組');render();return}
-    if(ST.k==='yoga'){const st=seqSteps(ST.q);ST.i++;if(ST.i>=st.length){const m=Math.max(1,Math.round(seqTotal(ST.q)/60));ST={k:'yogaDone',running:false,min:m,seq:ST.q.n};try{bell(2)}catch{}render();return}try{bell(1)}catch{}ST.endAt=Date.now()+st[ST.i].s*1000;render();return}
-    if(ST.k==='hiit'){ST.n++;const h=ST.h;if(ST.phase==='w'){if(ST.n>=h.n*2-1){ST={k:'hiitDone',running:false,min:Math.max(1,Math.round(h.n*(h.w+h.r)/60))};try{bell(2)}catch{}render();return}ST.phase='r';ST.endAt=Date.now()+h.r*1000}else{ST.phase='w';ST.endAt=Date.now()+h.w*1000}try{bell(1)}catch{}render();return}}
-  const el=$('#spTime');if(el)el.textContent=mmss(spLeft());}
+    if(ST.k==='rest'){ST={k:null,running:false};toast('休息結束，開始下一組');render();return}
+    if(ST.k==='yoga'){const st=seqSteps(ST.q);ST.i++;if(ST.i>=st.length){const m=Math.max(1,Math.round(seqTotal(ST.q)/60));ST={k:'yogaDone',running:false,min:m,seq:ST.q.n};render();return}ST.endAt=ST.endAt+st[ST.i].s*1000;render();return}
+    if(ST.k==='hiit'){ST.n++;const h=ST.h;if(ST.phase==='w'){if(ST.n>=h.n*2-1){ST={k:'hiitDone',running:false,min:Math.max(1,Math.round(h.n*(h.w+h.r)/60))};render();return}ST.phase='r';ST.endAt=ST.endAt+h.r*1000}else{ST.phase='w';ST.endAt=ST.endAt+h.w*1000}render();return}}
+  const el=$('#spTime');if(el)el.textContent=mmss(spLeft());
+  if(['yoga','hiit','rest'].includes(ST.k)){const nm=ST.k==='rest'?'組間休息':ST.k==='hiit'?(ST.phase==='w'?'間歇・運動':'間歇・休息'):((seqSteps(ST.q)[ST.i]||{}).n||'瑜珈');mediaMeta(nm+(ST.running?'':'・已暫停'),`剩 ${Math.ceil(spLeft())} 秒・日課運動`,ST.running?'playing':'paused')}}
 /* ---- view ---- */
 function vSport(){const c=spCfg(),k=today(),wk=sportsOf(weekKeys(k)),days=new Set(wk.map(x=>x.k)).size;
   if(!c.sports||spPick)return `<header class="ph"><div><p class="eyebrow">運動</p><h1>你想記錄哪些運動？</h1></div></header>
@@ -4689,14 +4707,14 @@ Object.assign(A,{
   spTab:el=>{spTab=el.dataset.v;render()},
   spSeq:el=>{lsSet('sd-yseq',el.dataset.id);render()},
   spYogaGo:el=>{const q=spCfg().seqs.find(x=>x.id===el.dataset.id);if(!q)return;spStart({k:'yoga',q:clone(q),i:0,left:seqSteps(q)[0].s});try{bell(1)}catch{}},
-  spPause:()=>{if(ST.running){ST.left=spLeft();ST.running=false}else{ST.endAt=Date.now()+(ST.left||0)*1000;ST.running=true;unlockAudio()}render()},
-  spSkip:()=>{if(ST.k==='yoga'){ST.running=true;ST.endAt=Date.now()}},
-  spPlus:el=>{if(ST.running)ST.endAt+=(+el.dataset.s||30)*1000},
-  spStop:()=>{const el=(Date.now()-(ST.startAt||Date.now()))/1000;
+  spPause:()=>{if(ST.running){ST.left=spLeft();ST.running=false;Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched)}else{ST.endAt=Date.now()+(ST.left||0)*1000;ST.running=true;unlockAudio();keepAlive(true);spSched()}syncSched();render()},
+  spSkip:()=>{if(ST.k!=='yoga')return;const st=seqSteps(ST.q);if(ST.i+1>=st.length){Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);ST.running=true;ST.endAt=Date.now();return}ST.i++;ST.running=true;ST.endAt=Date.now()+st[ST.i].s*1000;try{bell(1)}catch{}spSched();render()},
+  spPlus:el=>{if(ST.running){ST.endAt+=(+el.dataset.s||30)*1000;spSched()}},
+  spStop:()=>{Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);const el=(Date.now()-(ST.startAt||Date.now()))/1000;
     if(ST.k==='yoga'&&el>=60){ST={k:'yogaDone',running:false,min:Math.round(el/60),seq:ST.q.n};render();return}
     if(ST.k==='hiit'&&el>=60){ST={k:'hiitDone',running:false,min:Math.round(el/60)};render();return}
     ST={k:null,running:false};render()},
-  spCancel:()=>{ST={k:null,running:false};render()},
+  spCancel:()=>{Object.keys(SCH).filter(k=>k.startsWith('sp')).forEach(cancelSched);ST={k:null,running:false};render()},
   spQuick:el=>{const t=el.dataset.t,w=($('#sqW').value||'').trim(),m=+$('#sqM').value||0,f=+$('#sqF').value||null;if(!m)return toast('填一下分鐘數');spRecord(t,t==='yoga'?{seq:w||'瑜珈',min:m,feel:f?{flex:f}:null}:{what:w||'訓練',min:m,rpe:f?f*2:null});toast('記下了');render()},
   flKind:el=>{flowKind=el.dataset.v;lsSet('sd-flowk',flowKind);render()},
   flGo:()=>flowStart(),

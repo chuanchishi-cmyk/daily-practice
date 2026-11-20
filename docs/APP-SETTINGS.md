@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js）
 ```
 
 ---
@@ -253,6 +253,7 @@ node tools/tests/work-page.js
 node tools/tests/work-words.js
 node tools/tests/notes-remind.js
 node tools/tests/work-notes.js
+node tools/tests/sync-renew.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
@@ -552,6 +553,15 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **提醒同步到手機行事曆**：有提醒的事多一個「加到行事曆」（`remCal`）。網頁／主畫面版下載 `.ics`（含 VALARM，iPhone、Android、電腦都能開）；claude.ai 版打開 Google 日曆新增活動頁。
 - **白噪音「露營烤火」**：見 §26 音檔說明。
 - 測試：`tools/tests/work-notes.js`。
+
+## 36d. 雲端同步：點一下就續上（2026-11-20）
+
+- 網站版沒有後端，用 Google 瀏覽器端授權（GIS token client），通行證只有一小時、沒有長期憑證，瀏覽器也不准沒點按就自動開登入視窗，所以無法完全免點。
+- 通行證改存 `localStorage`（`sd-gd-tok`、`sd-gc-tok`，`tokGet/tokSet/tokDel`），關掉 App 再打開一小時內不必重連。
+- 第一次連線後用 Drive `about` 取得帳號 email 存在 `sd-g-hint`；續約時 `requestAccessToken({prompt:'',login_hint})`，不跳選帳號（日曆也共用）。停止同步時清掉。
+- 開 App 時先在背景載入 Google 登入元件（`gdPreload`），點同步標籤時同步呼叫登入，Safari 不會擋彈出視窗。同步標籤過期時顯示「⟳ 點一下續上同步」，每分鐘更新一次。
+- Google Cloud 同意畫面若還在「測試中」，授權 7 天就失效、最多 100 位測試使用者；發布正式版即可解除（`drive.appdata` 是不敏感權限，不需審查；網站版日曆 `calendar.readonly` 屬敏感權限，未審查會顯示未驗證警告）。
+- 測試：`tools/tests/sync-renew.js`（假 Google 登入元件與 API）。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

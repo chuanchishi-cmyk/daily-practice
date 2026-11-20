@@ -1172,18 +1172,28 @@ function editDay(k,fn,soon){const d=clone(day(k));d.date=k;d.sessions=d.sessions
 const GDRIVE_CLIENT_ID='639910884576-g2mit90cn584j6ccp7hm9hef3t1ta73j.apps.googleusercontent.com';
 const GD_FILE='daily-practice-sync.json',GD_SCOPE='https://www.googleapis.com/auth/drive.appdata';
 let GD={on:lsGet('sd-gd-on',false)===true,tok:null,exp:0,busy:false,last:lsGet('sd-gd-last',''),err:'',dirtyT:null,client:null};
-try{const t=JSON.parse(sessionStorage.getItem('sd-gd-tok')||'null');if(t&&t.exp>Date.now()+60000){GD.tok=t.tok;GD.exp=t.exp}}catch{}
+// 通行證只有一小時；存在 localStorage，關掉 App 再打開，一小時內不必重連。過期後帶上記住的帳號（login_hint），點一下就續上，不用再選帳號
+const tokGet=k=>{try{const t=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||'null');return t&&t.exp>Date.now()+60000?t:null}catch{return null}};
+const tokSet=(k,tok,exp)=>{try{localStorage.setItem(k,JSON.stringify({tok,exp}))}catch{try{sessionStorage.setItem(k,JSON.stringify({tok,exp}))}catch{}}};
+const tokDel=k=>{try{localStorage.removeItem(k);sessionStorage.removeItem(k)}catch{}};
+const gHint=()=>lsGet('sd-g-hint','')||'';
+{const t=tokGet('sd-gd-tok');if(t){GD.tok=t.tok;GD.exp=t.exp}}
 const gdAvail=()=>STANDALONE&&!!GDRIVE_CLIENT_ID&&/^https:/.test(location.protocol);
 const gdReady=()=>GD.tok&&GD.exp>Date.now()+30000;
 function gdLoadLib(){return new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.onload=()=>ok();sc.onerror=()=>no(new Error('lib'));document.head.appendChild(sc)})}
-async function gdConnect(consent){
-  try{await gdLoadLib()}catch{GD.err='連不上 Google，請確認網路。';render();return}
-  if(!GD.client)GD.client=google.accounts.oauth2.initTokenClient({client_id:GDRIVE_CLIENT_ID,scope:GD_SCOPE,callback:r=>{
-    if(r&&r.access_token){GD.tok=r.access_token;GD.exp=Date.now()+(+r.expires_in||3600)*1000;try{sessionStorage.setItem('sd-gd-tok',JSON.stringify({tok:GD.tok,exp:GD.exp}))}catch{}if(!GD.on){COLLS.forEach(c=>Object.keys(S[c]).forEach(id=>{const k=c+'/'+id;if(!MT_[k])MT_[k]=1}));lsSet('sd-mtime',MT_)}GD.on=true;lsSet('sd-gd-on',true);GD.err='';gdSync()}
-    else{GD.err='沒有完成 Google 登入。';render()}},error_callback:()=>{GD.err='登入視窗被關閉或擋下了，請再試一次。';render()}});
-  GD.client.requestAccessToken({prompt:consent?'consent':''});
+function gdClient(){if(!GD.client)GD.client=google.accounts.oauth2.initTokenClient({client_id:GDRIVE_CLIENT_ID,scope:GD_SCOPE,callback:r=>{
+    if(r&&r.access_token){GD.tok=r.access_token;GD.exp=Date.now()+(+r.expires_in||3600)*1000;tokSet('sd-gd-tok',GD.tok,GD.exp);if(!gHint())gdHintFetch();if(!GD.on){COLLS.forEach(c=>Object.keys(S[c]).forEach(id=>{const k=c+'/'+id;if(!MT_[k])MT_[k]=1}));lsSet('sd-mtime',MT_)}GD.on=true;lsSet('sd-gd-on',true);GD.err='';gdSync()}
+    else{GD.err='沒有完成 Google 登入。';render()}},error_callback:()=>{GD.err='登入視窗被關閉或擋下了，請再試一次。';render()}});return GD.client}
+// 記住是哪個 Google 帳號，續約時直接帶上，不必再選
+async function gdHintFetch(){try{const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)',{headers:{Authorization:'Bearer '+GD.tok}});if(r.ok){const j=await r.json();const e=j&&j.user&&j.user.emailAddress;if(e)lsSet('sd-g-hint',e)}}catch{}}
+// 先在背景載入 Google 登入元件，點下去時能同步打開視窗（Safari 對非同步開視窗比較嚴，容易被擋）
+function gdPreload(){if((gdAvail()&&GD.on)||(typeof gcOn==='function'&&gcOn()))gdLoadLib().catch(()=>{})}
+function gdConnect(consent){
+  const go=()=>{const o={prompt:consent?'consent':''},h=gHint();if(h&&!consent)o.login_hint=h;gdClient().requestAccessToken(o)};
+  if(window.google&&google.accounts&&google.accounts.oauth2){go();return}
+  gdLoadLib().then(go).catch(()=>{GD.err='連不上 Google，請確認網路。';render()});
 }
-async function gdFetch(url,opt={}){const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+GD.tok},opt.headers||{})}));if(r.status===401){GD.tok=null;try{sessionStorage.removeItem('sd-gd-tok')}catch{}throw Object.assign(new Error('auth'),{auth:true})}if(!r.ok)throw new Error('http '+r.status);return r}
+async function gdFetch(url,opt={}){const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+GD.tok},opt.headers||{})}));if(r.status===401){GD.tok=null;tokDel('sd-gd-tok');throw Object.assign(new Error('auth'),{auth:true})}if(!r.ok)throw new Error('http '+r.status);return r}
 function gdMerge(remote){
   const rd=(remote&&remote.data)||{},rm=(remote&&remote.mt)||{},rt=(remote&&remote.tomb)||{};let changed=false;
   COLLS.forEach(c=>{const ids=new Set([...Object.keys(S[c]||{}),...Object.keys(rd[c]||{})]);
@@ -1208,13 +1218,13 @@ async function gdSync(){
       await gdFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:`--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bd}--`})}
     GD.last=new Date().toISOString();lsSet('sd-gd-last',GD.last);lsSet('sd-lastexport',today());GD.err='';GD.busy=false;
     if(changed){toast('已從其他裝置同步最新資料');render()}else renderSyncChip();if(R==='prefs')render();
-  }catch(e){GD.busy=false;GD.err=e&&e.auth?'Google 登入已過期，按「立即同步」重新連線。':'同步失敗，稍後會再試一次。';renderSyncChip();if(R==='prefs')render()}
+  }catch(e){GD.busy=false;GD.err=e&&e.auth?'Google 連線過期了，點一下同步就續上。':'同步失敗，稍後會再試一次。';renderSyncChip();if(R==='prefs')render()}
 }
 function gdDirty(){try{if(!gdAvail()||!GD.on)return}catch{return}clearTimeout(GD.dirtyT);GD.dirtyT=setTimeout(()=>{if(gdReady())gdSync();else renderSyncChip()},15000)}
-function gdDisconnect(){GD.on=false;lsSet('sd-gd-on',false);try{if(GD.tok&&window.google)google.accounts.oauth2.revoke(GD.tok,()=>{})}catch{}GD.tok=null;try{sessionStorage.removeItem('sd-gd-tok')}catch{}render()}
+function gdDisconnect(){GD.on=false;lsSet('sd-gd-on',false);try{if(GD.tok&&window.google)google.accounts.oauth2.revoke(GD.tok,()=>{})}catch{}GD.tok=null;tokDel('sd-gd-tok');lsSet('sd-g-hint','');render()}
 function renderSyncChip(){const el=$('#syncChip');if(!el)return;if(!gdAvail()||!GD.on){el.hidden=true;return}el.hidden=false;
   const pend=Object.values(MT_).concat(Object.values(TOMB)).some(t=>!GD.last||t>Date.parse(GD.last));
-  el.textContent=GD.busy?'同步中…':!gdReady()?'⟳ 點一下同步':pend?'⟳ 等待同步':'✓ 已同步';el.classList.toggle('warn',!gdReady()&&!GD.busy)}
+  el.textContent=GD.busy?'同步中…':!gdReady()?'⟳ 點一下續上同步':pend?'⟳ 等待同步':'✓ 已同步';el.classList.toggle('warn',!gdReady()&&!GD.busy)}
 function gdAgeDays(){return GD.last?Math.floor((Date.now()-Date.parse(GD.last))/864e5):null}
 function gdHealthy(){const a=gdAgeDays();return gdAvail()&&GD.on&&a!==null&&a<8}
 function syncCardHTML(){return ''}
@@ -1222,7 +1232,7 @@ function syncBlockHTML(){
   if(!gdAvail())return '';
   const ok=GD.on;
   return `<div style="margin-bottom:14px"><h3 style="margin:0 0 8px">Google 雲端硬碟同步</h3>
-    ${ok?`<div class="list"><div class="li"><span class="pill ${gdReady()?'good':'warn'}">${gdReady()?'✓':'!'}</span><div class="grow"><b>${gdReady()?'已連線':'需要重新連線'}</b><div class="muted">${GD.last?'上次同步：'+new Date(GD.last).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'還沒同步過'}${GD.err?'・'+esc(GD.err):''}</div></div></div></div>
+    ${ok?`<div class="list"><div class="li"><span class="pill ${gdReady()?'good':'warn'}">${gdReady()?'✓':'!'}</span><div class="grow"><b>${gdReady()?'已連線':'連線過期了，點「立即同步」就續上'}</b><div class="muted">${GD.last?'上次同步：'+new Date(GD.last).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'還沒同步過'}${GD.err?'・'+esc(GD.err):''}</div></div></div></div>
       <div class="row" style="margin-top:10px"><button class="sec" data-act="gdNow">${GD.busy?'同步中…':'立即同步'}</button><button class="ghost sm" data-act="gdOff">停止同步</button></div>
       <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。</p>`
     :`<p style="margin:0 0 10px">用 Google 帳號登入，手機和電腦的紀錄就會自動同步，也等於隨時都有一份雲端備份。</p>
@@ -1343,7 +1353,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.12'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.13'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1353,7 +1363,8 @@ function goLocal(why){
   setNote(NOTES[why]);
   try{sessionStorage.removeItem('sd-updated')}catch{} // updates are silent; new features introduce themselves via WHATSNEW on 今日
   askPersist().then(()=>{if(R==='prefs')render()});{const pv=lsGet('sd-ver','');takeSnap(!!pv&&pv!==APP_VER);lsSet('sd-ver',APP_VER)}
-  setTimeout(()=>{renderSyncChip();if(gdAvail()&&GD.on&&gdReady())gdSync()},800);
+  setInterval(()=>{try{renderSyncChip()}catch{}},60000);
+  setTimeout(()=>{renderSyncChip();gdPreload();if(gdAvail()&&GD.on&&gdReady())gdSync()},800);
   render();
 }
 function switchToLocal(){
@@ -1936,6 +1947,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號'},
  {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
  {d:'2026-11-20',lv:'minor',t:'接電話會自動計算通話時間，記下來電時一起存，工作頁顯示今天通話幾通、幾分鐘；工作的事可一鍵放進三件事或轉成計畫步驟；有提醒的事可加到手機行事曆'},
  {d:'2026-11-20',lv:'minor',t:'隨手記太長的內容先收成兩行，按「展開」看全文；超過 5 則時其餘先收起'},
@@ -4538,18 +4550,18 @@ const GC={key:'',events:{},state:'idle',msg:''};
 function gcAvailWeb(){return STANDALONE&&typeof GDRIVE_CLIENT_ID!=='undefined'&&!!GDRIVE_CLIENT_ID&&/^https:/.test(location.protocol)}
 function gcOn(){return (STANDALONE?gcAvailWeb():true)&&!!cfg().gcalOn}
 const GCW={tok:null,exp:0,client:null};
-try{const t=JSON.parse(sessionStorage.getItem('sd-gc-tok')||'null');if(t&&t.exp>Date.now()+60000){GCW.tok=t.tok;GCW.exp=t.exp}}catch{}
+{const t=tokGet('sd-gc-tok');if(t){GCW.tok=t.tok;GCW.exp=t.exp}}
 const gcwReady=()=>GCW.tok&&GCW.exp>Date.now()+30000;
-async function gcAuth(){try{await gdLoadLib()}catch{GC.state='err';GC.msg='連不上 Google，請確認網路。';render();return}
+function gcAuth(){if(!(window.google&&google.accounts&&google.accounts.oauth2)){gdLoadLib().then(gcAuth).catch(()=>{GC.state='err';GC.msg='連不上 Google，請確認網路。';render()});return}
   if(!GCW.client)GCW.client=google.accounts.oauth2.initTokenClient({client_id:GDRIVE_CLIENT_ID,scope:'https://www.googleapis.com/auth/calendar.readonly',callback:r=>{
-    if(r&&r.access_token){GCW.tok=r.access_token;GCW.exp=Date.now()+(+r.expires_in||3600)*1000;try{sessionStorage.setItem('sd-gc-tok',JSON.stringify({tok:GCW.tok,exp:GCW.exp}))}catch{}gcLoad(true)}
+    if(r&&r.access_token){GCW.tok=r.access_token;GCW.exp=Date.now()+(+r.expires_in||3600)*1000;tokSet('sd-gc-tok',GCW.tok,GCW.exp);gcLoad(true)}
     else{GC.state='err';GC.msg='沒有完成 Google 授權。';render()}},error_callback:()=>{GC.state='err';GC.msg='授權視窗被關閉或擋下了，請再試一次。';render()}});
-  GCW.client.requestAccessToken({prompt:''})}
+  const o={prompt:''},h=gHint();if(h)o.login_hint=h;GCW.client.requestAccessToken(o)}
 async function gcLoadWeb(days){
   if(!gcwReady()){GC.state='auth';GC.msg='';if(R==='calendar')render();return null}
   const ev={};let token='',guard=0;
   do{const u='https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250&timeMin='+encodeURIComponent(new Date(days[0]+'T00:00:00').toISOString())+'&timeMax='+encodeURIComponent(new Date(addDays(days[41],1)+'T00:00:00').toISOString())+(token?'&pageToken='+encodeURIComponent(token):'');
-    const r=await fetch(u,{headers:{Authorization:'Bearer '+GCW.tok}});if(r.status===401){GCW.tok=null;try{sessionStorage.removeItem('sd-gc-tok')}catch{}GC.state='auth';if(R==='calendar')render();return null}
+    const r=await fetch(u,{headers:{Authorization:'Bearer '+GCW.tok}});if(r.status===401){GCW.tok=null;tokDel('sd-gc-tok');GC.state='auth';if(R==='calendar')render();return null}
     if(!r.ok)throw new Error('http '+r.status);const pl=await r.json();
     (pl.items||[]).forEach(e=>gcAddEvent(ev,e));token=pl.nextPageToken||'';}while(token&&++guard<4);
   return ev}

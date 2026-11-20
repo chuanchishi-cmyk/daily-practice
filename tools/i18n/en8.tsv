@@ -1761,3 +1761,7 @@
 =接電話會自動計算通話時間，記下來電時一起存，工作頁顯示今天通話幾通、幾分鐘；工作的事可一鍵放進三件事或轉成計畫步驟；有提醒的事可加到手機行事曆	Taking a call now times it and saves the length with the note; the Work page shows today’s calls and minutes; work items go into your top three or a plan step in one tap; reminders can be added to your phone’s calendar
 =隨手記太長的內容先收成兩行，按「展開」看全文；超過 5 則時其餘先收起	Long notes fold to two lines — tap “Expand” to read all; beyond 5 notes, the rest fold away
 =白噪音新增「露營烤火」：真實的柴火聲，細碎的劈啪聲，可無縫循環	New white noise “Campfire”: real burning wood with gentle crackles, looping seamlessly
+=⟳ 點一下續上同步	⟳ Tap to resume sync
+=連線過期了，點「立即同步」就續上	Connection expired — tap “Sync now” to resume
+=Google 連線過期了，點一下同步就續上。	Google connection expired — tap sync to resume.
+=雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號	Cloud sync: reopen the app within an hour without reconnecting; after it expires, one tap on the sync label resumes it — your Google account is remembered, so no account picker

@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js）
 ```
 
 ---
@@ -155,7 +155,7 @@ daily-practice/
 |---|---|---|
 | 番茄鐘（專注、休息） | 無 | `ring()`：880/660 Hz 清脆「嘀－嘟－嘀」，**重複兩次** |
 | 測驗計時（每段、全部） | 無 | `ring()`（同上）；剩 5 分、1 分鐘時 `warnTone()` 一聲＋數字閃爍 10 秒（設定 `sd-xwarn`，預設開） |
-| 白噪音（今日番茄鐘計時時） | 專注時、休息時各選一種：不播／夏夜蟲鳴／鳥鳴流水／潮汐 | **休息預設潮汐、專注預設不播**（`sd-noise-b`、`sd-noise-w`；舊版 `sd-noise-on`+`sd-noise-k` 開過的人，專注時沿用原選擇）。靜心時自動停止。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；蟲鳴以物理模型即時合成（0 KB）：不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。音量 `sd-noise-v` |
+| 白噪音（今日番茄鐘計時時） | 專注時、休息時各選一種：不播／夏夜蟲鳴／鳥鳴流水／露營烤火／潮汐 | **休息預設潮汐、專注預設不播**（`sd-noise-b`、`sd-noise-w`；舊版 `sd-noise-on`+`sd-noise-k` 開過的人，專注時沿用原選擇）。靜心時自動停止。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；蟲鳴以物理模型即時合成（0 KB）：不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。音量 `sd-noise-v` |
 | 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒。每聲各自的輸出記在 `WF`；三聲未響完就暫停 → 取消還沒響的（`wfCancel()`，剩幾聲記在 `MT.wfLeft`），繼續 → 接著響剩下的；重設後開始 → 重新三聲 | `yinqing(1,0)`：一聲引磬 |
 
 技術要點（iPhone 相容）：
@@ -252,6 +252,7 @@ node tools/tests/sport-flow.js
 node tools/tests/work-page.js
 node tools/tests/work-words.js
 node tools/tests/notes-remind.js
+node tools/tests/work-notes.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
@@ -407,6 +408,7 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 合成的聲音使用者聽起來像電子音，改用**實地錄音分層混音**：同一段原始錄音取 2–3 個不同時段，各層不同遠近（低通）、左右位置、速度微調 ±1.5–3%、緩慢強弱起伏，做成約 50 秒的無縫循環（-20 dBFS、96 kbps）。製作在 `audio/ambience` 分支，來源見該分支的 `audio/ambience/CREDITS.md`。
 - `stream.mp3` 目前是第三版（2026-11-20）：鳥叫較疏（第二版），1.5 kHz 以下水聲再降 3.5 dB；`summer-night.mp3` 維持第一版（第二版放慢降調，使用者選擇不換）。
 - `summer-night.mp3`（夏夜蟲鳴，key `insects`，沿用舊鍵讓原本選蟲鳴的人自動換成新錄音）與 `stream.mp3`（鳥鳴流水）是 App 作者自己的錄音，不需署名。
+- `campfire.mp3`（露營烤火，key `fire`，2026-11-20）：作者提供的兩段錄音合成——底層用 .ogg 錄音（50 Hz 高通、輕度降噪、180 Hz −1.5 dB 去悶），疊上另一段的劈啪聲（降 3.5 dB），50 秒無縫循環，96 kbps 立體聲、約 −16 LUFS，和其他白噪音一樣大聲。原則：真實、放鬆。
 - `NZ_FILE` 情境 → 檔名；`NZ_SEAMLESS` 已無縫循環的檔不再交叉淡化。舊的蟲鳴合成程式（`nzSynth`）保留但已不使用。
 - 待辦：海洋（海浪拍沙灘＋礁石）多層混音，素材下載受阻，等使用者提供錄音；燒柴、風聲暫不做。
 
@@ -539,6 +541,17 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **隨手記（上班）**：今日的「雜念停車場」改名「隨手記」，按鈕「記下」。上班情境的類別為「待辦、來電、想法、問題」。每則可設提醒（`remind`，ISO 時間）；`remindTick()` 每 15 秒檢查，到時間 toast＋響一聲＋震動＋通知（已允許時），並列在今日小卡最上方（「處理好了」「晚點再提醒」＝延後 30 分）。限制：瀏覽器版只有 App 開著或背景計時中才能準時提醒。工作上班頁的番茄鐘下有「接電話・臨時有事」：暫停番茄鐘、打開隨手記並選好「來電」、預設 1 小時後提醒。測試：`tools/tests/notes-remind.js`。
 - **我的節奏兩個月比對**：測驗或上次更新滿 60 天、近 60 天記滿 30 晚時，用睡眠中點（有 6 晚以上週末紀錄就用週末）判斷作息類型、用專注分鐘判斷高峰時段；和報告不同時出現回顧卡「兩個月下來，你的節奏有點不一樣了」，按「更新報告」才寫入 `rhAdj.type/peak/repAt`，報告的兩格標示「依紀錄更新」。測試：`tools/tests/rhythm-report.js`。
 - **靜心回饋可指定的老師**：只列能回應 6 種以上狀況的（`MZ_PICK_MIN`），目前是聖嚴法師、馬哈希大師、比約恩．納提科（新增第 5 章〈初探寺院〉談期待特別體驗）。之前指定、現在不在名單的老師，改回輪流。
+
+## 36c. 2026-11-20 第六批（工作隨手記）
+
+- **工作隨手記與今日隨手記分開**：`day.j.park` 項目多一個 `ctx:'work'`。工作上班頁記下的（或隨手記視窗在「工作」分類記下的）標成工作；今日頁只列 `ctx!=='work'`，工作頁只列工作的（`parkOf(k,ctx)`）。隨手記視窗（`qnOpen(ctx)`）上方有「生活／工作／全部」切換（`qnCtx`，從工作頁打開預設工作），計畫筆記依 `isAcadProj` 分、覺察片段算生活；類別跟著分類（工作：待辦、來電、想法、問題）。
+- **長的內容收起**：超過 40 字或有換行的收成兩行（`.nt.clamp`），旁邊「展開／收起」（`CLAMP` 集合，`data-act=clampT`）；清單超過 5 則時其餘先收起（「還有 N 則」）。
+- **工作用語**：`PH()` 在工作上班頁也用工作版（番茄任務提示「例：準備週會簡報、回覆客戶的信」）；工作隨手記說明與提示改用客戶、同事、主管。紀錄標籤還是預設讀書標籤時，工作頁上方提議「換成上班用的」（`wkTags`：換成 `WORK_TAGS`，舊標籤移到 `subjectsArchived`，以前的紀錄不受影響）。
+- **通話計時**：按「接電話・臨時有事」會開始計時（`CALL={start}`，存在 `sd-call`，重新整理也接得上），隨手記視窗與工作頁顯示「通話中 mm:ss」，可「結束通話」；記下來電時自動結束並存 `callMin`。工作頁標頭顯示「通話 N 通・M 分」。
+- **一鍵轉換**：工作隨手記每則有「放進三件事」「轉成步驟」（沿用 `qnTop`／`qnStep`；在視窗外按轉成步驟且有多個計畫時會打開視窗選計畫）。
+- **提醒同步到手機行事曆**：有提醒的事多一個「加到行事曆」（`remCal`）。網頁／主畫面版下載 `.ics`（含 VALARM，iPhone、Android、電腦都能開）；claude.ai 版打開 Google 日曆新增活動頁。
+- **白噪音「露營烤火」**：見 §26 音檔說明。
+- 測試：`tools/tests/work-notes.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

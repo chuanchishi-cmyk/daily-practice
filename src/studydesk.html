@@ -380,6 +380,12 @@ button:has(>.ic){display:inline-flex;align-items:center;justify-content:center;g
 .pausebox{margin:12px 0 0;padding:10px 12px;border:1px dashed var(--accent);border-radius:10px;background:var(--sunk)}
 .resume{margin:10px 0 0;text-align:center;font-size:calc(13px * var(--fs,1))}
 .park{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.nt.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nt{white-space:pre-wrap;overflow-wrap:anywhere}.ntmore{margin-left:4px;font-size:calc(12px * var(--fs,1))}
+.parkact{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}.parkact .linkbtn{font-size:calc(12px * var(--fs,1))}
+.callbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;margin:8px 0;border-radius:10px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
+.calldot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;animation:calld 1.4s ease-in-out infinite}
+@keyframes calld{50%{opacity:.3}}@media (prefers-reduced-motion:reduce){.calldot{animation:none}}
 .qnfab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:40;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 16px rgba(40,30,20,.14);font-size:calc(13px * var(--fs,1))}
 .qnfab:hover{border-color:var(--focus);color:var(--focus)}
 body:has(.modal) .qnfab{display:none}
@@ -1057,7 +1063,7 @@ const isAcadProj=p=>!!p&&ACAD_T.includes(p.type)&&!(WK()&&p.type==='project');
 const WHO_ACAD=['指導教授','口試委員','共同作者','同儕','其他'],WHO_WORK=['主管','同事','客戶','合作夥伴','其他'];
 const whoList=p=>isAcadProj(p)?WHO_ACAD:WHO_WORK,whoDef=p=>whoList(p)[0];
 const isTeacher=w=>w==='指導教授'||w==='口試委員';
-const PH=(acad,work)=>WK()?work:acad;
+const PH=(acad,work)=>(WK()||(typeof R!=='undefined'&&R==='work'))?work:acad;
 const WORK_TAGS=[{id:'W1',name:'專案',c:5,unit:''},{id:'W2',name:'會議',c:3,unit:''},{id:'W3',name:'信件與聯絡',c:1,unit:''},{id:'W4',name:'學習成長',c:10,unit:''},{id:'E',name:'運動',c:8,unit:'分'}];
 const DEF={
   subjects:[
@@ -1310,7 +1316,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.11'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.12'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1468,25 +1474,32 @@ function pomoHTML(){
 function pPaused(){return P.mode==='work'&&!P.running&&P.left!=null&&!!P.startedAt}
 /* ---------- 隨手記：今日的隨手記（原雜念停車場）、計畫筆記、覺察片段集中看；可設提醒 ---------- */
 const QN_KINDS_S=['待辦','想法','問題','提醒'],QN_KINDS_W=['待辦','來電','想法','問題'];
-const qnKinds=()=>WK()||isOn('work')?QN_KINDS_W:QN_KINDS_S;
+const qnKinds=()=>qnCtx==='work'?QN_KINDS_W:QN_KINDS_S;
 let qnRemind='';
-let qnKind='待辦',qnFilter='open',qnPick=null;
+let qnKind='待辦',qnFilter='open',qnPick=null,qnCtx='life';
 function qnItems(){const out=[],t=today();
-  for(let i=0;i<30;i++){const k=addDays(t,-i),j=day(k).j||{};(j.park||[]).forEach(x=>out.push({src:'park',k,id:x.id,text:x.text,kind:x.kind||'',done:!!x.done,at:k+' '+(x.t||'')}))}
-  Object.entries(S.pnotes||{}).forEach(([id,n])=>{if(!n||!S.projects[n.proj])return;out.push({src:'pnote',id,k:n.d||'',text:n.text,kind:n.kind||'',done:!!n.done,at:String(n.at||n.d||'').replace('T',' '),pid:n.proj,pj:proj(n.proj).name})});
-  for(let i=0;i<7;i++){const k=addDays(t,-i),j=day(k).j||{};(j.moments||[]).forEach((m,ix)=>{if(m&&m.w)out.push({src:'mom',k,id:k+':'+ix,text:m.w,kind:m.e?emoName(m.e):'',done:false,at:k+' '+(m.t||'')})})}
+  for(let i=0;i<30;i++){const k=addDays(t,-i),j=day(k).j||{};(j.park||[]).forEach(x=>out.push({src:'park',k,id:x.id,text:x.text,kind:x.kind||'',done:!!x.done,at:k+' '+(x.t||''),ctx:x.ctx==='work'?'work':'life',callMin:x.callMin,remind:x.remind}))}
+  Object.entries(S.pnotes||{}).forEach(([id,n])=>{if(!n||!S.projects[n.proj])return;out.push({src:'pnote',id,k:n.d||'',text:n.text,kind:n.kind||'',done:!!n.done,at:String(n.at||n.d||'').replace('T',' '),pid:n.proj,pj:proj(n.proj).name,ctx:isAcadProj(proj(n.proj))?'life':'work'})});
+  for(let i=0;i<7;i++){const k=addDays(t,-i),j=day(k).j||{};(j.moments||[]).forEach((m,ix)=>{if(m&&m.w)out.push({src:'mom',k,id:k+':'+ix,text:m.w,kind:m.e?emoName(m.e):'',done:false,at:k+' '+(m.t||''),ctx:'life'})})}
   return out.sort((a,b)=>a.at<b.at?1:-1)}
 function qnRow(x,pids){const src=x.src==='park'?(x.k===today()?'今天':fmtMD(x.k)):x.src==='pnote'?x.pj:'覺察片段・'+fmtMD(x.k),ref=`data-src="${x.src}" data-id="${esc(x.id)}" data-k="${esc(x.k||'')}"`;
   const pick=qnPick===x.id?`<div class="row qnpick"><select id="qnPj" aria-label="放到哪個計畫">${pids.map(id=>`<option value="${esc(id)}">${esc(proj(id).name)}</option>`).join('')}</select><button class="sm sec" data-act="qnStepGo" ${ref}>加入</button><button class="ghost sm" data-act="qnPickX">取消</button></div>`:'';
-  return `<div class="qnrow${x.done?' done':''}">${x.src!=='mom'?`<input type="checkbox" data-ch="qnDone" ${ref} ${x.done?'checked':''} aria-label="處理完了">`:'<span class="qndot" aria-hidden="true"></span>'}<div class="grow"><div class="qa">${esc(x.text)}</div><div class="muted qnmeta">${x.kind?`<span class="pill mut">${esc(x.kind)}</span> `:''}${esc(src)}</div>${pick}</div>
+  return `<div class="qnrow${x.done?' done':''}">${x.src!=='mom'?`<input type="checkbox" data-ch="qnDone" ${ref} ${x.done?'checked':''} aria-label="處理完了">`:'<span class="qndot" aria-hidden="true"></span>'}<div class="grow"><div class="qa">${noteTxt(x.text,'q'+x.src+x.id)}${x.callMin?`<span class="muted"> ・通話 ${x.callMin} 分</span>`:''}${remTxt(x)}</div><div class="muted qnmeta">${x.kind?`<span class="pill mut">${esc(x.kind)}</span> `:''}${esc(src)}</div>${pick}</div>
   ${x.src==='mom'?'<a class="xlink" href="#journal" data-act="close">日記 →</a>':x.done?'':`<span class="qnact"><button class="ghost sm" data-act="qnTop" ${ref}>放進三件事</button>${pids.length&&isOn('plan')?`<button class="ghost sm" data-act="qnStep" ${ref}>轉成步驟</button>`:''}<button class="ghost sm" data-act="qnDel" ${ref} aria-label="刪除">×</button></span>`}</div>`}
-function qnBody(){const all=qnItems(),list=all.filter(x=>qnFilter==='all'||!x.done),pids=Object.keys(S.projects),v=(($('#qnIn')||{}).value)||'';
-  return `<div class="row sb"><h2 id="qnT" style="margin:0">隨手記</h2><button class="ghost sm" data-act="close" aria-label="關閉">×</button></div>
+function qnBody(){const all=qnItems().filter(x=>qnCtx==='all'||x.ctx===qnCtx),list=all.filter(x=>qnFilter==='all'||!x.done),pids=Object.keys(S.projects),v=(($('#qnIn')||{}).value)||'';
+  return `<div class="row sb"><h2 id="qnT" style="margin:0">隨手記</h2><span class="row" style="gap:6px">${isOn('work')||WK()?`<div class="seg">${[['life','生活'],['work','工作'],['all','全部']].map(([v,n])=>`<button data-act="qnCtx" data-v="${v}" aria-pressed="${qnCtx===v}">${n}</button>`).join('')}</div>`:''}<button class="ghost sm" data-act="close" aria-label="關閉">×</button></span></div>${callBarHTML()}
   <p class="muted" style="margin:4px 0 8px">想到什麼先記下來，等一下再處理；需要的話設個提醒。今天的隨手記、計畫筆記、最近的覺察片段都集中在這裡。</p>
   <textarea id="qnIn" rows="2" placeholder="${PH('例：回老師的信、查那篇文章的出處、突然想到的點子','例：回主管的信、確認報價、突然想到的點子')}">${esc(v)}</textarea>
   <div class="row sb" style="margin-top:6px;gap:6px"><div class="seg">${qnKinds().map(k=>`<button data-act="qnKind" data-k="${k}" aria-pressed="${qnKind===k}">${k}</button>`).join('')}</div><span class="row" style="gap:6px"><select id="qnRem" data-ch="qnRem" aria-label="提醒">${[['','不提醒'],['30','30 分鐘後'],['60','1 小時後'],['120','2 小時後'],['t','選時間…'],['am','明天早上 9 點']].map(([v,n])=>`<option value="${v}"${qnRemind===v?' selected':''}>${n}</option>`).join('')}</select><input type="time" id="qnRemT"${qnRemind==='t'?'':' hidden'} aria-label="提醒時間"><button class="pri sm" data-act="qnAdd">記下</button></span></div>
   <div class="row sb" style="margin:14px 0 6px"><b>${qnFilter==='all'?'全部':'待處理'} <span class="muted num">${list.length}</span></b><div class="seg">${[['open','待處理'],['all','全部']].map(([k,n])=>`<button data-act="qnFilter" data-v="${k}" aria-pressed="${qnFilter===k}">${n}</button>`).join('')}</div></div>
   <div class="qnlist">${list.slice(0,80).map(x=>qnRow(x,pids)).join('')||'<p class="empty">都處理完了。</p>'}</div>`}
+function callStop(){if(!CALL)return 0;const m=Math.max(1,Math.round((Date.now()-CALL.start)/60000));CALL=null;lsSet('sd-call',null);CALL_MIN=m;return m}
+function callTick(){if(!CALL)return;document.querySelectorAll('#callT,#wkCallT').forEach(e=>e.textContent=mmss((Date.now()-CALL.start)/1000))}
+// 提醒同步到手機行事曆：下載 .ics（iPhone、Android、電腦的行事曆都能開），claude.ai 版另外直接開 Google 日曆
+async function remCal(k,id){const x=((day(k).j||{}).park||[]).find(y=>y.id===id);if(!x||!x.remind)return;const d=new Date(x.remind),dk=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),t=pad(d.getHours())+':'+pad(d.getMinutes());
+  const title='提醒：'+x.text.replace(/\s+/g,' ').slice(0,40);
+  if(!STANDALONE){const f=v=>v.replace(/[-:]/g,'').slice(0,15),st=d.toISOString(),en=new Date(d.getTime()+10*60000).toISOString();window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+f(st)+'Z/'+f(en)+'Z&details='+encodeURIComponent(x.text),'_blank','noopener');return}
+  const data=icsFile([{uid:x.id,date:dk,t,min:10,title,desc:x.text}]);if(await saveFile(`日課提醒-${dk}.ics`,data,'text/calendar',`rike-reminder-${dk}.ics`))toast('打開這個檔案，就會加到手機的行事曆')}
 function qnRemAt(){const v=($('#qnRem')||{}).value||'',n=Date.now();if(!v)return '';if(v==='am'){const d=new Date();d.setDate(d.getDate()+1);d.setHours(9,0,0,0);return d.toISOString()}
   if(v==='t'){const tv=($('#qnRemT')||{}).value;if(!tv)return '';const [h,m]=tv.split(':').map(Number),d=new Date();d.setHours(h,m,0,0);if(d.getTime()<n)d.setDate(d.getDate()+1);return d.toISOString()}return new Date(n+(+v)*60000).toISOString()}
 function remindAsk(){try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}catch{}}
@@ -1496,17 +1509,27 @@ let REM_LAST=0;
 function remindTick(){if(Date.now()-REM_LAST<15000)return;REM_LAST=Date.now();const fired=lsGet('sd-remfired',[])||[];const due=remindDue().filter(x=>!fired.includes(x.id));if(!due.length)return;
   lsSet('sd-remfired',fired.concat(due.map(x=>x.id)).slice(-200));const x=due[0];toast('提醒：'+x.text.slice(0,40));try{unlockAudio();flTone('go')}catch{}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch{}
   notify('日課提醒',x.text.slice(0,80));if(R==='today'||R==='work')render()}
-function qnOpen(){qnPick=null;$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="qnT"><div class="box qnbox">${qnBody()}</div></div>`;setTimeout(()=>{const i=$('#qnIn');i&&i.focus()},60)}
+function qnOpen(ctx){qnPick=null;qnCtx=ctx||(R==='work'?'work':'life');if(!qnKinds().includes(qnKind))qnKind='待辦';$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="qnT"><div class="box qnbox">${qnBody()}</div></div>`;setTimeout(()=>{const i=$('#qnIn');i&&i.focus()},60)}
 function qnRefresh(){const b=$('.qnbox');if(b){const f=document.activeElement&&document.activeElement.id==='qnIn';b.innerHTML=qnBody();if(f){const i=$('#qnIn');i&&i.focus()}}render()}
 function qnEdit(d,fn){if(d.src==='park')editDay(d.k,dd=>{const a=dd.j.park=dd.j.park||[],x=a.find(y=>y.id===d.id);if(x)fn(x,a)});else if(d.src==='pnote'){const n=S.pnotes[d.id];if(!n)return;const c=clone(n);fn(c);save('pnotes',d.id,c)}}
 function qnText(d){if(d.src==='park')return ((day(d.k).j.park||[]).find(y=>y.id===d.id)||{}).text||'';return (S.pnotes[d.id]||{}).text||''}
 function qnToStep(d,pid){const t=qnText(d).slice(0,120),st=curStageOf(pid);if(!t||!st)return;const pp=clone(proj(pid)),s2=pp.stages.find(x=>x.id===st.id);s2.steps.push({id:rid(),t,done:false,due:''});save('projects',pid,pp);qnEdit(d,x=>{x.done=true});qnPick=null;toast(`已加到「${pp.name}・${st.name}」`);qnRefresh()}
+let parkMore=false,CALL_MIN=null;const CLAMP=new Set();
+let CALL=lsGet('sd-call',null);
+const workCtx=()=>R==='work';
+function parkOf(k,ctx){return (((day(k).j||{}).park)||[]).filter(x=>ctx==='work'?x.ctx==='work':x.ctx!=='work')}
+function noteTxt(text,key){const long=(text||'').length>40||/\n/.test(text||'');return `<span class="nt${long&&!CLAMP.has(key)?' clamp':''}">${esc(text)}</span>${long?`<button class="linkbtn ntmore" data-act="clampT" data-key="${esc(key)}">${CLAMP.has(key)?'收起':'展開'}</button>`:''}`}
+function remTxt(x){return x.remind&&!x.done?`<span class="muted"> ・提醒 ${new Date(x.remind).toTimeString().slice(0,5)}${x.remind.slice(0,10)!==today()?'（明天）':''}</span>`:''}
+function parkRow(x,k,w){const ref=`data-src="park" data-k="${k}" data-id="${x.id}"`;
+  return `<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${x.kind&&x.kind!=='待辦'?`<span class="pill mut">${esc(x.kind)}</span> `:''}${noteTxt(x.text,'p'+x.id)}${x.callMin?`<span class="muted"> ・通話 ${x.callMin} 分</span>`:''}${remTxt(x)}
+    ${x.done?'':`<span class="parkact">${w?`<button class="linkbtn" data-act="qnTop" ${ref}>放進三件事</button>${isOn('plan')&&Object.keys(S.projects).length?`<button class="linkbtn" data-act="qnStep" ${ref}>轉成步驟</button>`:''}`:''}${x.remind?`<button class="linkbtn" data-act="remCal" data-k="${k}" data-id="${x.id}">加到行事曆</button>`:''}</span>`}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`}
+function callBarHTML(){return CALL?`<div class="callbar"><span><span class="calldot" aria-hidden="true"></span>通話中 <b class="num" id="callT">${mmss((Date.now()-CALL.start)/1000)}</b></span><button class="sm" data-act="callEnd">結束通話</button></div>`:''}
 function parkHTML(){
-  const k=today(),it=((day(k).j||{}).park)||[],open=it.filter(x=>!x.done).length;
-  return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">隨手記</b><span class="row" style="gap:8px"><span class="muted">${it.length?`${open} 則待處理`:''}</span><button class="linkbtn" data-act="qnOpen">全部 →</button></span></div>
-    <p class="muted" style="margin:2px 0 8px">${PH('專心時冒出的念頭、想到要做的事，先記在這裡，腦袋就不必一直記著它；番茄結束後再處理。','臨時交辦、來電、突然想到的事，先記在這裡，需要的話設個提醒；專心做完手上的再處理。')}</p>
-    <div class="row"><input id="parkIn" type="text" placeholder="${PH('例：回老師的信、查那篇文章的出處、買牙膏','例：回主管的信、確認報價、訂會議室')}" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">記下</button></div>
-    ${it.length?`<div class="list" style="margin-top:8px">${it.map(x=>`<div class="li parkit${x.done?' done':''}"><input type="checkbox" data-ch="parkDone" data-id="${x.id}" ${x.done?'checked':''} aria-label="處理完了"><span class="num muted">${esc(x.t)}</span><span class="grow">${x.kind==='來電'?'<span class="pill mut">來電</span> ':''}${esc(x.text)}${x.remind&&!x.done?`<span class="muted"> ・提醒 ${new Date(x.remind).toTimeString().slice(0,5)}${x.remind.slice(0,10)!==today()?'（明天）':''}</span>`:''}</span><button class="ghost sm" data-act="parkDel" data-id="${x.id}" aria-label="刪除">×</button></div>`).join('')}</div>`:''}
+  const w=workCtx(),k=today(),it=parkOf(k,w?'work':''),open=it.filter(x=>!x.done).length,list=parkMore?it:it.slice(0,5);
+  return `<div class="park"><div class="row sb"><b style="font-size:calc(13px * var(--fs,1))">${w?'工作隨手記':'隨手記'}</b><span class="row" style="gap:8px"><span class="muted">${it.length?`${open} 則待處理`:''}</span><button class="linkbtn" data-act="qnOpen">全部 →</button></span></div>
+    <p class="muted" style="margin:2px 0 8px">${w?'客戶、同事或主管臨時交代的事、來電、突然想到的點子，先記在這裡，需要的話設個提醒；手上的事做完再處理。':PH('專心時冒出的念頭、想到要做的事，先記在這裡，腦袋就不必一直記著它；番茄結束後再處理。','專心時冒出的念頭、想到要做的事，先記在這裡，腦袋就不必一直記著它；手上的事做完再處理。')}</p>
+    <div class="row"><input id="parkIn" type="text" placeholder="${w?'例：回覆客戶報價、訂下週會議室':PH('例：回老師的信、查那篇文章的出處、買牙膏','例：繳電話費、查那篇文章、突然想到的點子')}" style="flex:1" enterkeyhint="done"><button class="sm" data-act="parkAdd">記下</button></div>
+    ${it.length?`<div class="list" style="margin-top:8px">${list.map(x=>parkRow(x,k,w)).join('')}</div>${it.length>5?`<button class="tntog" data-act="parkMoreT">${parkMore?'收起':`還有 ${it.length-5} 則`}</button>`:''}`:''}
   </div>`;
 }
 function pStart(){MT.running?unlockAudio():freshAudio();if(P.mode!=='work')accReset();try{nzWarm()}catch{}if(P.mode==='work'&&!P.startedAt)P.startedAt=new Date().toISOString();P.endAt=Date.now()+pLeft()*1000;P.running=true;savP()}
@@ -1573,7 +1596,7 @@ function tAdvance(){
 let lastTitle='';
 let CUR_DAY=today();
 function tick(force){
-  syncSched();syncNoise();try{spTick()}catch{}try{careTick()}catch{}try{remindTick()}catch{}
+  syncSched();syncNoise();try{spTick()}catch{}try{careTick()}catch{}try{remindTick()}catch{}try{callTick()}catch{}
   {const q=Math.floor(Date.now()/3e4);if(q!==tick._q){tick._q=q;const tk=timeKey();if(TK&&tk!==TK&&today()===CUR_DAY&&(R==='today'||R==='journal')){TK=tk;softRender()}TK=tk}}
   if(today()!==CUR_DAY&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){const o=CUR_DAY;CUR_DAY=today();if(jDay===o)jDay=CUR_DAY;if(calSel===o){calSel=CUR_DAY;calM=CUR_DAY.slice(0,7)}render();return}
   if(P.running&&Date.now()>=P.endAt){pComplete(false);return}
@@ -1886,6 +1909,10 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
+ {d:'2026-11-20',lv:'minor',t:'接電話會自動計算通話時間，記下來電時一起存，工作頁顯示今天通話幾通、幾分鐘；工作的事可一鍵放進三件事或轉成計畫步驟；有提醒的事可加到手機行事曆'},
+ {d:'2026-11-20',lv:'minor',t:'隨手記太長的內容先收成兩行，按「展開」看全文；超過 5 則時其餘先收起'},
+ {d:'2026-11-20',lv:'minor',t:'白噪音新增「露營烤火」：真實的柴火聲，細碎的劈啪聲，可無縫循環'},
  {d:'2026-11-20',lv:'minor',t:'隨手記：今日的「雜念停車場」改名「隨手記」；可以設提醒（30 分、1 小時、選時間、明早），時間到跳出提示並列在今日小卡；工作上班頁新增「接電話・臨時有事」，先暫停番茄鐘再記來電'},
  {d:'2026-11-20',lv:'minor',t:'節氣卡：前兩天、當天、後兩天出現；國定假日與紀念日（元旦、教師節、國慶日、聖誕節等）前兩天到當天也會顯示；農曆節日依天文算法重算，並與 Google 日曆核對（2027 春節為 2/6）'},
  {d:'2026-11-20',lv:'minor',t:'我的節奏：每兩個月比對作息類型與高峰時段，有變化時先問你要不要更新報告'},
@@ -2795,19 +2822,24 @@ const A={
     editDay(k,d=>{const t=d.j.top3=d.j.top3||[];if(t[i])t[i].mv=m});render()},
   pmode:el=>{pSetMode(el.dataset.m);render()},
   ptoggle:()=>{const was=P.running;const pend=$('#ptagName');if(!was&&pend&&pend.value.trim())A.ptagSave();was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
-  parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false})});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
+  parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push(Object.assign({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false},workCtx()?{ctx:'work',kind:'待辦'}:{}))});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
   qnOpen:()=>qnOpen(),
+  qnCtx:el=>{qnCtx=el.dataset.v;if(!qnKinds().includes(qnKind))qnKind='待辦';qnRefresh()},
+  clampT:el=>{const k=el.dataset.key;CLAMP.has(k)?CLAMP.delete(k):CLAMP.add(k);const m=$('.qnbox');if(m&&m.contains(el))qnRefresh();else render()},
+  parkMoreT:()=>{parkMore=!parkMore;render()},
   qnKind:el=>{qnKind=el.dataset.k;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el?'true':'false'));const i=$('#qnIn');if(i)i.placeholder=qnKind==='來電'?'誰打來、說了什麼、要回覆什麼，例：王經理來電，報價改週五前給':'想到什麼先寫下來';if(qnKind==='來電'&&$('#qnRem')&&!$('#qnRem').value){$('#qnRem').value='60'}},
   remDone:el=>{editDay(el.dataset.k,d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.done=true});toast('處理好了');render()},
   remSnooze:el=>{editDay(el.dataset.k,d=>{const x=(d.j.park||[]).find(y=>y.id===el.dataset.id);if(x)x.remind=new Date(Date.now()+30*60000).toISOString()});lsSet('sd-remfired',(lsGet('sd-remfired',[])||[]).filter(i=>i!==el.dataset.id));toast('30 分鐘後再提醒');render()},
-  wkCall:()=>{if(P.running&&P.mode==='work')pPause();qnKind='來電';qnOpen();setTimeout(()=>{const r=$('#qnRem');if(r&&!r.value)r.value='60'},80);toast('番茄鐘先暫停了，回來按開始就能接著');render()},
+  wkCall:()=>{if(P.running&&P.mode==='work')pPause();if(!CALL){CALL={start:Date.now()};lsSet('sd-call',CALL)}qnKind='來電';qnOpen('work');setTimeout(()=>{const r=$('#qnRem');if(r&&!r.value)r.value='60'},80);toast('番茄鐘先暫停了，開始計算通話時間');render()},
+  callEnd:()=>{const m=callStop();toast(`通話 ${m} 分鐘，記下來電內容時會一起存`);if($('.qnbox'))qnRefresh();else render()},
+  remCal:el=>remCal(el.dataset.k,el.dataset.id),
   qnFilter:el=>{qnFilter=el.dataset.v;qnRefresh()},
-  qnAdd:()=>{const i=$('#qnIn'),t=(i&&i.value||'').trim();if(!t)return toast('先寫下想到的事');const n=new Date(),rm=qnRemAt();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push(Object.assign({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,kind:qnKind,done:false},rm?{remind:rm}:{}))});if(rm){remindAsk();toast('記下了，'+new Date(rm).toTimeString().slice(0,5)+' 提醒你')}qnRemind='';i.value='';toast('記下了');qnRefresh();setTimeout(()=>{const j=$('#qnIn');j&&j.focus()},30)},
+  qnAdd:()=>{const i=$('#qnIn'),t=(i&&i.value||'').trim();if(!t)return toast('先寫下想到的事');const n=new Date(),rm=qnRemAt();if(CALL)callStop();const cm=qnKind==='來電'?CALL_MIN:null;CALL_MIN=null;editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push(Object.assign({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,kind:qnKind,done:false},qnCtx==='work'||(qnCtx==='all'&&R==='work')?{ctx:'work'}:{},rm?{remind:rm}:{},cm?{callMin:cm}:{}))});if(rm){remindAsk();toast('記下了，'+new Date(rm).toTimeString().slice(0,5)+' 提醒你')}qnRemind='';i.value='';toast('記下了');qnRefresh();setTimeout(()=>{const j=$('#qnIn');j&&j.focus()},30)},
   qnDel:el=>{if(!twoStep(el))return;const d=el.dataset;if(d.src==='park')editDay(d.k,dd=>{dd.j.park=(dd.j.park||[]).filter(x=>x.id!==d.id)});else if(d.src==='pnote')remove('pnotes',d.id);qnRefresh()},
   qnTop:el=>{const d=el.dataset,t=qnText(d).slice(0,80);if(!t)return;let where='';
     for(const k of [today(),addDays(today(),1)]){let ok=false;editDay(k,dd=>{const a=dd.j.top3=dd.j.top3||[];const i=[0,1,2].find(i=>!(a[i]&&a[i].t));if(i!==undefined){a[i]={t,done:false};ok=true}});if(ok){where=k===today()?'今天':'明天';break}}
     if(!where)return toast('今天和明天的三件事都滿了');qnEdit(d,x=>{x.done=true});toast(`已放進${where}的三件事`);qnRefresh()},
-  qnStep:el=>{const d=el.dataset,pids=Object.keys(S.projects);if(d.src==='pnote'){qnToStep(d,S.pnotes[d.id].proj);return}if(pids.length===1){qnToStep(d,pids[0]);return}qnPick=d.id;qnRefresh()},
+  qnStep:el=>{const d=el.dataset,pids=Object.keys(S.projects);if(d.src==='pnote'){qnToStep(d,S.pnotes[d.id].proj);return}if(pids.length===1){qnToStep(d,pids[0]);return}if(!$('.qnbox'))qnOpen(R==='work'?'work':'life');qnPick=d.id;qnRefresh()},
   qnStepGo:el=>qnToStep(el.dataset,$('#qnPj').value),
   qnPickX:()=>{qnPick=null;qnRefresh()},
   parkDel:el=>{editDay(today(),d=>{d.j.park=(d.j.park||[]).filter(x=>x.id!==el.dataset.id)});render()},
@@ -3647,9 +3679,9 @@ function warnTone(){if(!AC)return;try{const out=dest(),t=T0()+.05;[[1175,.24],[2
 const xwarnOn=()=>lsGet('sd-xwarn',true)!==false;
 /* ---------- white noise (today's pomodoro, focus only) ---------- */
 // 白噪音情境：真實的實地錄音（summer-night、stream 為作者自錄；分層混音、約 50 秒無縫循環，見 docs 第 7 節）
-const NOISE_K=[['insects','夏夜蟲鳴'],['stream','鳥鳴流水'],['ocean','潮汐']];
-const NZ_FILE={insects:'summer-night.mp3',stream:'stream.mp3',ocean:'ocean.mp3'};
-const NZ_SEAMLESS={insects:true,stream:true}; // 已經做成無縫循環，不再交叉淡化
+const NOISE_K=[['insects','夏夜蟲鳴'],['stream','鳥鳴流水'],['fire','露營烤火'],['ocean','潮汐']];
+const NZ_FILE={insects:'summer-night.mp3',stream:'stream.mp3',fire:'campfire.mp3',ocean:'ocean.mp3'};
+const NZ_SEAMLESS={insects:true,stream:true,fire:true}; // 已經做成無縫循環，不再交叉淡化
 // 專注時、休息時各自選一種（'off' = 不播）。休息預設潮汐；專注預設不播，舊版開過「白噪音」的人沿用原本的選擇
 const nzOk=k=>NOISE_K.some(x=>x[0]===k);
 const noiseFor=m=>{const w=m==='work',k=lsGet(w?'sd-noise-w':'sd-noise-b',null);if(k==='off'||nzOk(k))return k;
@@ -4338,10 +4370,11 @@ function careHTML(){const c=careOf(today()),goal=+cfg().waterGoal||8,sit=sitMin(
     <p class="muted" style="margin:8px 0 0;font-size:calc(12px * var(--fs,1))">護眼：每專注 20 分鐘，看 6 公尺外 20 秒（20-20-20）。番茄鐘休息時，今日頁的計時下方也會提示一件。</p></section>`}
 function vWork(){if(gcOn()&&calM===today().slice(0,7)&&GC.key!==calM&&GC.state!=='loading')setTimeout(()=>{Promise.resolve(gcLoad(false)).then(()=>{if(R==='work')render()}).catch(()=>{})},0);const k=today(),ss=day(k).sessions||[],mins=ss.reduce((a,x)=>a+(+x.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),ev=gcOn()&&GC.events&&GC.events[k]||null;
   const meets=isOn('plan')?Object.keys(S.projects||{}).map(id=>({id,p:proj(id)})).filter(x=>x.p.next&&x.p.next.date&&x.p.next.date>=k&&diffDays(k,x.p.next.date)<=7).sort((a,b)=>(a.p.next.date+(a.p.next.time||''))<(b.p.next.date+(b.p.next.time||''))?-1:1):[];
-  return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>工作上班</h1></div><div class="chips"><span class="chip">今天專注 <b>${fmtMin(mins)}</b></span></div></header>
+  return `<header class="ph"><div><p class="eyebrow">${fmtLong(k)}</p><h1>工作上班</h1></div><div class="chips"><span class="chip">今天專注 <b>${fmtMin(mins)}</b></span>${(()=>{const c=parkOf(k,'work').filter(x=>x.callMin);return c.length?`<span class="chip">通話 <b>${c.length}</b> 通・${c.reduce((a,x)=>a+x.callMin,0)} 分</span>`:''})()}</div></header>
+  ${JSON.stringify(cfg().subjects.map(x=>x.name))===JSON.stringify(DEF.subjects.map(x=>x.name))?`<div class="banner row sb" style="margin-bottom:12px"><span>紀錄標籤還是讀書用的（論文、閱讀…）。要換成上班用的「專案、會議、信件與聯絡、學習成長」嗎？以前的紀錄不受影響。</span><button class="sm" data-act="wkTags">換成上班用的</button></div>`:''}
   <div class="grid2">
     <div class="stack">
-      <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}${breakTipHTML()}<div class="row" style="margin-top:10px"><button class="sm" data-act="wkCall">接電話・臨時有事</button><span class="muted" style="font-size:calc(12px * var(--fs,1))">先暫停番茄鐘，記下來電或交辦</span></div></section>
+      <section class="card pomo" aria-label="番茄鐘">${pomoHTML()}${breakTipHTML()}${CALL?`<div class="callbar" style="margin-top:10px"><span><span class="calldot" aria-hidden="true"></span>通話中 <b class="num" id="wkCallT">${mmss((Date.now()-CALL.start)/1000)}</b></span><span class="row" style="gap:6px"><button class="sm" data-act="wkCall">記下內容</button><button class="sm" data-act="callEnd">結束通話</button></span></div>`:`<div class="row" style="margin-top:10px"><button class="sm" data-act="wkCall">接電話・臨時有事</button><span class="muted" style="font-size:calc(12px * var(--fs,1))">先暫停番茄鐘，開始計算通話時間，順手記下內容</span></div>`}</section>
       <section class="card"><div class="row sb"><h2 style="margin:0">彈性記錄</h2></div><p class="muted" style="margin:6px 0 10px">開會、處理信件、臨時被叫走，沒有開番茄鐘也能補記一段；長休、短休和白噪音都沿用設定。</p>
         <div class="row" style="flex-wrap:wrap"><button class="sm" data-act="wkRec" data-m="15">補記 15 分</button><button class="sm" data-act="wkRec" data-m="30">30 分</button><button class="sm" data-act="wkRec" data-m="60">1 小時</button><button class="ghost sm" data-act="wkRec" data-m="0">自訂…</button></div></section>
     </div>
@@ -4357,6 +4390,7 @@ function vWork(){if(gcOn()&&calM===today().slice(0,7)&&GC.key!==calM&&GC.state!=
 Object.assign(A,{
   care:el=>{const k=el.dataset.k;if(k==='eye'){if(CARE_T){CARE_T=null;render();return}try{unlockAudio()}catch{}CARE_T={end:Date.now()+20000};render();return}careAdd(k);toast(k==='water'?'喝水了，很好':k==='walk'?'走一走，很好':'伸展好了');render()},
   wkRec:el=>{const m=+el.dataset.m||30;openRecord({min:m,t:new Date(Date.now()-m*60000).toISOString(),sub:P.sub,proj:P.proj,phase:P.phase,task:'',early:false,note:''})},
+  wkTags:()=>{editCfg(c=>{c.subjectsArchived=(c.subjectsArchived||[]).concat((c.subjects||[]).filter(x=>!WORK_TAGS.some(w=>w.id===x.id)));c.subjects=clone(WORK_TAGS)});P.sub='W1';P.proj='';savP();toast('標籤換好了');render()},
   wkMeet:el=>{curProj=el.dataset.id;planTab='meet'}
 });
 /* ---------- custom pages ---------- */

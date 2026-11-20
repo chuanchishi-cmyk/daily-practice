@@ -13,7 +13,7 @@ const run=async(purposes,projType)=>{const c=await b.newContext({viewport:{width
   out.html=await pg.$eval('main',e=>e.innerHTML);await c.close();return out};
 const w=await run(['work'],'product');
 ok(/客戶的信|週會/.test(w.task),'上班：番茄鐘任務提示「'+w.task+'」');
-ok(/主管/.test(w.park)&&!/老師/.test(w.park),'上班：雜念停車場提示「'+w.park+'」');
+ok(!/老師/.test(w.park),'上班：今日隨手記提示（生活用）「'+w.park+'」');
 ok(w.who.startsWith('主管')&&/客戶/.test(w.who)&&!/指導教授/.test(w.who),'上班：會談對象「'+w.who+'」');
 ok(/主管/.test(w.prep),'上班：會前清單提示「'+w.prep+'」');
 ok(!/\$\{PH\(/.test(w.html),'沒有沒替換的程式碼殘留');

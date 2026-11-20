@@ -1234,10 +1234,10 @@ function syncBlockHTML(){
   return `<div style="margin-bottom:14px"><h3 style="margin:0 0 8px">Google 雲端硬碟同步</h3>
     ${ok?`<div class="list"><div class="li"><span class="pill ${gdReady()?'good':'warn'}">${gdReady()?'✓':'!'}</span><div class="grow"><b>${gdReady()?'已連線':'連線過期了，點「立即同步」就續上'}</b><div class="muted">${GD.last?'上次同步：'+new Date(GD.last).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'還沒同步過'}${GD.err?'・'+esc(GD.err):''}</div></div></div></div>
       <div class="row" style="margin-top:10px"><button class="sec" data-act="gdNow">${GD.busy?'同步中…':'立即同步'}</button><button class="ghost sm" data-act="gdOff">停止同步</button></div>
-      <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。<br>Google 為了安全，每次連線約一小時；之後上方會出現「⟳ 點一下續上同步」，點一下就好，不用重新選帳號。</p>`
+      <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。<br>Google 為了安全，每次連線約一小時；之後上方會出現「⟳ 點一下續上同步」，點一下就好，不用重新選帳號。<a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a></p>`
     :`<p style="margin:0 0 10px">用 Google 帳號登入，手機和電腦的紀錄就會自動同步，也等於隨時都有一份雲端備份。</p>
       <button class="pri" data-act="gdOn">用 Google 帳號開始同步</button>
-      <p class="muted" style="margin:8px 0 0">資料只存到你自己的 Google 雲端硬碟（隱藏的 App 資料夾），日課沒有伺服器，也看不到你的紀錄。${GD.err?'<br>'+esc(GD.err):''}</p>`}
+      <p class="muted" style="margin:8px 0 0">資料只存到你自己的 Google 雲端硬碟（隱藏的 App 資料夾），日課沒有伺服器，也看不到你的紀錄。<a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a>${GD.err?'<br>'+esc(GD.err):''}</p>`}
   </div>`;
 }
 let WSTEP=0;
@@ -1353,7 +1353,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.14'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.15'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){

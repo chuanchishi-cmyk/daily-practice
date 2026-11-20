@@ -1220,7 +1220,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.5'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.6'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1748,6 +1748,7 @@ const WHATSNEW=[]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加
 const CHANGELOG=[
  {d:'2026-11-20',lv:'minor',t:'新頁面「運動」：瑜珈序列與呼吸節拍、健身組數與組間休息、跑步單車游泳配速、每日步數（在用途或設定裡打開）'},
  {d:'2026-11-20',lv:'minor',t:'作息觀測：早上記一下昨晚的睡眠，每週一收到作息報告'},
+ {d:'2026-11-20',lv:'fix',t:'鳥鳴流水：鳥叫較疏、水聲較柔和'},
  {d:'2026-11-20',lv:'fix',t:'靜心開頭的木魚：暫停時停止，繼續時接著響，重設後重新響；睡眠紀錄改成收合的一列；新增標籤直接輸入；手機節氣插畫置中'},
  {d:'2026-11-20',lv:'minor',t:'節氣卡加入插畫：江戶時代《梅園草木花譜》《本草圖譜》的植物圖'},
  {d:'2026-11-20',lv:'minor',t:'月曆重新設計：格子更簡潔，專注多寡用小圓點表示，標出節氣與節日'},

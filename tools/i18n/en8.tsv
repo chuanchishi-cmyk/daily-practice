@@ -1765,3 +1765,9 @@
 =連線過期了，點「立即同步」就續上	Connection expired — tap “Sync now” to resume
 =Google 連線過期了，點一下同步就續上。	Google connection expired — tap sync to resume.
 =雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號	Cloud sync: reopen the app within an hour without reconnecting; after it expires, one tap on the sync label resumes it — your Google account is remembered, so no account picker
+=Google 為了安全，每次連線約一小時；之後上方會出現「⟳ 點一下續上同步」，點一下就好，不用重新選帳號。	For security, Google keeps each connection for about an hour; after that, “⟳ Tap to resume sync” appears at the top — one tap, no need to pick your account again.
+=，按上方「立即同步」，點一下就續上。	 — tap “Sync now” above to resume.
+=新的紀錄目前只在這台裝置。點一下就續上，不用重新選帳號。	New entries are only on this device for now. One tap resumes — no need to pick your account again.
+=續上同步	Resume sync
+=紀錄先存在這台裝置。到「設定 → 資料保護與同步」用 Google 帳號登入，手機和電腦就會自動同步，也等於隨時有一份雲端備份。連線偶爾過期時，點一下上方的同步標籤就續上。建議把日課加到手機主畫面使用。	Entries are saved on this device first. Sign in with Google in “Settings → Data protection & sync” to sync your phone and computer automatically — it doubles as a cloud backup. If the connection expires now and then, one tap on the sync label at the top resumes it. We recommend adding Rike to your home screen.
+=雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）	Cloud sync: reopen the app within an hour without reconnecting; after it expires, one tap on the sync label resumes it — your Google account is remembered (settings, tip cards and the full guide updated to match)

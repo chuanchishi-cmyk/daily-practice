@@ -1207,7 +1207,7 @@ function syncBlockHTML(){
   return `<div style="margin-bottom:14px"><h3 style="margin:0 0 8px">Google 雲端硬碟同步</h3>
     ${ok?`<div class="list"><div class="li"><span class="pill ${gdReady()?'good':'warn'}">${gdReady()?'✓':'!'}</span><div class="grow"><b>${gdReady()?'已連線':'連線過期了，點「立即同步」就續上'}</b><div class="muted">${GD.last?'上次同步：'+new Date(GD.last).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'還沒同步過'}${GD.err?'・'+esc(GD.err):''}</div></div></div></div>
       <div class="row" style="margin-top:10px"><button class="sec" data-act="gdNow">${GD.busy?'同步中…':'立即同步'}</button><button class="ghost sm" data-act="gdOff">停止同步</button></div>
-      <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。</p>`
+      <p class="muted" style="margin:8px 0 0">每台裝置用同一個 Google 帳號開啟同步，紀錄就會自動合併。資料存在你自己雲端硬碟的隱藏 App 資料夾，只有日課讀得到，也不佔你看得到的檔案空間。<br>Google 為了安全，每次連線約一小時；之後上方會出現「⟳ 點一下續上同步」，點一下就好，不用重新選帳號。</p>`
     :`<p style="margin:0 0 10px">用 Google 帳號登入，手機和電腦的紀錄就會自動同步，也等於隨時都有一份雲端備份。</p>
       <button class="pri" data-act="gdOn">用 Google 帳號開始同步</button>
       <p class="muted" style="margin:8px 0 0">資料只存到你自己的 Google 雲端硬碟（隱藏的 App 資料夾），日課沒有伺服器，也看不到你的紀錄。${GD.err?'<br>'+esc(GD.err):''}</p>`}
@@ -1232,7 +1232,7 @@ function WELCOME(){
   W.push(['覺察：回到平靜','累了就靜心幾分鐘；晚上寫幾句日記，排好明天的三件事。慢慢會看見自己的情緒和節奏，心也比較安定。']);
   W.push(['節奏：越用越懂你','你的作息、精神好的時段，日課都會記在心上。番茄鐘的長度、提醒的時間，會慢慢照你的習慣調整；你改了哪裡，就以你的為準。']);
   if(!STANDALONE)W.push(['你的紀錄很安全','紀錄存在你自己的私人空間，換裝置登入同一個帳號就能接著用。分享這個頁面給別人，他們也看不到你的資料。']);
-  else if(gdAvail())W.push(['資料保存與同步','紀錄先存在這台裝置。到「設定 → 資料保護與同步」用 Google 帳號登入，手機和電腦就會自動同步，也等於隨時有一份雲端備份。建議把日課加到手機主畫面使用。']);
+  else if(gdAvail())W.push(['資料保存與同步','紀錄先存在這台裝置。到「設定 → 資料保護與同步」用 Google 帳號登入，手機和電腦就會自動同步，也等於隨時有一份雲端備份。連線偶爾過期時，點一下上方的同步標籤就續上。建議把日課加到手機主畫面使用。']);
   else W.push(['資料存在這台裝置','紀錄只存在這台裝置的瀏覽器，不會上傳。建議把日課加到手機主畫面使用，並到「設定 → 資料保護」每週備份一次，可以直接存到雲端硬碟。']);
   return W;
 }
@@ -1264,7 +1264,7 @@ function dataCardHTML(){
   return `<section class="card"><h2>${gdAvail()?'資料保護與同步':'資料保護'}</h2>
     ${syncBlockHTML()}
     <div class="list">
-      ${gd&&!cloud?row(gdOk,gdOk?'已同步到你的 Google 雲端硬碟':'Google 同步需要處理',gdOk?'換裝置時用同一個 Google 帳號開啟同步就能接著用。這台裝置也留著一份，沒網路時照常記錄。':(gda!==null?`上次同步是 ${gda} 天前`:'還沒有同步成功')+'，按上方「立即同步」重新連線。'):row(cloud,cloud?'存在你的私人雲端':'存在這台裝置的瀏覽器',cloud?'換裝置登入同一個帳號就能看到，別人打開這個頁面也看不到你的紀錄。':'換裝置或清除瀏覽資料，紀錄就會不見。所以下面兩項很重要。')}
+      ${gd&&!cloud?row(gdOk,gdOk?'已同步到你的 Google 雲端硬碟':'Google 同步需要處理',gdOk?'換裝置時用同一個 Google 帳號開啟同步就能接著用。這台裝置也留著一份，沒網路時照常記錄。':(gda!==null?`上次同步是 ${gda} 天前`:'還沒有同步成功')+'，按上方「立即同步」，點一下就續上。'):row(cloud,cloud?'存在你的私人雲端':'存在這台裝置的瀏覽器',cloud?'換裝置登入同一個帳號就能看到，別人打開這個頁面也看不到你的紀錄。':'換裝置或清除瀏覽資料，紀錄就會不見。所以下面兩項很重要。')}
       ${cloud||gd?'':row(PERSIST===true||inst,PERSIST===true?'已請瀏覽器保留資料':'瀏覽器可能會自動清除',PERSIST===true?'瀏覽器不會因為空間不足而自動刪掉你的紀錄。':(STANDALONE?'把日課「加到主畫面」再使用，最能避免被清除（iPhone 的 Safari 會清掉 7 天沒開的網站資料，但主畫面 App 不會）。':'這個環境無法保證，請定期備份。'))}
       ${gd?'':row(age!==null&&age<8,last?`上次備份：${fmtMD(last)}（${age===0?'今天':age+' 天前'}）`:'還沒有備份過',cloud?'雲端已經有一份，備份檔是多一層保險，每月一次就好。':'每週備份一次就夠了，超過 7 天會在頁面上方提醒你。')}
     </div>
@@ -1326,7 +1326,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.13'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.14'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1375,7 +1375,7 @@ function inAppHint(){if(!STANDALONE||!/\bLine\/|FBAN|FBAV|Instagram/i.test(navig
   return `<div class="banner" style="border-color:var(--accent)"><b>你正在 LINE 裡面開啟。</b>想把日課加到主畫面、讓資料穩定保存，請先點右下角（或右上角）的「⋯」，選「${ios?'用 Safari 開啟':'用預設瀏覽器開啟'}」。<a href="guide.html">看圖文說明</a></div>`}
 function localBanner(){
   if(backend!=='local')return inAppHint();
-  if(gdAvail()&&GD.on){if(gdHealthy())return inAppHint();const a=gdAgeDays();return inAppHint()+`<div class="banner row sb"><span>Google 同步暫停了（${a!==null?'上次同步是 '+a+' 天前':'還沒同步成功'}），新的紀錄目前只在這台裝置。</span><button class="sm sec" data-act="gdNow">立即同步</button></div>`}
+  if(gdAvail()&&GD.on){if(gdHealthy())return inAppHint();const a=gdAgeDays();return inAppHint()+`<div class="banner row sb"><span>Google 同步暫停了（${a!==null?'上次同步是 '+a+' 天前':'還沒同步成功'}），新的紀錄目前只在這台裝置。點一下就續上，不用重新選帳號。</span><button class="sm sec" data-act="gdNow">續上同步</button></div>`}
   if(localWhy==='viewonly'||localWhy==='nologin')return inAppHint()+`<div class="banner row sb"><span>${localWhy==='viewonly'?'你目前沒有雲端儲存權限，紀錄會先存在這個瀏覽器。想在不同裝置同步，請分享這個頁面的人把你設為「可使用」。':'資料目前只存在這個瀏覽器。登入 claude.ai 後開啟，就能同步到雲端。'}</span></div>`;
   return inAppHint()+backupNudge();
 }
@@ -1920,7 +1920,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
- {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號'},
+ {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）'},
  {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
  {d:'2026-11-20',lv:'minor',t:'接電話會自動計算通話時間，記下來電時一起存，工作頁顯示今天通話幾通、幾分鐘；工作的事可一鍵放進三件事或轉成計畫步驟；有提醒的事可加到手機行事曆'},
  {d:'2026-11-20',lv:'minor',t:'隨手記太長的內容先收成兩行，按「展開」看全文；超過 5 則時其餘先收起'},

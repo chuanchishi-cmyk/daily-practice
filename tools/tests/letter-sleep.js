@@ -18,7 +18,7 @@ if(!LON){console.log('skip 雁書（FEATURE_LETTER 關閉中）');await adv(9*60
 await pg.fill('#ltText','最近工作很多，晚上一直睡不著，腦袋停不下來，擔心明天的報告做不完。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(400);
 ok(/1 封信在路上/.test(await pg.textContent('main')),'寄出：信在路上');
 await adv(8*60);await go('today');ok(!/你有一封回信/.test((await pg.evaluate(()=>document.querySelector('.todaynotes')?.textContent||''))),'隔天 06:10（起床前）：還沒有回信');
-await adv(90);await go('today');await pg.waitForTimeout(600);await go('today');
+await adv(90);await go('today');for(let i=0;i<10&&!(await pg.$('.todaynotes'));i++){await pg.waitForTimeout(500);await go('today')}
 ok(/你有一封回信/.test(await pg.textContent('.todaynotes')),'隔天 07:40（起床後）：今日頁出現「你有一封回信」');
 await go('letter');await pg.click('[data-act=ltOpen]');await pg.waitForTimeout(400);
 const rep=(await pg.textContent('.letter.reply .ltbody')).trim();

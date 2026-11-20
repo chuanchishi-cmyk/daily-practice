@@ -259,7 +259,7 @@ node tools/tests/test-timer-log.js
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
 
-6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上三個 mp3 與 `art/jieqi/*.webp`（24 張）。
+6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上四個 mp3（summer-night、stream、ocean、campfire） 與 `art/jieqi/*.webp`（24 張）。
 7. 提醒使用者：手機把 App 完全關掉再開，就會換到新版。
 
 注意：如果 push 被拒（遠端有別的 session 推過），先 `git pull --rebase`。若衝突在 `index.html`，把遠端的改動合回 `src/studydesk.html` 再重新 build，不要直接覆蓋。

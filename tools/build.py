@@ -33,4 +33,14 @@ head='''<!doctype html>
 te=body.index('</title>')+len('</title>')
 out=head+body[:te]+'\n</head>\n<body>\n'+body[te:]+'\n</body>\n</html>\n'
 io.open(os.path.join(ROOT,'index.html'),'w',encoding='utf8').write(out)
+# guide.html：版本與「最近更新」跟著 CHANGELOG 自動更新
+import re,html as H
+ver=re.search(r"const APP_VER='([^']*)'",s).group(1)
+cl=s[s.index('const CHANGELOG=['):]
+items=re.findall(r"\{d:'(\d{4}-\d\d-\d\d)',lv:'(major|minor)',t:'([^']*)'\}",cl[:cl.index('];')])[:8]
+GP=os.path.join(ROOT,'guide.html');g=io.open(GP,encoding='utf8').read()
+li=''.join('\n    <li><span class="muted">%s</span>　%s</li>'%(d[5:].replace('-','/'),H.escape(t)) for d,lv,t in items)+'\n  '
+g=re.sub(r'<!--AUTO-NEWS-->.*?<!--/AUTO-NEWS-->','<!--AUTO-NEWS-->'+li+'<!--/AUTO-NEWS-->',g,flags=re.S)
+g=re.sub(r'<!--AUTO-VER-->.*?<!--/AUTO-VER-->','<!--AUTO-VER-->版本 '+ver+'<!--/AUTO-VER-->',g,flags=re.S)
+io.open(GP,'w',encoding='utf8').write(g)
 print('built')

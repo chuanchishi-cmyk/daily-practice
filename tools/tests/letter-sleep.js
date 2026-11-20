@@ -16,7 +16,15 @@ await go('prefs');await pg.$eval('[data-act=purOpen]',e=>e.click());await pg.wai
 const LON=await pg.evaluate(()=>!!document.querySelector('nav.rail a[href="#letter"]'));
 if(!LON){console.log('skip 雁書（FEATURE_LETTER 關閉中）');await adv(9*60+30);}else{await go('letter');
 await pg.fill('#ltText','最近工作很多，晚上一直睡不著，腦袋停不下來，擔心明天的報告做不完。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(400);
-ok(/1 封信在路上/.test(await pg.textContent('main')),'寄出：信在路上');
+ok(/信已啟程/.test(await pg.textContent('main'))&&/正由雁子帶往遠方/.test(await pg.textContent('main'))&&!(await pg.$('#ltText')),'寄出：換成等待畫面（信已啟程，寫信框收起）');
+await pg.click('.ltwait [data-act=ltOpen]');await pg.waitForTimeout(300);await pg.click('[data-act=ltAsk][data-v=edit]');await pg.waitForTimeout(200);
+ok(/深呼吸三次/.test(await pg.textContent('#modal')),'按修改：先出現溫和的提示（深呼吸、退一步讀、先放著）');
+await pg.click('#modal [data-act=ltEditGo]');await pg.waitForTimeout(200);await pg.fill('#ltEditT','最近工作很多，晚上一直睡不著，腦袋停不下來，擔心明天的報告做不完。我想多說一句：謝謝。');await pg.click('[data-act=ltEditSave]');await pg.waitForTimeout(300);
+ok(/我想多說一句/.test(await pg.textContent('.letter.mine')),'修改後：信的內容更新');
+await pg.click('[data-act=ltBack]');await pg.waitForTimeout(200);await pg.click('[data-act=ltComposeT]');await pg.waitForTimeout(200);await pg.fill('#ltText','這是一封想收回的信，寫完就覺得好多了。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(300);
+ok(/2 封信/.test(await pg.textContent('.ltwait')),'再寫一封：等待畫面顯示 2 封信');
+await pg.click('.ltrow');await pg.waitForTimeout(200);await pg.click('[data-act=ltAsk][data-v=back]');await pg.waitForTimeout(200);await pg.click('#modal [data-act=ltBackGo]');await pg.waitForTimeout(300);
+ok(!/想收回的信/.test(await pg.textContent('main'))&&/你的信正由雁子/.test(await pg.textContent('main')),'撤回：那封信消失，剩一封在路上');
 await adv(8*60);await go('today');ok(!/你有一封回信/.test((await pg.evaluate(()=>document.querySelector('.todaynotes')?.textContent||''))),'隔天 06:10（起床前）：還沒有回信');
 await adv(90);await go('today');for(let i=0;i<10&&!(await pg.$('.todaynotes'));i++){await pg.waitForTimeout(500);await go('today')}
 ok(/你有一封回信/.test(await pg.textContent('.todaynotes')),'隔天 07:40（起床後）：今日頁出現「你有一封回信」');

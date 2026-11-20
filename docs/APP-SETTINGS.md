@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js）
 ```
 
 ---
@@ -230,6 +230,7 @@ daily-practice/
 # 2. 產生網站版與翻譯
 python3 tools/build.py
 python3 tools/i18n/build-i18n.py i18n-en.js
+# 2a. tools/build.py 也會更新 guide.html（安裝說明）：「最近更新」取 CHANGELOG 前 8 筆 major／minor，版本號取 APP_VER；新增或改名頁面時，記得同步改 guide.html 的功能清單（.feat）
 # 2b. 原始碼裡把 APP_VER 改成今天（換版時自動存改版前快照），CHANGELOG 最上面加一筆（lv: major/minor/fix）
 # 3. Service Worker 版本號 +1（例：v57 → v58）
 sed -i "s/rike-v57/rike-v58/" sw.js
@@ -246,6 +247,7 @@ node tools/tests/practice-rhythm.js
 node tools/tests/woodfish-pause.js
 node tools/tests/plan-units.js
 node tools/tests/notes-rhythm.js
+node tools/tests/mz-teacher.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -491,3 +493,10 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **隨手記**：每頁右下角固定按鈕（`.qnfab`，手機只顯示筆的圖示；有對話框時隱藏），打開收件匣（`qnOpen()`）。新記的存在當天的雜念停車場 `day.j.park`（多一個 `kind`：待辦／想法／問題／提醒）。收件匣合併：近 30 天停車場、計畫筆記 `S.pnotes`、近 7 天覺察片段（唯讀，連到日記）。每則可勾完成、放進三件事（今天滿了放明天）、轉成步驟（多個計畫時先選計畫，加到 `curStageOf()`）、刪除。今日的雜念停車場標題旁有「全部隨手記」。WHATSNEW `n-qn` 介紹一次。測試：`tools/tests/notes-rhythm.js`（含第二、三期，測驗結果用 `tools/tests/fixtures/quiz-v3.json`）。
 - **統計頁的練習計時**：照 §25 原本的決定，統計頁的「專注時間」與番茄數只算番茄鐘（標題標明「番茄鐘」），練習計時仍是獨立一張卡；KPI 下方加一行「另有練習計時 N 小時・合計 M」，合計＝今日頁「今天專注」的算法，兩邊數字對得起來。
 - **設定 → claude.ai 版**（只在網站版出現）：說明 claude.ai 版多的功能（AI 回信、AI 建議、Google 日曆、雲端同步），以及搬資料的方法（下載備份檔 → 到 claude.ai 版匯入），附連結。
+
+## 35. 2026-11-20 第三批
+
+- **安裝說明頁（guide.html）跟著版本更新**：功能清單補上今日、白噪音、跟課學習、作息觀測、隨手記、運動（選用）、雁書（選用）與 claude.ai 版說明；「最近更新」區塊（`<!--AUTO-NEWS-->`、`<!--AUTO-VER-->` 標記之間）由 `tools/build.py` 每次自動帶入。App 內「完整說明」「安裝說明」兩個按鈕都連到這一頁。
+- **雁書：投遞與等待**。有信在路上時，雁書頁標題改成「信已啟程」，顯示雁群飛過山丘的小圖（剛寄出時信封飛走、雁群飛入，2.4 秒；減少動態時不播），說明幾點會收到回信，按鈕「看看寄出的信」「再寫一封」；寫信框收起（`ltCompose`），按「再寫一封」才展開。
+- **雁書：修改、撤回**。回信送達（`due`）前，信的頁面有「修改」「撤回」。按下先跳出溫和的提示（`ltAsk`）：深呼吸三次看念頭從哪裡來、退一步像讀朋友的信、先記在隨手記讓信照原樣飛；主按鈕是「讓它繼續飛」，次要按鈕才是「還是要修改／撤回這封信」。修改不改變送達時間，會記 `edited`；撤回直接刪除那封信。修改後的信也會重新檢查自傷字眼。
+- **靜心回饋：指定老師**。藏在「看更多說明」最下面一行小字（`.mzt`，收合）：「想指定回應的老師？」。選了之後存 `cfg.mzTeacher`，`mzPickVariant()` 優先選這位老師的說明，沒有就照原本輪流；收合時只顯示「回應的老師：阿姜查」。每位老師旁的數字是談到的狀況數（共 14 種：聖嚴法師 13、馬哈希大師 8、比約恩．納提科 5、帕奧禪師 3、阿姜查 2、焦諦卡禪師 1、虛雲老和尚 1），選了涵蓋少的老師，其他狀況仍由別的老師回應。`mzTeacher()` 改用 `MZ_TEACHERS` 名單比對（修正《阿姜查的禪修世界》開頭沒有人名的情況）。測試：`tools/tests/mz-teacher.js`。

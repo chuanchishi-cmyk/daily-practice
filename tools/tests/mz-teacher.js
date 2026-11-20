@@ -1,0 +1,24 @@
+// 靜心回饋：在「看更多說明」裡指定回應的老師（平常收起來），設定一次就套用，可以改回輪流
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];let fail=0;
+fs.writeFileSync(SP+'tmz.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const c=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+await c.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');if(localStorage.getItem('studydesk-v1'))return;
+  const k=new Date().toISOString().slice(0,10),t=new Date().toISOString();
+  localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{}},days:{[k]:{date:k,sessions:[],counts:{},j:{practice:[{id:'p1',t,min:10,method:'呼吸覺察',note:'念頭一直跑出來，想東想西',q:2,dist:['念頭']}]}}},mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}}))});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+SP+'tmz.html#mind');await pg.waitForTimeout(800);
+const open=async()=>{await pg.$$eval('.prcard',els=>els.forEach(e=>e.closest('details')&&(e.closest('details').open=true)));};
+await open();await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();
+ok(!(await pg.isVisible('.mzt .opts')),'平常看不到老師選項（收在「看更多說明」裡）');
+await pg.$eval('.mzmore',d=>d.open=true);await pg.$eval('.mzt',d=>d.open=true);await pg.waitForTimeout(100);
+ok(await pg.isVisible('.mzt [data-v="阿姜查"]'),'展開後可以選老師');
+await pg.$eval('.mzt [data-v="阿姜查"]',e=>e.click());await pg.waitForTimeout(400);await open();
+let src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/阿姜查/.test(src),'選阿姜查：這一筆的說明改由阿姜查回應（'+src.trim().slice(0,24)+'）');
+await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();
+src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/阿姜查/.test(src),'之後重新回饋：不用再選，仍是阿姜查');
+ok(/回應的老師：阿姜查/.test(await pg.$eval('.mzt summary',e=>e.textContent)),'收起時只顯示一行「回應的老師：阿姜查」');
+await pg.$eval('.mzmore',d=>d.open=true);await pg.$eval('.mzt',d=>d.open=true);await pg.$eval('.mzt [data-v=""]',e=>e.click());await pg.waitForTimeout(300);
+ok(await pg.evaluate(()=>!(JSON.parse(localStorage.getItem('studydesk-v1')).meta.main.mzTeacher)),'改回輪流');
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

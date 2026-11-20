@@ -204,6 +204,22 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .ltcard .grow{display:flex;flex-direction:column}
 .ltseal{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--f-display);font-size:calc(17px * var(--fs,1))}
 .letter{margin-bottom:14px}
+.ltwait{text-align:center;padding-top:8px}
+.ltgeese{width:min(320px,100%);height:auto;display:block;margin:0 auto}
+.ltgeese .hill{fill:color-mix(in srgb,var(--c9,var(--focus)) 14%,var(--surface))}
+.ltgeese .flock path{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;opacity:.72}
+.ltgeese .env{opacity:0}.ltgeese .env rect,.ltgeese .env path{fill:var(--surface);stroke:var(--accent);stroke-width:1.6}
+.ltwait .flock{animation:ltDrift 9s ease-in-out infinite alternate}
+.ltwait.sent .env{animation:ltEnv 2.4s ease-in forwards}
+.ltwait.sent .flock{animation:ltFly 2.4s ease-out both,ltDrift 9s 2.4s ease-in-out infinite alternate}
+@keyframes ltEnv{0%{opacity:1;transform:translate(0,0) scale(1)}60%{opacity:1;transform:translate(110px,-34px) scale(.6)}100%{opacity:0;transform:translate(170px,-46px) scale(.3)}}
+@keyframes ltFly{0%{transform:translate(-60px,24px);opacity:.2}100%{transform:none;opacity:1}}
+@keyframes ltDrift{from{transform:translate(0,0)}to{transform:translate(14px,-5px)}}
+@media (prefers-reduced-motion:reduce){.ltwait .flock,.ltwait.sent .env,.ltwait.sent .flock{animation:none}}
+.ltw1{font-family:var(--f-display);font-size:calc(17px * var(--fs,1));margin:8px 0 0}
+.lttips{margin:10px 0 0;padding-left:18px;line-height:1.75}.lttips li{margin:4px 0}
+.mzt{margin-top:8px}.mzt>summary{cursor:pointer;color:var(--muted);font-size:calc(11.5px * var(--fs,1));list-style:none}.mzt>summary::-webkit-details-marker{display:none}
+.mzt .opts{margin-top:6px}
 .letter .ltbody{white-space:pre-wrap;font-family:var(--f-display);font-size:calc(15px * var(--fs,1));line-height:2;overflow-wrap:anywhere}
 .letter.reply{background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--accent) 4%,var(--surface)))}
 .ltsrc{margin:10px 0 0;font-size:calc(12px * var(--fs,1))}
@@ -1287,7 +1303,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.7'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.8'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1837,6 +1853,9 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-20',lv:'minor',t:'雁書：寄出後換成「信已啟程」的等待畫面；回信送達前可以修改或撤回（會先陪你停一下，想想要不要讓它照原樣飛）'},
+ {d:'2026-11-20',lv:'minor',t:'靜心回饋：可以指定回應的老師（在「看更多說明」裡，設定一次就會套用，隨時可改回輪流）'},
+ {d:'2026-11-20',lv:'fix',t:'安裝說明頁的功能介紹與最近更新，跟著版本自動更新'},
  {d:'2026-11-20',lv:'major',t:'隨手記：每一頁右下角都能隨手記下想到的事；雜念停車場、計畫筆記和覺察片段集中在一起，可以放進三件事或轉成計畫步驟'},
  {d:'2026-11-20',lv:'minor',t:'計畫地圖：各階段可以同時進行，最小一步會從其他階段遞補，也能「換一個」；新增「跟著一套課程」的計畫，一個單元一個單元「看 → 做 → 檢查」，順序不拘'},
  {d:'2026-11-20',lv:'minor',t:'作息觀測：我的節奏頁加上每兩週的作息變化；實際作息跟測驗差很多時，會先問你要不要更新'},
@@ -3867,8 +3886,10 @@ function mzFeedback(x){
   return {k:best.k,a:mzPickAck(best),b,m:v.m,s:v.s};
 }
 // 老師輪流：記住最近用過的老師，挑最久沒出現的那位（同一位不會連續出現）
-const mzTeacher=v=>{const s=(v.s||'').replace(/^參考/,'');const m=s.match(/^(.*?)(《|開示)/);return (m?m[1]:s.slice(0,6)).replace(/[，、；\s]+$/,'')||s.slice(0,6)};
-function mzPickVariant(vs){if(vs.length<2)return vs[0];const hist=lsGet('sd-mzt',[])||[];
+const MZ_TEACHERS=['聖嚴法師','馬哈希大師','帕奧禪師','阿姜查','比約恩．納提科','焦諦卡禪師','虛雲老和尚'];
+const mzTeacher=v=>{const s=v.s||'';let best='',at=1e9;MZ_TEACHERS.forEach(t=>{const i=s.indexOf(t);if(i>=0&&i<at){at=i;best=t}});return best||s.slice(0,6)};
+const mzTeacherCount=t=>Object.values(MZ_M).filter(vs=>vs.some(v=>mzTeacher(v)===t)).length;
+function mzPickVariant(vs){const pref=cfg().mzTeacher,hit=pref&&vs.find(v=>mzTeacher(v)===pref);if(hit)return hit;if(vs.length<2)return vs[0];const hist=lsGet('sd-mzt',[])||[];
   const age=v=>{const i=hist.lastIndexOf(mzTeacher(v));return i<0?-1:i};
   const pick=vs.slice().sort((a,b)=>age(a)-age(b))[0];lsSet('sd-mzt',hist.concat(mzTeacher(pick)).slice(-8));return pick}
 // 第一句：該狀況自己的承接語＋幾句溫和的通用開頭，避免和上一次一樣
@@ -3878,7 +3899,12 @@ function mzPickAck(best){const pool=best.a.concat(MZ_OPEN.map(x=>x)),last=lsGet(
 function mzCardHTML(f){const care=f.k==='crisis'||f.k==='distress';
   return `<div class="mzfb${care?' care':''}"><b>${f.k==='crisis'?'請先照顧自己':'給你的回饋'}</b>
     <p>${f.a?`<span class="mzack">${esc(f.a)}</span>`:''}${esc(f.b||f.t||'')}</p>
-    ${f.m?`<details class="mzmore"><summary><span class="c">看更多說明…</span><span class="o">收起 ▴</span></summary><p>${esc(f.m)}</p><span class="mzsrc">出處：${esc(f.s||'')}</span></details>`:''}</div>`}
+    ${f.m?`<details class="mzmore"><summary><span class="c">看更多說明…</span><span class="o">收起 ▴</span></summary><p>${esc(f.m)}</p><span class="mzsrc">出處：${esc(f.s||'')}</span>${mzTeacherPick(f)}</details>`:''}</div>`}
+function mzTeacherPick(f){const pref=cfg().mzTeacher||'',miss=pref&&f.s&&mzTeacher({s:f.s})!==pref;
+  return `<details class="mzt"><summary>${pref?`回應的老師：${esc(pref)}`:'想指定回應的老師？'}</summary>
+    <p class="muted" style="margin:6px 0 0;font-size:calc(12px * var(--fs,1))">選好之後，之後的說明會優先引用這位老師的教導；這位老師沒談到的狀況，會由其他老師回應${miss?'（這一次就是這樣）':''}。</p>
+    <div class="opts">${[['','輪流']].concat(MZ_TEACHERS.map(t=>[t,t])).map(([v,n])=>`<button class="opt sm" data-act="mzTeach" data-v="${esc(v)}" aria-pressed="${pref===v}">${esc(n)}${v?`<span class="muted"> ${mzTeacherCount(v)}</span>`:''}</button>`).join('')}</div>
+    <p class="muted" style="margin:4px 0 0;font-size:calc(11px * var(--fs,1))">數字是這位老師談到的狀況數（共 ${Object.keys(MZ_M).length} 種）。</p></details>`}
 function lastNext(){for(let i=0;i<21;i++){const k=addDays(today(),-i),ps=(((day(k).j||{}).practice)||[]).slice().reverse();const p=ps.find(x=>x.next&&x.next.trim());if(p)return {k,p}}return null}
 function practiceCard(d,x){return `<div class="prcard">
     <div class="mrec2">
@@ -4041,6 +4067,7 @@ Object.assign(A,{
   mToggle:()=>{unlockAudio();if(MT.running){MT.left=mLeft();MT.running=false;MT.wfLeft=wfCancel()}else{const fresh=MT.left==null||MT.left>=MT.min*60-1;if(fresh){MT.left=null;MT.wfLeft=0;freshAudio();smallWoodfish(3,6)}else if(MT.wfLeft>0){smallWoodfish(MT.wfLeft,6);MT.wfLeft=0}MT.endAt=Date.now()+mLeft()*1000;MT.running=true}savMT();render()},
   mReset:()=>{wfCancel();MT.running=false;MT.left=null;MT.wfLeft=0;savMT();render()},
   prQ:el=>{const n=+el.dataset.n;editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(x=>x.id===el.dataset.id);if(p)p.q=p.q===n?null:n});render()},
+  mzTeach:el=>{const v=el.dataset.v;editCfg(c=>{c.mzTeacher=v||''});const card=el.closest('.prcard'),btn=card&&card.querySelector('[data-act=prFb]');toast(v?`之後由${v}的教導回應`:'改回輪流');if(btn)A.prFb(btn);else render()},
   prFb:el=>{const id=el.dataset.id,n=$('#prn'+id),x=$('#prx'+id);editDay(el.dataset.k,d=>{const p=(d.j.practice||[]).find(y=>y.id===id);if(p){if(n)p.note=n.value;if(x)p.next=x.value;p.fb=mzFeedback(p)}});render()},
   prDel:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.j.practice=(d.j.practice||[]).filter(x=>x.id!==el.dataset.id)});render()},
   prAdd:el=>{const m=+$('#prMin').value;if(!m)return;editDay(el.dataset.k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});render()}
@@ -4637,27 +4664,42 @@ ${x.text}`,{modelTier:'default'});if(res&&res.text&&res.text.trim().length>80)r=
 function ltUnread(){return lettersAll().filter(x=>x.reply&&!x.read&&ltArrived(x))}
 function letterLine(){if(!FEATURE_LETTER||!isOn('letter'))return null;const u=ltUnread();if(!u.length){if(lettersAll().some(x=>!x.reply&&ltArrived(x)))setTimeout(ltDeliver,50);return null}
   return {k:'雁書',t:`你有一封回信：${fmtMD(u[0].k)} 寫的信，雁書回覆了。`,href:'#letter'}}
-let ltOpen=null,ltSafety=false;
+let ltOpen=null,ltSafety=false,ltCompose=false,ltJustSent=false,ltEdit=false;
 function vLetter(){if(lettersAll().some(x=>!x.reply&&ltArrived(x)))setTimeout(ltDeliver,50);
   const L=lettersAll(),wait=L.filter(x=>!ltArrived(x)),R=myRhythm(),w=R&&R.wake!=null?R.wake:450;
   const view=ltOpen&&L.find(x=>x.id===ltOpen);
   if(view){if(view.reply&&!view.read)setTimeout(()=>editDay(view.k,d=>{const y=(d.letters||[]).find(z=>z.id===view.id);if(y)y.read=true}),400);
     return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>${fmtMD(view.k)} 的信</h1></div><button class="ghost" data-act="ltBack">← 信匣</button></header>
-    <section class="card letter mine"><p class="muted">你寫的</p><div class="ltbody">${esc(view.text)}</div></section>
+    <section class="card letter mine"><p class="muted">你寫的</p>${ltEdit&&!view.reply&&!ltArrived(view)?`<textarea id="ltEditT" rows="8">${esc(view.text)}</textarea><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="ghost sm" data-act="ltEditX">不改了</button><button class="pri sm" data-act="ltEditSave">改好了，請雁子帶走</button></div>`:`<div class="ltbody">${esc(view.text)}</div>`}</section>
     ${view.reply?`<section class="card letter reply"><p class="muted">雁書的回信</p><div class="ltbody">${esc(view.reply)}</div>${view.src==='ai'?'<p class="muted ltsrc">這封回信由 AI 書寫。</p>':`<p class="muted ltsrc">依你信裡提到的主題整理${(view.books||[]).length?'，參考'+view.books.map(b=>b.startsWith('《')?b:'《'+b+'》').join('、'):''}。</p>`}</section>`
-      :`<section class="card letter"><p class="empty">信還在路上，${ltArrived(view)?'馬上就到':'明天起床後會收到回信'}。</p></section>`}`}
-  return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>寫一封信</h1></div></header>
+      :`<section class="card letter"><p class="empty">信還在路上，${ltArrived(view)?'馬上就到':'明天起床後會收到回信'}。</p>${ltArrived(view)?'':'<div class="row" style="justify-content:flex-end;gap:6px"><button class="ghost sm" data-act="ltAsk" data-v="edit">修改</button><button class="ghost sm" data-act="ltAsk" data-v="back">撤回</button></div>'}</section>`}`}
+  const onway=wait[0],showCompose=!onway||ltCompose;
+  return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>${onway&&!ltCompose?'信已啟程':'寫一封信'}</h1></div></header>
   ${ltSafety?`<div class="mzfb care" style="margin-bottom:14px"><b>先照顧好自己</b><p>謝謝你願意寫下來。你現在的感受很重要，請不要一個人承受。如果有傷害自己的念頭，請馬上聯絡信任的人，或撥打安心專線 1925、生命線 1995（24 小時）。</p></div>`:''}
-  <section class="card"><p class="muted" style="margin-top:0">寫下最近的心事、煩惱，或任何想說的話。信寄出後，明天${hm(w)}起床後會收到回信。</p>
+  ${onway&&!ltCompose?`<section class="card ltwait${ltJustSent?' sent':''}"><svg class="ltgeese" viewBox="0 0 320 120" aria-hidden="true"><path class="hill" d="M0 112 C60 92 110 96 160 104 S260 92 320 100 V120 H0Z"/><g class="flock"><path d="M196 40 q8 -7 15 0 q7 -7 15 0"/><path d="M226 56 q6 -5 11 0 q5 -5 11 0"/><path d="M174 58 q6 -5 11 0 q5 -5 11 0"/><path d="M252 72 q5 -4 9 0 q4 -4 9 0"/><path d="M152 74 q5 -4 9 0 q4 -4 9 0"/></g><g class="env"><rect x="40" y="70" width="44" height="30" rx="3"/><path d="M40 72 l22 16 l22 -16"/></g></svg>
+    <p class="ltw1">${wait.length>1?`${wait.length} 封信`:'你的信'}正由雁子帶往遠方</p>
+    <p class="muted" style="margin:4px 0 0">明天 ${hm(w)} 起床後，回信會送到這裡${isOn('today')?'，今日頁也會提醒你':''}。今晚就把心事交給雁子，安心休息吧。</p>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="sm" data-act="ltOpen" data-id="${onway.id}">看看寄出的信</button><button class="ghost sm" data-act="ltComposeT">再寫一封</button></div></section>`:''}
+  ${showCompose?`  <section class="card"><p class="muted" style="margin-top:0">寫下最近的心事、煩惱，或任何想說的話。信寄出後，明天${hm(w)}起床後會收到回信。</p>
     <textarea id="ltText" rows="8" placeholder="例：最近工作很多，晚上總是睡不好，腦袋一直在想明天的事……"></textarea>
-    <div class="row sb" style="margin-top:8px"><span class="muted">信只存在你自己的紀錄裡。</span><button class="pri" data-act="ltSend">寄出</button></div>
-    ${STANDALONE?`<p class="muted" style="margin:10px 0 0;font-size:calc(12px * var(--fs,1))">這個版本的回信，會依你信裡提到的主題，從書裡核對過的段落組成，並標出出處。想要由 AI 讀完你的信、親自回信，可以在 <a href="https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe" target="_blank" rel="noopener">claude.ai 版</a> 打開日課。</p>`:''}</section>
-  ${wait.length?`<p class="muted" style="margin:12px 2px">有 ${wait.length} 封信在路上。</p>`:''}
+    <div class="row sb" style="margin-top:8px"><span class="muted">信只存在你自己的紀錄裡。</span><span class="row">${onway?'<button class="ghost sm" data-act="ltComposeT">取消</button>':''}<button class="pri" data-act="ltSend">寄出</button></span></div>
+    ${STANDALONE?`<p class="muted" style="margin:10px 0 0;font-size:calc(12px * var(--fs,1))">這個版本的回信，會依你信裡提到的主題，從書裡核對過的段落組成，並標出出處。想要由 AI 讀完你的信、親自回信，可以在 <a href="https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe" target="_blank" rel="noopener">claude.ai 版</a> 打開日課。</p>`:''}</section>`:''}
   <section class="card" style="margin-top:16px"><h2>信匣</h2>${L.length?`<div class="list">${L.map(x=>`<button class="li ltrow" data-act="ltOpen" data-id="${x.id}"><span class="num muted" style="flex:none">${fmtMD(x.k)}</span><span class="grow">${esc(x.text.slice(0,30))}${x.text.length>30?'…':''}</span>${x.reply?(x.read?'<span class="muted">已讀</span>':'<span class="pill good">新回信</span>'):'<span class="muted">在路上</span>'}</button>`).join('')}</div>`:'<p class="empty">還沒有信。</p>'}</section>`}
 Object.assign(A,{
-  ltSend:()=>{const t=$('#ltText').value.trim();if(t.length<5)return toast('多寫幾句吧');ltSafety=MZ_CRISIS.test(t)||MZ_DISTRESS.test(t);editDay(today(),d=>{d.letters=d.letters||[];d.letters.push({id:rid(),t:new Date().toISOString(),text:t,due:ltDue()})});toast('信寄出了，起床後會收到回信');render()},
+  ltSend:()=>{const t=$('#ltText').value.trim();if(t.length<5)return toast('多寫幾句吧');ltSafety=MZ_CRISIS.test(t)||MZ_DISTRESS.test(t);editDay(today(),d=>{d.letters=d.letters||[];d.letters.push({id:rid(),t:new Date().toISOString(),text:t,due:ltDue()})});ltCompose=false;ltJustSent=true;setTimeout(()=>{ltJustSent=false},3000);render();window.scrollTo(0,0)},
+  ltComposeT:()=>{ltCompose=!ltCompose;render();if(ltCompose)setTimeout(()=>{const t=$('#ltText');t&&t.focus()},60)},
   ltOpen:el=>{ltOpen=el.dataset.id;render()},
-  ltBack:()=>{ltOpen=null;render()},
+  ltBack:()=>{ltOpen=null;ltEdit=false;render()},
+  ltAsk:el=>{const ed=el.dataset.v==='edit';$('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ltaT"><div class="box"><h2 id="ltaT">${ed?'想改一改這封信嗎？':'想把信收回來嗎？'}</h2>
+    <p style="margin:0">寫下的那一刻，心裡的東西已經放下一些了。想改、想收回都沒關係，在決定之前，可以先試試：</p>
+    <ul class="lttips"><li><b>深呼吸三次</b>，看看「想改」的念頭從哪裡來：擔心寫得不好？怕被看見？還是想法真的變了？</li>
+      <li><b>退一步讀</b>：把這封信當成朋友寫來的，用讀朋友來信的心情讀一遍，你會想對他說什麼？</li>
+      <li><b>先放著</b>：新想到的話，記在隨手記，明天收到回信後再寫一封。讓這封信照原樣飛，也是一種練習。</li></ul>
+    <div class="row sb" style="margin-top:14px"><button class="pri" data-act="close">讓它繼續飛</button><span class="row"><button class="ghost sm" data-act="${ed?'ltEditGo':'ltBackGo'}">${ed?'還是要修改':'撤回這封信'}</button></span></div></div></div>`},
+  ltEditGo:()=>{$('#modal').innerHTML='';ltEdit=true;render();setTimeout(()=>{const t=$('#ltEditT');t&&t.focus()},60)},
+  ltEditX:()=>{ltEdit=false;render()},
+  ltEditSave:()=>{const t=($('#ltEditT').value||'').trim();if(t.length<5)return toast('多寫幾句吧');const v=lettersAll().find(x=>x.id===ltOpen);if(!v)return;ltSafety=MZ_CRISIS.test(t)||MZ_DISTRESS.test(t);editDay(v.k,d=>{const y=(d.letters||[]).find(z=>z.id===v.id);if(y){y.text=t;y.edited=new Date().toISOString()}});ltEdit=false;toast('改好了，雁子會帶著新的信出發');render()},
+  ltBackGo:()=>{$('#modal').innerHTML='';const v=lettersAll().find(x=>x.id===ltOpen);if(!v)return;editDay(v.k,d=>{d.letters=(d.letters||[]).filter(z=>z.id!==v.id)});ltOpen=null;ltEdit=false;toast('信收回來了。寫下來本身，就已經是一種整理。');render()},
 });
 
 /* ---------- 作息觀測（第一期）：早上記一下昨晚的睡眠，每週一給作息報告 ---------- */

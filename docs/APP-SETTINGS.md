@@ -35,6 +35,7 @@ daily-practice/
 ├─ i18n-en.js                ← 英文翻譯（由 tools/i18n/build-i18n.py 產生）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png
 ├─ qr.png                    ← 網站 QR code（設定頁、分享視窗使用）
+├─ art/jieqi/                ← 二十四節氣插畫（24 張 webp，出處見 art/jieqi/CREDITS.md；claude.ai 版發佈時用 files 一起上傳）
 ├─ ocean.mp3 / summer-night.mp3 / stream.mp3 ← 白噪音音檔（真實錄音，立體聲 96kbps；claude.ai 版發佈時要用 files 一起上傳）
 ├─ docs/APP-SETTINGS.md      ← 本文件
 └─ tools/
@@ -247,7 +248,7 @@ node tools/tests/test-timer-log.js
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
 
-6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上 `{"ocean.mp3": "ocean.mp3", "summer-night.mp3": "summer-night.mp3", "stream.mp3": "stream.mp3"}`。
+6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上三個 mp3 與 `art/jieqi/*.webp`（24 張）。
 7. 提醒使用者：手機把 App 完全關掉再開，就會換到新版。
 
 注意：如果 push 被拒（遠端有別的 session 推過），先 `git pull --rebase`。若衝突在 `index.html`，把遠端的改動合回 `src/studydesk.html` 再重新 build，不要直接覆蓋。
@@ -372,7 +373,7 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 插畫位置依植物樣子（`JQ_POSE`）：垂枝（梅、杏、桃、柳、臘梅、桂、石榴）從右上角垂下；直立（油菜、鳶尾、麥、向日葵、菊、蘆葦、水仙、竹）從右下角長出；其餘靠右側。
 - 傳統節日（`FEST`，2026–2040 由瀏覽器內建農曆計算產生；春節 2027 為 2/7、2030 為 2/2）：節日前兩天到當天出現，優先於節氣卡；每個節日一句應景的建議（`FEST_TXT`），中秋顯示一輪月亮。
 - 冬至數九（`shujiu()`）：冬至起 81 天，每個「九」的第一天在今日小卡加一行，練習過的日子算在消寒圖畫了一瓣。
-- 插畫：`JQ_IMG` 節氣名 → 圖檔。風格：中國傳統歲時、手繪古風、半寫實＋淡水彩、素雅；不用 AI 生成，用公有領域古典圖譜（如《植物名實圖考》《本草圖譜》、十九世紀植物版畫）調成淡雅色調，每張約 40 KB。沒有圖時顯示篆印式的節氣名（`.jqseal`）。
+- 插畫：`JQ_IMG` 節氣名 → `art/jieqi/<拼音>.webp`（毛利梅園《梅園草木花譜》23 張、岩崎灌園《本草圖譜》1 張，皆為公有領域，製作在 `art/jieqi` 分支）。淺色：與卡片融合、邊緣用放射狀遮罩淡出；深色：右側一幅圓角小畫。原本規劃：風格：中國傳統歲時、手繪古風、半寫實＋淡水彩、素雅；不用 AI 生成，用公有領域古典圖譜（如《植物名實圖考》《本草圖譜》、十九世紀植物版畫）調成淡雅色調，每張約 40 KB。沒有圖時顯示篆印式的節氣名（`.jqseal`）。
 - 取圖需要連 Wikimedia（commons.wikimedia.org、upload.wikimedia.org）：已建立雲端環境「daily-practice」允許這些網址，需在該環境開新的 session 才能使用。
 
 ## 24. 介紹卡與回顧卡（2026-11-19，試跑）
@@ -444,3 +445,11 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 休息：直接把今日的番茄鐘切到短休／長休並開始（循環點 +1，第 4 次長休），番茄數不折算。
 - 番茄鐘正在專注時開始練習計時：先確認，暫停番茄鐘，已專注的時間加進累計。
 - 今天專注、統計、目標衝刺頁的分鐘數都包含訂正時間。
+
+## 33. 2026-11-20 調整
+
+- **月曆**（`vCalendar()`、`.cell2`）：格子只放日期、專注小圓點（大小依專注分鐘，含練習計時）、重要日期／計畫步驟／Google 行程的小色點、節氣與節日名（`calLabels()`）。今天＝陶土橘圓圈，選取＝青綠框。上方「‹ 年月 ›」與一行月摘要（有專注的天數、總時數、三件事完成率）。日期詳情：先一行總覽，再重要日期、行程、專注紀錄、三件事；日記、計數、雜念收合。
+- **靜心回饋**：詳細說明依老師輪流（`mzPickVariant()`，記住最近 8 次用過的老師 `sd-mzt`，挑最久沒出現的）；第一句從該狀況的承接語與通用開頭（`MZ_OPEN`）隨機挑，不和上一次相同（`sd-mza`）。
+- **作息觀測可修改**：今日早上填完後縮成一行「昨晚 23:30 睡、07:00 起・睡得 4 分　修改」；我的節奏頁「最近 7 晚」每格都能直接改（`slpF`）。
+- **計畫地圖「今天的最小一步」**：改成可收合的卡片（`.pwfold`）；完成後自動收起，展開狀態當天記住（`sd-pwfold`）。
+- **手機版番茄鐘**：開始／重設／提前結束移到計時下方；「記錄到」的標籤在手機上改成一列可左右滑動，選中的標籤自動捲到可見處。

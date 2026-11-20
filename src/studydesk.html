@@ -143,15 +143,15 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .jq{position:relative;overflow:hidden}
 .jqart{width:88px;height:88px;object-fit:contain;flex:none;mix-blend-mode:multiply}
 .jq.has-art{padding-right:120px;min-height:96px}
-.jq.has-art .jqart{position:absolute;right:6px;width:116px;height:116px;opacity:.92;pointer-events:none}
+.jq.has-art .jqart{position:absolute;right:6px;width:116px;height:116px;opacity:.95;pointer-events:none;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
 .jq.p-hang .jqart{top:-10px;object-position:right top}
 .jq.p-up .jqart{bottom:-12px;object-position:right bottom}
 .jq.p-side .jqart{top:50%;transform:translateY(-50%);object-position:right center}
 .jq.fest{background:linear-gradient(100deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--bg));border-color:color-mix(in srgb,var(--accent) 25%,var(--line))}
 .jq .jqseal.fseal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);opacity:1}
 .jqmoon{flex:none;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 36%,#fffaf0,#f3dfae 55%,#e2c27d);box-shadow:0 0 0 6px color-mix(in srgb,#f3dfae 25%,transparent),0 0 24px 6px color-mix(in srgb,#f3dfae 45%,transparent)}
-:root[data-theme="dark"] .jqart{mix-blend-mode:normal;opacity:.85}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .jqart{mix-blend-mode:normal;opacity:.85}}
+:root[data-theme="dark"] .jq.has-art .jqart{mix-blend-mode:normal;opacity:.9;width:84px;height:84px;right:14px;top:50%;bottom:auto;transform:translateY(-50%);border-radius:10px;-webkit-mask-image:none;mask-image:none;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .jq.has-art .jqart{mix-blend-mode:normal;opacity:.9;width:84px;height:84px;right:14px;top:50%;bottom:auto;transform:translateY(-50%);border-radius:10px;-webkit-mask-image:none;mask-image:none;box-shadow:0 2px 10px rgba(0,0,0,.35)}}
 .jqseal{flex:none;display:grid;place-items:center;width:46px;height:46px;border:1.5px solid color-mix(in srgb,var(--accent) 70%,transparent);border-radius:6px;color:var(--accent);font-family:var(--f-display);font-size:calc(14px * var(--fs,1));letter-spacing:.1em;writing-mode:vertical-rl;line-height:1.1;opacity:.85}
 .jqt{min-width:0}
 .jqh{margin:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
@@ -198,6 +198,40 @@ main .todaynotes .tnt a{color:var(--ink);text-decoration:none}
 .tpost.due{background:color-mix(in srgb,var(--accent) 7%,var(--surface));border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
 .tpost p{margin:0 0 8px;font-size:calc(13.5px * var(--fs,1));line-height:1.7}
 .tpost .row button{border-radius:999px}
+.calh{display:flex;align-items:center;gap:6px}
+.calarr{font-size:calc(22px * var(--fs,1));line-height:1;padding:2px 10px;color:var(--muted)}
+.calsum{margin:-8px 2px 12px;color:var(--muted);font-size:calc(13px * var(--fs,1))}
+.calsum b{color:var(--ink);font-weight:700}
+.cell2{position:relative;min-height:74px;border:1px solid transparent;border-radius:12px;padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;font:inherit;color:inherit;cursor:pointer;min-width:0}
+@media (hover:hover){.cell2:hover{background:var(--sunk)}}
+@media (hover:none){.cell2:hover:not(.sel){background:transparent;border-color:transparent}}
+.cell2.out{opacity:.35}
+.cell2 .d{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:var(--f-mono);font-size:calc(14px * var(--fs,1))}
+.cell2.today .d{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.cell2.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 6%,var(--surface))}
+.clab{font-family:var(--f-display);font-size:calc(10.5px * var(--fs,1));color:var(--muted);line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;max-width:100%}
+.cfoot{display:flex;align-items:center;gap:3px;min-height:16px;margin-top:auto}
+.cfocus{display:inline-block;border-radius:50%;background:color-mix(in srgb,var(--focus) 75%,transparent)}
+.cdot{display:inline-block;width:6px;height:6px;border-radius:50%}
+.cdot{flex:none}
+.cdot.cd-ex{background:var(--accent)}
+.cdot.cd-ms{background:var(--c2)}
+.cdot.cd-gc{background:var(--c3)}
+.callegend{margin-top:12px;gap:14px}
+.dayov{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.dayov span{padding:3px 10px;border-radius:999px;background:var(--sunk);font-size:calc(12.5px * var(--fs,1))}
+.dayfold{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.dayfold>summary{cursor:pointer;font-weight:700;font-size:calc(13px * var(--fs,1));padding:4px 0}
+@media (max-width:820px){.cell2{min-height:58px;padding:4px 1px}.cell2 .d{width:26px;height:26px;font-size:calc(13px * var(--fs,1))}}
+.slpdone{margin:-6px 2px 14px;font-size:calc(13px * var(--fs,1));color:var(--muted)}
+.slpdone b{color:var(--ink)}
+.slpdone .linkbtn{margin-left:10px}
+.slplist{display:flex;flex-direction:column;gap:6px}
+.slprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.slprow>.num{min-width:7.5em;font-size:calc(12.5px * var(--fs,1))}
+.slprow input[type=time]{width:auto;min-width:0;flex:0 1 110px}
+.slprow select{flex:0 0 auto}
+.slpdur{min-width:3em;text-align:right;font-size:calc(12px * var(--fs,1))}
 .t3hint{margin:8px 0 0;font-size:calc(12.5px * var(--fs,1));color:var(--muted)}
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -616,6 +650,10 @@ nav.rail a[aria-current="page"] svg.ni{opacity:1;stroke:var(--focus)}
 .tdel{border:0;background:transparent;padding:0 3px;font-size:calc(14px * var(--fs,1));color:var(--muted);line-height:1}
 .tdel:hover{color:var(--bad)}
 .tagpick{display:flex;flex-direction:column;gap:6px}
+.pomo .ctrl{margin:2px 0 14px}
+@media (max-width:820px){.pomo .tags:not(.editing){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+  .pomo .tags:not(.editing)::-webkit-scrollbar{display:none}
+  .pomo .tags:not(.editing) .tagc{flex:none}}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tagc{padding:5px 11px;border-radius:999px;font-size:calc(13px * var(--fs,1));background:var(--bg);border-color:var(--line);display:inline-flex;align-items:center;gap:5px}
 .tagc::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--tc,var(--muted))}
@@ -1177,7 +1215,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.4'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1271,6 +1309,7 @@ function render(){
   renderNav();
   if(!welcomed&&backend!=='loading'){welcomed=true;setTimeout(maybeWelcome,2900)}
   if(sw){m.classList.remove('enter');void m.offsetWidth;m.classList.add('enter');const lg=document.querySelector('.blogo');if(lg){lg.classList.remove('turn');void lg.offsetWidth;lg.classList.add('turn')}window.scrollTo(0,0)}else window.scrollTo(0,sy);
+  {const tg=document.querySelector('#pTags:not(.editing) .tagc.on'),bx=tg&&tg.parentElement;if(bx&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,tg.offsetLeft-bx.offsetLeft-16)}
   tick(true);
 }
 
@@ -1312,9 +1351,14 @@ function pomoHTML(){
   <div class="clock" id="pomoTime">--:--</div>
   <div class="pbar"><i id="pomoBar"></i></div>
   <div class="cycles">${Array.from({length:every},(_,i)=>`<i class="${i<done?'on':''}"></i>`).join('')}<span>每 ${every} 個番茄長休一次</span></div>
+  <div class="ctrl">
+    <button class="pri" data-act="ptoggle" id="pToggle" aria-label="${P.running?'暫停':'開始'}">${playLbl(P.running,'開始')}</button>
+    <button data-act="preset">重設</button>
+    ${P.mode==='work'?'<button data-act="pfinish">提前結束並記錄</button>':'<button data-act="pskip">跳過休息</button>'}
+  </div>
   <div class="pform">
     <div class="wide tagpick"><div class="row sb"><span class="muted" style="font-size:calc(12px * var(--fs,1))">記錄到</span><button class="ghost sm" data-act="ptagEditT" style="padding:1px 6px;font-size:calc(12px * var(--fs,1))">${tagEdit?'完成':'編輯'}</button></div>
-      <div class="tags">${allTags().map(t=>tagEdit?(t.proj?'':`<span class="tagc editing" style="--tc:var(--c${t.c})">${esc(t.name)}<button class="tdel" data-act="ptagDel" data-id="${esc(t.id)}" aria-label="刪除「${esc(t.name)}」">×</button></span>`):`<button class="tagc${P.sub===t.id?' on':''}" data-act="ptag" data-id="${esc(t.id)}" style="--tc:var(--c${t.c})">${t.proj?'<span class="pj">專案</span>':''}${esc(t.name)}</button>`).join('')}${tagEdit?'':`<button class="tagc add" data-act="ptagNew">${tagAdding?'取消':'＋ 自填'}</button>`}</div>
+      <div class="tags${tagEdit?' editing':''}" id="pTags">${allTags().map(t=>tagEdit?(t.proj?'':`<span class="tagc editing" style="--tc:var(--c${t.c})">${esc(t.name)}<button class="tdel" data-act="ptagDel" data-id="${esc(t.id)}" aria-label="刪除「${esc(t.name)}」">×</button></span>`):`<button class="tagc${P.sub===t.id?' on':''}" data-act="ptag" data-id="${esc(t.id)}" style="--tc:var(--c${t.c})">${t.proj?'<span class="pj">專案</span>':''}${esc(t.name)}</button>`).join('')}${tagEdit?'':`<button class="tagc add" data-act="ptagNew">${tagAdding?'取消':'＋ 自填'}</button>`}</div>
       ${tagEdit?'<span class="muted" style="font-size:calc(12px * var(--fs,1))">刪除後，過去的紀錄仍會保留並顯示原名稱。計畫的標籤請到計畫地圖管理。</span>':''}
       ${tagAdding?`<div class="row" style="margin-top:6px"><input id="ptagName" type="text" placeholder="例：日文、健身、備課、讀書會" style="flex:1"><button class="sm sec" data-act="ptagSave">加入</button></div>`:''}
     </div>
@@ -1323,11 +1367,6 @@ function pomoHTML(){
   </div>
   ${pPaused()?`<div class="pausebox"><label class="f">暫停中・手邊做到哪裡？<input id="pPause" type="text" data-ch="pfield" data-k="pauseNote" value="${esc(P.pauseNote||'')}" placeholder="例：第二節寫到第三段，下一句要補引文"></label><p class="muted" style="margin:4px 0 0">寫一句就好。回來時看這行，就能馬上接上。</p></div>`:''}
   ${P.running&&P.pauseNote?`<p class="resume"><span class="muted">上次停在：</span>${esc(P.pauseNote)}</p>`:''}
-  <div class="ctrl">
-    <button class="pri" data-act="ptoggle" id="pToggle" aria-label="${P.running?'暫停':'開始'}">${playLbl(P.running,'開始')}</button>
-    <button data-act="preset">重設</button>
-    ${P.mode==='work'?'<button data-act="pfinish">提前結束並記錄</button>':'<button data-act="pskip">跳過休息</button>'}
-  </div>
   <p class="muted kbhint" style="text-align:center;margin:12px 0 0">空白鍵：開始／暫停</p>
   ${parkHTML()}`;
 }
@@ -1581,7 +1620,9 @@ const JQ=[
  ['大雪','松枝','堅貞、長青','寒冷的日子，穩穩地維持日常，就是一種力量。'],
  ['冬至','冬青','常綠、守候','一年中夜最長的一天，好好休息，陽氣從今天開始回升。']];
 const JQ_C=[5.4055,20.12,3.87,18.73,5.63,20.646,4.81,20.1,5.52,21.04,5.678,21.37,7.108,22.83,7.5,23.13,7.646,23.042,8.318,23.438,7.438,22.36,7.18,21.94];
-const JQ_IMG={}; // 節氣名 → 插畫檔（例：'小雪':'art/jq-xiaoxue.webp'），沒有圖時顯示文字版
+// 插畫：毛利梅園《梅園草木花譜》、岩崎灌園《本草圖譜》（江戶時代，公有領域），出處見 art/jieqi/CREDITS.md
+const JQ_PY='xiaohan dahan lichun yushui jingzhe chunfen qingming guyu lixia xiaoman mangzhong xiazhi xiaoshu dashu liqiu chushu bailu qiufen hanlu shuangjiang lidong xiaoxue daxue dongzhi'.split(' ');
+const JQ_IMG=Object.fromEntries(JQ.map((x,i)=>[x[0],'art/jieqi/'+JQ_PY[i]+'.webp']));
 function jqDate(y,i){const Y=y%100,L=i<4?Math.floor((Y-1)/4):Math.floor(Y/4);return y+'-'+pad(Math.floor(i/2)+1)+'-'+pad(Math.floor(Y*0.2422+JQ_C[i])-L)}
 function jqNow(k){const y=+k.slice(0,4);for(const yy of [y,y-1])for(let i=23;i>=0;i--){const d=jqDate(yy,i);if(d<=k)return {i,d,n:diffDays(d,k),j:JQ[i]}}return null}
 // 節氣卡：節氣前三天到後兩天（共六天）；之前「再過 N 天是…」，當天「今天…」
@@ -1702,6 +1743,10 @@ const WHATSNEW=[]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加
 const CHANGELOG=[
  {d:'2026-11-20',lv:'minor',t:'新頁面「運動」：瑜珈序列與呼吸節拍、健身組數與組間休息、跑步單車游泳配速、每日步數（在用途或設定裡打開）'},
  {d:'2026-11-20',lv:'minor',t:'作息觀測：早上記一下昨晚的睡眠，每週一收到作息報告'},
+ {d:'2026-11-20',lv:'minor',t:'節氣卡加入插畫：江戶時代《梅園草木花譜》《本草圖譜》的植物圖'},
+ {d:'2026-11-20',lv:'minor',t:'月曆重新設計：格子更簡潔，專注多寡用小圓點表示，標出節氣與節日'},
+ {d:'2026-11-20',lv:'fix',t:'靜心回饋輪流參考不同老師的指導，開頭的話也不再固定'},
+ {d:'2026-11-20',lv:'fix',t:'作息觀測的睡眠紀錄可以修改；計畫地圖「今天的最小一步」完成後自動收起；手機版番茄鐘的按鈕移到計時下方，標籤改成一列可滑動'},
  {d:'2026-11-20',lv:'minor',t:'練習計時和番茄共用 25／5 的節奏：練習結束可以接著訂正，累計滿一個番茄就提醒休息，休息直接用今日的番茄鐘'},
  {d:'2026-11-20',lv:'minor',t:'節氣卡改在節氣前三天到後兩天出現；加入春節、元宵、端午、七夕、中秋、重陽，以及冬至起的數九'},
  {d:'2026-11-20',lv:'fix',t:'小建議、回顧與備份提醒改成日課風格的卡片'},
@@ -1801,51 +1846,56 @@ function dayMarks(k){
   Object.keys(S.projects).forEach(id=>{const p=proj(id);if(p.deadline===k&&!p.flex)t.push({c:'ex',n:p.name+' 截止'});if(p.next&&p.next.date===k)t.push({c:'ex',n:'會談：'+p.name});p.stages.forEach(st=>{if(st.end===k&&!stageDone(st))t.push({c:'ms',n:st.name+' 結束'});st.steps.forEach(x=>{if(x.due===k&&!x.done)t.push({c:'ms',n:x.t})})})});
   return t;
 }
+// 月曆：格子只放日期、專注小圓點（越大越多）、重要日期／步驟／行程的小色點、節氣與節日名
+function calLabels(ym){const y=+ym.slice(0,4),o={};for(const yy of [y-1,y,y+1])for(let i=0;i<24;i++){const d=jqDate(yy,i);if(d.slice(0,7)===ym)o[d]=JQ[i][0]}
+  Object.entries(FEST).forEach(([n,ds])=>ds.forEach(d=>{if(d.slice(0,7)===ym)o[d]=n}));return o}
 function vCalendar(){
-  const days=monthDays(calM),[y,m]=calM.split('-').map(Number);
-  const mins=k=>(day(k).sessions||[]).reduce((a,s)=>a+(+s.min||0),0);
+  const days=monthDays(calM),[y,m]=calM.split('-').map(Number),t=today(),lab=calLabels(calM);
+  const mins=k=>(day(k).sessions||[]).reduce((a,s)=>a+(+s.min||0),0)+testSum([k]).min;
   const max=Math.max(60,...days.map(mins));
-  const t=today();
   if(gcOn()&&GC.key!==calM&&GC.state!=='loading')setTimeout(()=>gcLoad(false),0);
   const gce=k=>gcOn()&&GC.key===calM?(GC.events[k]||[]):[];
-  const cells=days.map(k=>{const ss=day(k).sessions||[],mn=mins(k),j=day(k).j||{},mk=dayMarks(k);const heat=mn?Math.round(12+60*mn/max):0;
-    return `<button class="cell${k.slice(0,7)!==calM?' out':''}${k===t?' today':''}${k===calSel?' sel':''}" data-act="calSel" data-k="${k}" style="${heat?`background:color-mix(in srgb,var(--c0) ${heat}%,var(--surface))`:''}" aria-label="${fmtLong(k)}，${ss.length} 個番茄">
-      <span class="d"><span>${parseD(k).getDate()}</span>${j.mood?`<span class="muted">心境 ${j.mood}</span>`:''}</span>
-      ${ss.length?`<span class="m">${ss.length} 個・${mn}′</span>`:''}
-      ${mk.slice(0,2).map(x=>`<span class="tag ${x.c}">${esc(x.n)}</span>`).join('')}
-      ${gce(k).slice(0,Math.max(0,3-mk.length)).map(e=>`<span class="tag gc">${esc(e.t?e.t+' ':'')}${esc(e.n)}</span>`).join('')}${gce(k).length>Math.max(0,3-mk.length)?`<span class="m">+${gce(k).length-Math.max(0,3-mk.length)} 個行程</span>`:''}
-    </button>`}).join('');
-  const mt=days.filter(k=>k.slice(0,7)===calM),tot=mt.reduce((a,k)=>a+mins(k),0),cnt=mt.reduce((a,k)=>a+(day(k).sessions||[]).length,0),act=mt.filter(k=>mins(k)>0).length;
-  return `<header class="ph"><div><p class="eyebrow">月曆</p><h1>${y} 年 ${m} 月</h1></div>
-    <div class="row"><button data-act="calNav" data-d="-1">上個月</button><button data-act="calNav" data-d="0">本月</button><button data-act="calNav" data-d="1">下個月</button></div></header>
+  const cells=days.map(k=>{const mn=mins(k),mk=dayMarks(k),ev=gce(k),sz=mn?Math.round(6+10*Math.min(1,mn/max)):0;
+    const dots=mk.filter(x=>x.c==='ex').slice(0,1).map(()=>'<i class="cdot cd-ex"></i>').join('')+mk.filter(x=>x.c==='ms').slice(0,1).map(()=>'<i class="cdot cd-ms"></i>').join('')+(ev.length?'<i class="cdot cd-gc"></i>':'');
+    const tip=[mn?`專注 ${fmtMin(mn)}`:'',...mk.map(x=>x.n),...ev.map(e=>e.n),lab[k]||''].filter(Boolean).join('、');
+    return `<button class="cell2${k.slice(0,7)!==calM?' out':''}${k===t?' today':''}${k===calSel?' sel':''}" data-act="calSel" data-k="${k}" aria-label="${fmtLong(k)}${tip?'：'+esc(tip):''}" title="${esc(tip)}">
+      <span class="d">${parseD(k).getDate()}</span>${lab[k]?`<span class="clab">${lab[k]}</span>`:'<span class="clab"></span>'}
+      <span class="cfoot">${sz?`<i class="cfocus" style="width:${sz}px;height:${sz}px"></i>`:''}${dots}</span></button>`}).join('');
+  const mt=days.filter(k=>k.slice(0,7)===calM),tot=mt.reduce((a,k)=>a+mins(k),0),act=mt.filter(k=>mins(k)>0).length;
+  let t3=0,t3d=0;mt.forEach(k=>{const tp=(((day(k).j||{}).top3)||[]).filter(x=>x&&x.t);t3+=tp.length;t3d+=tp.filter(x=>x.done).length});
+  return `<header class="ph"><div><p class="eyebrow">月曆</p><h1 class="calh"><button class="ghost calarr" data-act="calNav" data-d="-1" aria-label="上個月">‹</button>${y} 年 ${m} 月<button class="ghost calarr" data-act="calNav" data-d="1" aria-label="下個月">›</button></h1></div>
+    <div class="row">${calM!==t.slice(0,7)||calSel!==t?'<button class="sm" data-act="calNav" data-d="0">回到今天</button>':''}</div></header>
   ${gcBar()}
-  <div class="gridA"><section class="card">
-    <div class="row sb" style="margin-bottom:10px"><div class="legend">${gcOn()?'<span><i class="dot" style="background:var(--c3)"></i>Google 日曆</span>':''}<span><i class="dot" style="background:color-mix(in srgb,var(--c0) 25%,var(--surface))"></i>專注較少</span><span><i class="dot" style="background:color-mix(in srgb,var(--c0) 72%,var(--surface))"></i>專注較多</span><span><i class="dot" style="background:var(--accent)"></i>考試／截止</span><span><i class="dot" style="background:var(--c2)"></i>里程碑</span></div>
-    <span class="muted">本月 ${cnt} 個番茄・${fmtMin(tot)}・${act} 天有讀書</span></div>
+  <p class="calsum">本月 <b>${act}</b> 天有專注・共 <b>${fmtMin(tot)}</b>${t3?`・三件事完成 <b>${Math.round(t3d/t3*100)}%</b>`:''}</p>
+  <div class="gridA"><section class="card calcard">
     <div class="cal">${WD.map(w=>`<div class="hd">${w}</div>`).join('')}${cells}</div>
+    <div class="legend callegend"><span><i class="cfocus" style="width:9px;height:9px"></i>專注（越大越多）</span><span><i class="cdot cd-ex"></i>重要日期</span><span><i class="cdot cd-ms"></i>計畫步驟</span>${gcOn()?'<span><i class="cdot cd-gc"></i>Google 日曆</span>':''}</div>
   </section>
   <aside class="card">${dayDetail(calSel)}</aside></div>`;
 }
 function dayDetail(k){
   const d=day(k),j=d.j||{},c=cfg(),mk=dayMarks(k),ss=d.sessions||[];
   const wins=(j.wins||[]).filter(Boolean);
-  return `<h2>${fmtMD(k)}（週${wdName(k)}） <span class="muted">${ss.length} 個番茄・${fmtMin(ss.reduce((a,s)=>a+(+s.min||0),0))}</span></h2>
+  const ts=testSum([k]),pm=(j.practice||[]).reduce((a,x)=>a+(+x.min||0),0),sp=d.sport||[],tp=(j.top3||[]).filter(x=>x&&x.t),lab=calLabels(k.slice(0,7))[k];
+  const ov=[ss.length?`番茄 ${ss.length} 個・${fmtMin(ss.reduce((a,s)=>a+(+s.min||0),0))}`:'',ts.L.length?`${exL('timer')} ${ts.sets} 組・${fmtMin(ts.min)}`:'',pm?`靜心 ${pm} 分`:'',sp.length?`運動 ${sp.length} 次`:'',tp.length?`三件事 ${tp.filter(x=>x.done).length}/${tp.length}`:''].filter(Boolean);
+  return `<h2>${fmtMD(k)}（週${wdName(k)}）${lab?` <span class="pill mut">${lab}</span>`:''}</h2>
+  <p class="dayov">${ov.length?ov.map(x=>`<span>${x}</span>`).join(''):'<span class="muted">這天還沒有紀錄。</span>'}</p>
   ${mk.length?`<div class="chips" style="margin-bottom:10px">${mk.map(x=>`<span class="chip${x.c==='ex'?' hot':''}">${esc(x.n)}</span>`).join('')}</div>`:''}
   ${gcOn()&&GC.key===calM&&(GC.events[k]||[]).length?`<h3 style="margin-top:0">Google 日曆</h3><div class="list" style="margin-bottom:10px">${GC.events[k].map(e=>`<div class="li"><span class="dot" style="background:var(--c3)"></span><span class="num muted">${e.t||'全天'}</span><span class="grow">${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.n)}</a>`:esc(e.n)}</span></div>`).join('')}</div>`:''}
   ${sessionsHTML(k)}
   <div style="margin:8px 0 4px"><button class="sm" data-act="manual" data-k="${k}">補登這天</button> <a class="btn sm" href="#journal" data-act="toJournal" data-k="${k}">寫這天的日記</a> ${isOn('stats')?`<a class="btn sm" href="#stats" data-act="go" data-to="stats" data-m="week" data-k="${k}">看這週統計</a>`:''}</div>
-  <h3>計數</h3>${c.counters.map(x=>`<div class="row sb"><span>${esc(x.name)}</span><span class="num">${+((d.counts||{})[x.id])||0}${x.goal?' / '+x.goal:''}</span></div>`).join('')||'<p class="empty">—</p>'}
+  ${c.counters.some(x=>+((d.counts||{})[x.id]))?`<h3>計數</h3>${c.counters.filter(x=>+((d.counts||{})[x.id])).map(x=>`<div class="row sb"><span>${esc(x.name)}</span><span class="num">${+((d.counts||{})[x.id])||0}${x.goal?' / '+x.goal:''}</span></div>`).join('')}`:''}
   ${(j.park||[]).length?`<h3>雜念停車場</h3><div class="list">${j.park.map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="num muted">${esc(x.t)}</span><span class="grow${x.done?' muted':''}">${esc(x.text)}</span></div>`).join('')}</div>`:''}
   <h3>三件事</h3>${(j.top3||[]).filter(x=>x&&x.t).length?`<div class="list">${(j.top3||[]).filter(x=>x&&x.t).map(x=>`<div class="li"><span aria-hidden="true">${x.done?'✓':'○'}</span><span class="grow${x.done?' muted':''}">${esc(x.t)}</span></div>`).join('')}</div>`:'<p class="empty">這天沒有寫三件事。</p>'}
   ${(j.moments||[]).length?`<h3>覺察片段</h3><div class="list">${j.moments.map(m=>`<div class="li" style="align-items:flex-start"><span class="num muted">${esc(m.t||'')}</span><div class="grow">${m.e?`<span class="chip">${esc(emoName(m.e))}</span> `:''}${esc(m.w||'')}${m.b||m.r?`<div class="muted">${m.b?'身體：'+esc(m.b):''}${m.b&&m.r?'・':''}${m.r?'回應：'+esc(m.r):''}</div>`:''}</div></div>`).join('')}</div>`:''}
-  <h3>覺察日記</h3>
+  <details class="dayfold"${j.intent||j.mood||wins.length||j.good||j.adjust?'':' hidden'}><summary>覺察日記${j.mood?` <span class="muted">心境 ${j.mood}</span>`:''}</summary>
   ${j.intent?`<p class="qa"><b>意向：</b>${esc(j.intent)}</p>`:''}
   ${j.mood||j.energy||j.calm?`<p class="muted">心境 ${j.mood||'—'}・精力 ${j.energy||'—'}・安定 ${j.calm||'—'}（滿分 5）</p>`:''}
   ${Object.keys(j.emo||{}).length||(j.emoX||[]).length?`<div class="chips" style="margin-bottom:8px">${Object.entries(j.emo||{}).map(([e,v])=>`<span class="chip">${emoName(e)}・${LV[v]}</span>`).join('')}${(j.emoX||[]).map(o=>`<span class="chip">${esc(o.n)}・${LV[o.v]}</span>`).join('')}</div>`:''}
   ${(j.practice||[]).length?`<p class="muted">靜心 ${(j.practice||[]).reduce((a,x)=>a+(+x.min||0),0)} 分鐘</p>`:''}
-  ${wins.length?`<ol style="margin:0;padding-left:20px">${wins.map(w=>`<li>${esc(w)}</li>`).join('')}</ol>`:'<p class="empty">這天沒有寫回顧。</p>'}
+  ${wins.length?`<ol style="margin:0;padding-left:20px">${wins.map(w=>`<li>${esc(w)}</li>`).join('')}</ol>`:''}
   ${j.good?`<p class="qa"><b>感恩：</b>${esc(j.good)}</p>`:''}
-  ${j.adjust?`<p class="qa"><b>反思：</b>${esc(j.adjust)}</p>`:''}`;
+  ${j.adjust?`<p class="qa"><b>反思：</b>${esc(j.adjust)}</p>`:''}</details>`;
 }
 
 /* ---------- charts ---------- */
@@ -2300,14 +2350,14 @@ function vPlan(){
   <section class="card" style="margin-bottom:16px">${stageTrack(p,cur)}</section>
   <div class="plan-grid">
     <div class="stack">
-      <section class="card focus">
-        ${planWinHTML(p)||`<p class="eyebrow">今天的最小一步</p>
+      ${(()=>{const w=planWin(),done=!!(w&&w.proj===curProj),st=lsGet('sd-pwfold',null),open=st&&st.d===today()&&st.p===curProj&&st.done===done?st.open:!done;
+        return `<details class="card fold focus pwfold" data-fold="pw"${open?' open':''}><summary><span class="ftxt"><h2>${done?'<span class="jck">✓</span>今天的最小一步完成':'今天的最小一步'}</h2><span class="fsum">${esc(done?w.t:(ns?ns.s.t:''))}</span></span>${CHEV}</summary><div class="foldbody">
+        ${planWinHTML(p)||`
         ${ns?`<div class="row sb"><div class="bigstep">${esc(ns.s.t)}<div class="muted" style="font-size:calc(12px * var(--fs,1));font-weight:400">${esc(ns.st.name)}</div></div><div class="row"><button class="sec" data-act="stepPomo" data-id="${ns.s.id}" data-st="${ns.st.id}">用番茄鐘開始</button><button data-act="stepDone" data-st="${ns.st.id}" data-id="${ns.s.id}">完成了</button></div></div>`:(cur&&!cur.steps.length?'<p>這個階段還沒有步驟。想到第一件要做的事，就加在下方的階段卡片裡；不急，邊做邊加就好。</p>':'<p>這個階段的步驟都完成了。選下一個階段，或新增步驟。</p>')}
         <div class="row sb"><h3>沒有動力？選一件 15 分鐘內能完成的事</h3><button class="ghost sm" data-act="starterEditT">${starterEdit?'完成':'編輯'}</button></div>
         <div class="starters">${starters().map(([k,n,d])=>starterEdit?`<div class="starter editing"><b>${esc(n)}</b><span>${esc(d)}</span><button class="ghost sm stdel" data-act="starterDel" data-k="${esc(k)}" aria-label="刪除「${esc(n)}」">×</button></div>`:`<button class="starter" data-act="starter" data-k="${esc(k)}" aria-pressed="${starter===k}"><b>${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
         ${starterEdit?`<div class="row" style="margin-top:10px"><input id="stNewN" type="text" placeholder="名稱，例：整理註腳" style="width:150px"><input id="stNewD" type="text" placeholder="說明，例：只整理一頁的註腳" style="flex:1"><button class="sm sec" data-act="starterAdd">加入</button><button class="ghost sm" data-act="starterReset">恢復預設</button></div>`:''}
-        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}`}
-      </section>
+        ${starter?`<div class="row" style="margin-top:10px"><input id="winTxt" type="text" placeholder="做了什麼？（選填，例：寫了第二章開頭）" style="flex:1"><button class="pri" data-act="winAdd">記下這個成果</button><button data-act="winPomo">先開番茄鐘</button></div>`:''}`}</div></details>`})()}
       ${cur?`<section class="card stagecard">
         <div class="row sb"><div><p class="eyebrow">目前階段 ${p.stages.indexOf(cur)+1} / ${p.stages.length}</p><input class="stname" id="stn${cur.id}" type="text" data-ch="stF" data-f="name" data-id="${cur.id}" value="${esc(cur.name)}" aria-label="階段名稱（點一下可以改）" title="點一下可以改名稱"></div>
           ${p.flex?'':`<div class="row daterow"><input type="date" id="sts${cur.id}" data-ch="stF" data-f="start" data-id="${cur.id}" value="${esc(cur.start)}" aria-label="開始"><span class="muted">→</span><input type="date" id="ste${cur.id}" data-ch="stF" data-f="end" data-id="${cur.id}" value="${esc(cur.end)}" aria-label="結束"></div>`}</div>
@@ -2439,7 +2489,7 @@ let impMsg='';
 const FOLD_OPEN=new Set((()=>{const v=lsGet('sd-fold',[]);return Array.isArray(v)?v:[]})());
 const CHEV='<svg class="chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function fold(id,title,sum,body){return `<details class="card fold" data-fold="${id}"${FOLD_OPEN.has(id)?' open':''}><summary><span class="ftxt"><h2>${title}</h2><span class="fsum">${sum}</span></span>${CHEV}</summary><div class="foldbody">${body}</div></details>`}
-document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details.fold')){d.open?FOLD_OPEN.add(d.dataset.fold):FOLD_OPEN.delete(d.dataset.fold);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')))}},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details.pwfold')){const w=planWin();lsSet('sd-pwfold',{d:today(),p:curProj,done:!!(w&&w.proj===curProj),open:d.open})}if(d&&d.matches&&d.matches('details.fold')){d.open?FOLD_OPEN.add(d.dataset.fold):FOLD_OPEN.delete(d.dataset.fold);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')))}},true);
 function vPrefs(){
   const c=cfg();
   const th=themePref();
@@ -3636,9 +3686,18 @@ function mzFeedback(x){
   if(!best)return {k:'general',a:x.q&&x.q<=2?'今天的心比較散，也沒關係。':'謝謝你今天花時間陪伴自己。',b:'靜心不是要達到某種狀態，而是一次又一次溫柔地回到當下。'+((per&&MZ_TOD.general[per])||'')+'下次坐完，可以多寫一句你注意到的事，例如念頭、身體或呼吸的變化，回饋會更貼近你。'};
   const h=[...String(x.id||'')].reduce((a,c)=>a+c.charCodeAt(0),0),nx=(x.next||'').trim();
   let b=best.b;const tod=per&&(MZ_TOD[best.k]||{})[per];if(tod)b+=tod;if(nx)b+=`你想試的「${nx.slice(0,30)}」很好，下次開始前看一眼就能用上。`;
-  const vs=MZ_M[best.k]||[{m:best.m,s:best.s}],v=vs[(h+Math.floor(Date.now()/864e5))%vs.length];
-  return {k:best.k,a:best.a[h%best.a.length],b,m:v.m,s:v.s};
+  const vs=MZ_M[best.k]||[{m:best.m,s:best.s}],v=mzPickVariant(vs);
+  return {k:best.k,a:mzPickAck(best),b,m:v.m,s:v.s};
 }
+// 老師輪流：記住最近用過的老師，挑最久沒出現的那位（同一位不會連續出現）
+const mzTeacher=v=>{const s=(v.s||'').replace(/^參考/,'');const m=s.match(/^(.*?)(《|開示)/);return (m?m[1]:s.slice(0,6)).replace(/[，、；\s]+$/,'')||s.slice(0,6)};
+function mzPickVariant(vs){if(vs.length<2)return vs[0];const hist=lsGet('sd-mzt',[])||[];
+  const age=v=>{const i=hist.lastIndexOf(mzTeacher(v));return i<0?-1:i};
+  const pick=vs.slice().sort((a,b)=>age(a)-age(b))[0];lsSet('sd-mzt',hist.concat(mzTeacher(pick)).slice(-8));return pick}
+// 第一句：該狀況自己的承接語＋幾句溫和的通用開頭，避免和上一次一樣
+const MZ_OPEN=['謝謝你願意坐下來，也願意把感受寫下來。','能把練習中的狀況寫下來，就已經是一種覺察。','每一次坐下來，都很值得。','你注意到的這些，都是練習的一部分。','願意誠實地看見自己的狀態，就很好。'];
+function mzPickAck(best){const pool=best.a.concat(MZ_OPEN.map(x=>x)),last=lsGet('sd-mza','');const own=best.a.filter(x=>x!==last);
+  const cand=(own.length&&Math.random()<.7)?own:pool.filter(x=>x!==last);const a=cand[Math.floor(Math.random()*cand.length)]||best.a[0];lsSet('sd-mza',a);return a}
 function mzCardHTML(f){const care=f.k==='crisis'||f.k==='distress';
   return `<div class="mzfb${care?' care':''}"><b>${f.k==='crisis'?'請先照顧自己':'給你的回饋'}</b>
     <p>${f.a?`<span class="mzack">${esc(f.a)}</span>`:''}${esc(f.b||f.t||'')}</p>
@@ -4431,11 +4490,13 @@ Object.assign(A,{
 const hm2m=s=>{const m=/^(\d{1,2}):(\d{2})/.exec(s||'');return m?(+m[1])*60+(+m[2]):null};
 function slpDur(x){const b=hm2m(x.bed),w=hm2m(x.wake);if(b==null||w==null)return null;let d=w-b;if(d<=0)d+=1440;return d}
 function slpMid(x){const b=hm2m(x.bed),d=slpDur(x);if(d==null)return null;let m=b+d/2;if(b<720)m+=1440;return m} // 以前一天中午為 0 點的分鐘數
-function slpMorningHTML(clk){const k=today(),x=day(k).slp;if(x&&x.wake)return '';if(clk.m<240||clk.m>=12*60)return '';
-  const R=myRhythm(),bed=R&&R.sleep!=null?R.sleep:1410,wk=R&&R.wake!=null?R.wake:450;
-  return `<section class="card slpcard"><h2>昨晚睡得好嗎？ <span class="muted">花 10 秒記一下，日課會更懂你的作息</span></h2>
-  <div class="row" style="gap:10px;align-items:flex-end"><label class="f">幾點睡著<input type="time" id="slpB" value="${hm(bed)}"></label><label class="f">幾點起床<input type="time" id="slpW" value="${hm(wk)}"></label>
-  <div><span class="muted" style="display:block;font-size:calc(12px * var(--fs,1))">睡得如何（1 很差，5 很好）</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="slpQ" data-n="${n}">${n}</button>`).join('')}</div></div></div></section>`}
+let slpEdit=false;
+function slpMorningHTML(clk){const k=today(),x=day(k).slp;if(clk.m<240||clk.m>=12*60)return '';
+  if(x&&x.wake&&!slpEdit)return `<p class="slpdone">昨晚 <b class="num">${esc(x.bed)}</b> 睡、<b class="num">${esc(x.wake)}</b> 起${x.q?`・睡得 ${x.q} 分`:''}<button class="linkbtn" data-act="slpEditT">修改</button></p>`;
+  const R=myRhythm(),bed=x&&x.bed||hm(R&&R.sleep!=null?R.sleep:1410),wk=x&&x.wake||hm(R&&R.wake!=null?R.wake:450);
+  return `<section class="card slpcard"><h2>昨晚睡得好嗎？ <span class="muted">${x?'改好後再按一次分數':'花 10 秒記一下，日課會更懂你的作息'}</span></h2>
+  <div class="row" style="gap:10px;align-items:flex-end"><label class="f">幾點睡著<input type="time" id="slpB" value="${bed}"></label><label class="f">幾點起床<input type="time" id="slpW" value="${wk}"></label>
+  <div><span class="muted" style="display:block;font-size:calc(12px * var(--fs,1))">睡得如何（1 很差，5 很好）</span><div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="slpQ" data-n="${n}" aria-pressed="${!!x&&x.q===n}">${n}</button>`).join('')}</div></div></div></section>`}
 function slpWeekReport(st,t){const ws=weekStart(t),id='slp-'+ws;if(st.done[id])return null;const dow=diffDays(ws,t);if(dow>2)return null;
   const ks=Array.from({length:7},(_,i)=>addDays(ws,i-7)),L=ks.map(k=>Object.assign({k},day(k).slp||{})).filter(x=>slpDur(x)!=null);if(L.length<4)return null;
   const avg=L.reduce((a,x)=>a+slpDur(x),0)/L.length,mids=L.map(slpMid),mean=mids.reduce((a,b)=>a+b,0)/mids.length,sd=Math.sqrt(mids.reduce((a,b)=>a+(b-mean)**2,0)/mids.length);
@@ -4445,11 +4506,15 @@ function slpWeekReport(st,t){const ws=weekStart(t),id='slp-'+ws;if(st.done[id])r
   return {id,kind:'review',t:'上週的作息報告',b:`記了 ${L.length} 晚，平均睡 ${fmtN(avg/60)} 小時${qa?`，睡眠品質 ${fmtN(qa)} 分`:''}；入睡時間的變動約 ${Math.round(sd)} 分鐘。${tip}`,btn:'看我的節奏',page:'quiz'}}
 Object.assign(A,{
   slpQ:el=>{const b=$('#slpB').value,w=$('#slpW').value;if(!b||!w)return toast('填一下時間');const x={bed:b,wake:w,q:+el.dataset.n},d=slpDur(x);
-    editDay(today(),dd=>{dd.slp=x;if(dd.j.sleep==null&&d)dd.j.sleep=Math.round(d/30)/2});toast(`記下了：睡了約 ${fmtN(d/60)} 小時`);render()},
+    editDay(today(),dd=>{const auto=dd.slp&&dd.j.sleep===Math.round((slpDur(dd.slp)||0)/30)/2;dd.slp=x;if((dd.j.sleep==null||auto)&&d)dd.j.sleep=Math.round(d/30)/2});slpEdit=false;toast(`記下了：睡了約 ${fmtN(d/60)} 小時`);render()},
+  slpEditT:()=>{slpEdit=true;render()},
 });
+Object.assign(C,{slpF:el=>{const {k,f}=el.dataset;editDay(k,d=>{const x=Object.assign({},d.slp||{});if(f==='q')x.q=+el.value||null;else x[f]=el.value;d.slp=x;const du=slpDur(x);if(du&&(d.j.sleep==null))d.j.sleep=Math.round(du/30)/2});render()}});
 function slpListHTML(){const ks=Array.from({length:14},(_,i)=>addDays(today(),-13+i)),L=ks.map(k=>Object.assign({k},day(k).slp||{}));if(!L.some(x=>slpDur(x)!=null))return '';
   const rows=ks.map((k,i)=>({key:k,label:String(parseD(k).getDate()),parts:[{c:3,v:Math.round((slpDur(L[i])||0)/6)/10,n:'小時'}]}));
   return `<section class="card" style="margin-bottom:16px"><h2>作息觀測 <span class="muted">近 14 晚的睡眠</span></h2>${stackBars(rows,{h:130,unit:'時',minMax:9,marker:today()})}
+    <h3>最近 7 晚 <span class="muted">記錯了可以直接改</span></h3>
+    <div class="slplist">${ks.slice(-7).reverse().map(k=>{const x=day(k).slp||{};return `<div class="slprow"><span class="num muted">${fmtMD(k)}（週${wdName(k)}）</span><input type="time" value="${esc(x.bed||'')}" data-ch="slpF" data-k="${k}" data-f="bed" aria-label="${fmtMD(k)} 入睡"><span class="muted">→</span><input type="time" value="${esc(x.wake||'')}" data-ch="slpF" data-k="${k}" data-f="wake" aria-label="${fmtMD(k)} 起床"><select data-ch="slpF" data-k="${k}" data-f="q" aria-label="睡眠品質">${['','1','2','3','4','5'].map(v=>`<option value="${v}"${String(x.q||'')===v?' selected':''}>${v?v+' 分':'品質'}</option>`).join('')}</select><span class="muted slpdur">${slpDur(x)!=null?fmtN(slpDur(x)/60)+' 時':''}</span></div>`}).join('')}</div>
     <p class="muted" style="margin:6px 0 0">每天早上在「今日」記一下昨晚的睡眠，每週一會收到作息報告。</p></section>`}
 Object.assign(A,{
   pgNewOpen:openNewPage,

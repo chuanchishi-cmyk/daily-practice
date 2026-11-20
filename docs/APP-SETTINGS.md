@@ -4,7 +4,7 @@
 > 1. **之後做新 App 的模板**：照這份的架構、設計規格、部署流程走，只換內容。
 > 2. **換新的工作空間（新對話 / 新 session）時的交接文件**：新空間的 Claude 讀這份就能接手維護。
 >
-> 最後更新：2026-11-19　｜　Service Worker 版本：見 `sw.js` 第 2 行 `CACHE='rike-vNN'`
+> 最後更新：2026-11-20　｜　Service Worker 版本：見 `sw.js` 第 2 行 `CACHE='rike-vNN'`
 
 ---
 
@@ -16,6 +16,7 @@
 | 語言 | 繁體中文（主）＋ 英文（自動翻譯層） |
 | 網站版（PWA） | https://chuanchishi-cmyk.github.io/daily-practice/ |
 | 安裝說明頁 | https://chuanchishi-cmyk.github.io/daily-practice/guide.html |
+| 隱私權政策 | https://chuanchishi-cmyk.github.io/daily-practice/privacy.html（Google OAuth 同意畫面連結） |
 | GitHub repo | `chuanchishi-cmyk/daily-practice`（舊名 `study-desk`，GitHub 會自動轉址） |
 | 部署方式 | GitHub Pages，`main` 分支根目錄，push 後約 1 分鐘上線 |
 | claude.ai 版 | https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe |
@@ -32,6 +33,7 @@ daily-practice/
 ├─ sw.js                     ← Service Worker：離線快取；每次發版把 CACHE 版本號 +1
 ├─ manifest.webmanifest      ← PWA 名稱、圖示、顏色
 ├─ guide.html                ← 手機/電腦安裝說明（LINE 分享用）
+├─ privacy.html              ← 隱私權政策（手寫，不由 build 產生；改了資料處理方式要同步更新）
 ├─ i18n-en.js                ← 英文翻譯（由 tools/i18n/build-i18n.py 產生）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png
 ├─ qr.png                    ← 網站 QR code（設定頁、分享視窗使用）
@@ -204,7 +206,8 @@ daily-practice/
 |---|---|
 | OAuth Client ID | `639910884576-g2mit90cn584j6ccp7hm9hef3t1ta73j.apps.googleusercontent.com`（公開值，非密鑰） |
 | 雲端硬碟範圍 | `https://www.googleapis.com/auth/drive.appdata` |
-| 行事曆範圍 | `https://www.googleapis.com/auth/calendar.readonly` |
+| 行事曆範圍 | `https://www.googleapis.com/auth/calendar.readonly`（程式仍會要求，但同意畫面「資料存取權」未列入、未送審） |
+| 同意畫面狀態 | 2026-11-20 發布為「實際運作中」（外部）；品牌頁：首頁、隱私權政策已填，未上傳 Logo |
 | 授權的 JavaScript 來源 | `https://chuanchishi-cmyk.github.io` |
 | 需啟用的 API | Google Drive API、Google Calendar API（Google Cloud Console） |
 
@@ -560,7 +563,7 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 通行證改存 `localStorage`（`sd-gd-tok`、`sd-gc-tok`，`tokGet/tokSet/tokDel`），關掉 App 再打開一小時內不必重連。
 - 第一次連線後用 Drive `about` 取得帳號 email 存在 `sd-g-hint`；續約時 `requestAccessToken({prompt:'',login_hint})`，不跳選帳號（日曆也共用）。停止同步時清掉。
 - 開 App 時先在背景載入 Google 登入元件（`gdPreload`），點同步標籤時同步呼叫登入，Safari 不會擋彈出視窗。同步標籤過期時顯示「⟳ 點一下續上同步」，每分鐘更新一次。
-- Google Cloud 同意畫面若還在「測試中」，授權 7 天就失效、最多 100 位測試使用者；發布正式版即可解除（`drive.appdata` 是不敏感權限，不需審查；網站版日曆 `calendar.readonly` 屬敏感權限，未審查會顯示未驗證警告）。
+- Google Cloud 同意畫面已於 2026-11-20 發布為正式版（原本「測試中」時授權 7 天就失效、最多 100 位測試使用者）。`drive.appdata` 是不敏感權限，不需審查。網站版日曆 `calendar.readonly` 屬敏感權限，已從「資料存取權」移除、未送審：連接日曆時會顯示「Google 尚未驗證這個應用程式」，需按「進階 → 繼續」，且未審核的機密權限有終身使用者人數上限。要對外開放網站版日曆，需把權限加回並送審（需首頁、隱私權政策 `privacy.html`、示範影片）。不要上傳 Logo，會觸發品牌驗證。
 - 測試：`tools/tests/sync-renew.js`（假 Google 登入元件與 API）。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）

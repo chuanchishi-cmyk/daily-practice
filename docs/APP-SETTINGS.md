@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js）
 ```
 
 ---
@@ -156,7 +156,7 @@ daily-practice/
 | 番茄鐘（專注、休息） | 無 | `ring()`：880/660 Hz 清脆「嘀－嘟－嘀」，**重複兩次** |
 | 測驗計時（每段、全部） | 無 | `ring()`（同上）；剩 5 分、1 分鐘時 `warnTone()` 一聲＋數字閃爍 10 秒（設定 `sd-xwarn`，預設開） |
 | 白噪音（今日番茄鐘計時時） | 專注時、休息時各選一種：不播／夏夜蟲鳴／鳥鳴流水／潮汐 | **休息預設潮汐、專注預設不播**（`sd-noise-b`、`sd-noise-w`；舊版 `sd-noise-on`+`sd-noise-k` 開過的人，專注時沿用原選擇）。靜心時自動停止。潮汐用 `ocean.mp3`（1.08 MB，立體聲 96kbps）；蟲鳴以物理模型即時合成（0 KB）：不同距離的蟋蟀與遠方樹蟋；立體聲、加空間殘響，40 秒無縫循環，開啟 App 後背景預先產生。音量 `sd-noise-v` |
-| 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒 | `yinqing(1,0)`：一聲引磬 |
+| 靜心 | `smallWoodfish(3,6)`：三聲木魚，間隔 6 秒。每聲各自的輸出記在 `WF`；三聲未響完就暫停 → 取消還沒響的（`wfCancel()`，剩幾聲記在 `MT.wfLeft`），繼續 → 接著響剩下的；重設後開始 → 重新三聲 | `yinqing(1,0)`：一聲引磬 |
 
 技術要點（iPhone 相容）：
 - 聲音以 Web Audio 的**音訊時鐘預先排程**（`schedule()` / `syncSched()`），螢幕關掉也能響。
@@ -243,6 +243,7 @@ node tools/tests/sport.js
 node tools/tests/letter-sleep.js
 node tools/tests/today-notes.js
 node tools/tests/practice-rhythm.js
+node tools/tests/woodfish-pause.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -450,6 +451,8 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 
 - **月曆**（`vCalendar()`、`.cell2`）：格子只放日期、專注小圓點（大小依專注分鐘，含練習計時）、重要日期／計畫步驟／Google 行程的小色點、節氣與節日名（`calLabels()`）。今天＝陶土橘圓圈，選取＝青綠框。上方「‹ 年月 ›」與一行月摘要（有專注的天數、總時數、三件事完成率）。日期詳情：先一行總覽，再重要日期、行程、專注紀錄、三件事；日記、計數、雜念收合。
 - **靜心回饋**：詳細說明依老師輪流（`mzPickVariant()`，記住最近 8 次用過的老師 `sd-mzt`，挑最久沒出現的）；第一句從該狀況的承接語與通用開頭（`MZ_OPEN`）隨機挑，不和上一次相同（`sd-mza`）。
-- **作息觀測可修改**：今日早上填完後縮成一行「昨晚 23:30 睡、07:00 起・睡得 4 分　修改」；我的節奏頁「最近 7 晚」每格都能直接改（`slpF`）。
+- **作息觀測可修改**：今日早上填完後縮成一行「昨晚 23:30 睡、07:00 起・睡得 4 分　修改」；我的節奏頁的「修改睡眠紀錄」預設收合，展開後只有一列：選哪一晚（近 7 晚）＋入睡、起床、品質＋儲存（`slpSave`）。桌面版我的節奏頁字級略縮小（`.qzpage`）。
 - **計畫地圖「今天的最小一步」**：改成可收合的卡片（`.pwfold`）；完成後自動收起，展開狀態當天記住（`sd-pwfold`）。
 - **手機版番茄鐘**：開始／重設／提前結束移到計時下方；「記錄到」的標籤在手機上改成一列可左右滑動，選中的標籤自動捲到可見處。
+- **設定 → 紀錄標籤**：「新增標籤」不再預填「新標籤」，改成空白加引導文「例：日文、健身、備課」並自動聚焦；還沒命名的標籤不會出現在番茄鐘。
+- **節氣插畫（手機）**：600px 以下一律垂直置中、縮成 100px。

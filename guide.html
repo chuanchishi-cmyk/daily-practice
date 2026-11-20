@@ -39,7 +39,9 @@ li{margin:4px 0}
 .tabs button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .pane[hidden]{display:none}
-.tip{background:var(--sunk);border-left:3px solid var(--accent);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:15px}
+.tip{position:relative;background:color-mix(in srgb,var(--accent) 6%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-radius:14px;padding:12px 14px 12px 40px;margin-top:14px;font-size:15px;line-height:1.75}
+.tip::before{content:"";position:absolute;left:16px;top:20px;width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.8}
+.tip b{display:block;font-size:14px;color:var(--accent);letter-spacing:.04em;margin-bottom:2px}
 .ic{display:inline-block;vertical-align:-4px;width:20px;height:20px}
 .muted{color:var(--muted);font-size:14px}
 a{color:var(--sage)}
@@ -61,6 +63,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
   <p style="margin:0 0 12px">給準備考試、寫論文、想好好專注的人的每日練習空間。免下載、免註冊、免費，手機和電腦都能用。</p>
   <ul class="feat">
     <li><b>今日</b><span>今天和明天的三件事、雜念停車場，節氣與今日小卡</span></li>
+    <li><b>工作上班</b><span>休息時護眼、喝水、起身走走，今天的行程與會談</span></li>
     <li><b>番茄鐘與白噪音</b><span>專注計時，夏夜蟲鳴、鳥鳴流水、潮汐，鎖定畫面也會響</span></li>
     <li><b>計畫地圖</b><span>大計畫切成小步驟；跟著課程一單元一單元「看、做、檢查」</span></li>
     <li><b>目標衝刺</b><span>考試、比賽、演出的倒數，分段練習計時、紀錄與複習</span></li>
@@ -68,23 +71,22 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
     <li><b>我的節奏與作息觀測</b><span>找出精力高峰與動力來源，睡眠紀錄每兩週校正</span></li>
     <li><b>隨手記</b><span>每一頁右下角都能記下想到的事，之後再處理</span></li>
     <li><b>月曆與統計</b><span>看見每天、每週、每月的累積</span></li>
-    <li><b>運動（選用）</b><span>瑜珈序列、健身組數、跑步配速、每日步數</span></li>
-    <li><b>雁書（選用）</b><span>寫一封信，明天起床後收到回信</span></li>
+    <li><b>運動</b><span>瑜珈序列、健身連續模式、跑步配速、每日步數</span></li>
+    <li><b>雁書</b><span>託雁捎書：把心事寫成信交給雁子，明天起床後收到回信</span></li>
   </ul>
-  <p class="muted" style="margin:10px 0 0">「選用」的頁面預設不顯示，在「設定 → 要顯示哪些頁面」打開。</p>
 </section>
 
 <section>
-  <h2>最近更新 <span class="muted" style="font-weight:400"><!--AUTO-VER-->版本 2026.11.20.8<!--/AUTO-VER--></span></h2>
+  <h2>最近更新 <span class="muted" style="font-weight:400"><!--AUTO-VER-->版本 2026.11.20.9<!--/AUTO-VER--></span></h2>
   <ul><!--AUTO-NEWS-->
+    <li><span class="muted">11/20</span>　新頁面「工作上班」：番茄鐘、休息時護眼 20 秒、喝水、起身走走與伸展，久坐提醒，彈性補記工作時段，今天的三件事、行程與會談（在用途或設定裡打開）</li>
+    <li><span class="muted">11/20</span>　運動：健身新增連續模式（計時型全程自動、次數型做完按一下就休息），鎖定螢幕也照節奏響；最近紀錄可以一列補記</li>
+    <li><span class="muted">11/20</span>　雁書：「寫一封信」改名「託雁捎書」，按鈕改成「交給雁子」</li>
     <li><span class="muted">11/20</span>　雁書：寄出後換成「信已啟程」的等待畫面；回信送達前可以修改或撤回（會先陪你停一下，想想要不要讓它照原樣飛）</li>
     <li><span class="muted">11/20</span>　靜心回饋：可以指定回應的老師（在「看更多說明」裡，設定一次就會套用，隨時可改回輪流）</li>
     <li><span class="muted">11/20</span>　隨手記：每一頁右下角都能隨手記下想到的事；雜念停車場、計畫筆記和覺察片段集中在一起，可以放進三件事或轉成計畫步驟</li>
     <li><span class="muted">11/20</span>　計畫地圖：各階段可以同時進行，最小一步會從其他階段遞補，也能「換一個」；新增「跟著一套課程」的計畫，一個單元一個單元「看 → 做 → 檢查」，順序不拘</li>
     <li><span class="muted">11/20</span>　作息觀測：我的節奏頁加上每兩週的作息變化；實際作息跟測驗差很多時，會先問你要不要更新</li>
-    <li><span class="muted">11/20</span>　我的節奏：可選擇打開「驅動力對照」，比較最近日記裡常出現的價值和測驗結果</li>
-    <li><span class="muted">11/20</span>　雁書開放：寫一封信，起床後收到回信；書中觀點已逐段對照原書，並標出章節或頁碼</li>
-    <li><span class="muted">11/20</span>　新頁面「運動」：瑜珈序列與呼吸節拍、健身組數與組間休息、跑步單車游泳配速、每日步數（在用途或設定裡打開）</li>
   <!--/AUTO-NEWS--></ul>
   <p class="muted" style="margin:10px 0 0">完整的更新紀錄在 App 的「設定 → 更新紀錄」。</p>
 </section>

@@ -5,7 +5,7 @@ fs.writeFileSync(SP+'tjq.html','<!doctype html><meta charset=utf-8><body>'+fs.re
 const ok=(cond,msg)=>{console.log((cond?'ok   ':'FAIL ')+msg);if(!cond)fail++};
 // at: 'YYYY-MM-DD' 10:00 Taipei; seed: days of sessions before that date
 const open=async(at,o={})=>{const c=await b.newContext(Object.assign({},devices['iPhone 13'],{timezoneId:'Asia/Taipei'}));
-  await c.addInitScript(([at,o])=>{sessionStorage.setItem('sd-splash-seen','1');if(!localStorage.getItem('sd-tips'))localStorage.setItem('sd-tips',JSON.stringify({done:{'n-qn':'yes'},last:'',cur:null}));if(!o.welcome)localStorage.setItem('sd-welcome','true');
+  await c.addInitScript(([at,o])=>{sessionStorage.setItem('sd-splash-seen','1');if(!localStorage.getItem('sd-tips'))localStorage.setItem('sd-tips',JSON.stringify({done:{'n-qn':'yes','n-work':'yes'},last:'',cur:null}));if(!o.welcome)localStorage.setItem('sd-welcome','true');
     const D=Date,t=new D(at+'T10:00:00+08:00').getTime(),off=t-D.now();class FD extends D{constructor(...a){if(a.length)super(...a);else super(D.now()+off)}static now(){return D.now()+off}};window.Date=FD;
     if(o.days){const ymd=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');const S={meta:{},days:{},mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}};
       for(let i=1;i<=o.days;i++){const d=new D(t-i*864e5);const k=ymd(d);S.days[k]={date:k,j:{top3:[{t:'事'+i,done:i%2===0}]},sessions:[{t:new D(k+'T09:30:00+08:00').toISOString(),min:25,sub:'R'},{t:new D(k+'T10:10:00+08:00').toISOString(),min:25,sub:'R'}]}}

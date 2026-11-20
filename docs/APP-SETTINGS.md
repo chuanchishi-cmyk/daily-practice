@@ -41,7 +41,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js）
 ```
 
 ---
@@ -248,6 +248,8 @@ node tools/tests/woodfish-pause.js
 node tools/tests/plan-units.js
 node tools/tests/notes-rhythm.js
 node tools/tests/mz-teacher.js
+node tools/tests/sport-flow.js
+node tools/tests/work-page.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
@@ -500,3 +502,33 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **雁書：投遞與等待**。有信在路上時，雁書頁標題改成「信已啟程」，顯示雁群飛過山丘的小圖（剛寄出時信封飛走、雁群飛入，2.4 秒；減少動態時不播），說明幾點會收到回信，按鈕「看看寄出的信」「再寫一封」；寫信框收起（`ltCompose`），按「再寫一封」才展開。
 - **雁書：修改、撤回**。回信送達（`due`）前，信的頁面有「修改」「撤回」。按下先跳出溫和的提示（`ltAsk`）：深呼吸三次看念頭從哪裡來、退一步像讀朋友的信、先記在隨手記讓信照原樣飛；主按鈕是「讓它繼續飛」，次要按鈕才是「還是要修改／撤回這封信」。修改不改變送達時間，會記 `edited`；撤回直接刪除那封信。修改後的信也會重新檢查自傷字眼。
 - **靜心回饋：指定老師**。藏在「看更多說明」最下面一行小字（`.mzt`，收合）：「想指定回應的老師？」。選了之後存 `cfg.mzTeacher`，`mzPickVariant()` 優先選這位老師的說明，沒有就照原本輪流；收合時只顯示「回應的老師：阿姜查」。每位老師旁的數字是談到的狀況數（共 14 種：聖嚴法師 13、馬哈希大師 8、比約恩．納提科 5、帕奧禪師 3、阿姜查 2、焦諦卡禪師 1、虛雲老和尚 1），選了涵蓋少的老師，其他狀況仍由別的老師回應。`mzTeacher()` 改用 `MZ_TEACHERS` 名單比對（修正《阿姜查的禪修世界》開頭沒有人名的情況）。測試：`tools/tests/mz-teacher.js`。
+
+## 36. 2026-11-20 第四批
+
+- **雁書改名**：寫信畫面標題「託雁捎書」，寄出按鈕「交給雁子」；選單仍叫「雁書」。安裝說明頁不再標「選用」。
+- **安裝說明頁的提示框**：`.tip` 改成柔和的陶土色底、細框、左側小圓點，標題獨立一行（原本是粗的左邊線）。
+- **深色模式**：`--line` 加深為 `#463f37`、`--sunk` 調暗；分段按鈕的選取狀態用 `--seg-on`（深色 `#3d3731`，淺色沿用 surface）加一圈淡綠內框。全頁文字對比用程式檢查過（WCAG 4.5／大字 3），只剩刻意淡化的停用按鈕。
+- **跟課學習單元列**：單元名稱與「看／做／檢查」同一列，膠囊縮小、勾選以 ✓ 表示；目前單元淡綠底；預設顯示 4 個未完成單元；課程不顯示「沒有動力？」的起手式。
+- **健身連續模式**（`flowHTML()`、`flowStart()`）：
+  - 計時型：`[動作, 秒數, 組數]`，開始前準備、每組之間緩衝（使用者自設秒數）。開始或繼續時 `flowSched()` 把之後所有提示音排在音訊時鐘上（倒數 3 聲 tick、開始 go、休息低音 rest、結束三聲 end，`flTone()`），鎖定螢幕也會響；畫面回來時 `spTick()` 只追上進度、不重播。
+  - 次數型：`[動作, 次數, 組數]`、組間休息。做完按「完成這組」，或鎖定畫面／耳機的暫停鍵（`msPause` 在次數型做組時＝完成這組），休息倒數與結束音一樣預先排好。
+  - 間歇沿用原本的設定，放在同一組分頁裡。設定存在 `cfg.gymFlow={time:{prep,buf,items},reps:{prep,rest,items}}`。
+  - 做完只需要一列記錄：感覺 1–5（存成 rpe×2）、不舒服、記下；動作與組數自動帶入。
+  - 執行中畫面與瑜珈一致：上方組數、大字動作名、計時、下一個預告、進度圓點、暫停／跳過／結束。組間休息、間歇也換成同樣樣式。
+  - 運動時不用手機的人：瑜珈與健身的「最近的紀錄」上方有一列補記（做了什麼、分鐘、感覺）。
+  - 測試：`tools/tests/sport-flow.js`。
+- **工作上班**（`vWork()`，`OPT_IN`，用途「工作上班」會打開工作上班、月曆、統計）：
+  - 番茄鐘用同一個 `pomoHTML()`，長休、短休、白噪音都沿用設定；休息時計時下方提示一件事（`breakTipHTML()`：短休輪流護眼／喝水／走走，長休伸展＋靜心連結），工作上班打開時今日頁也會顯示。
+  - 照顧身體四格（`CARE`）：護眼（點了開始 20 秒倒數，結束響一聲並記一次）、喝水（目標 `cfg.waterGoal`，預設 8 杯）、起身走走、伸展，記在 `day.j.care`，時間在 `day.j.careAt`。上次走走或伸展之後累積專注 ≥ 50 分鐘，顯示久坐提醒（`sitMin()`）。
+  - 彈性記錄：補記 15／30／60 分或自訂，打開原本的紀錄表（`openRecord`）。
+  - 今天：三件事、Google 日曆行程（有連上時）、7 天內的會談（連到會前清單），以及隨手記、靜心 3 分鐘、伸展、安排會談的捷徑。
+  - 測試：`tools/tests/work-page.js`。
+
+## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
+
+日課的氣質：**感受生活、感受四季更迭嬗替、小日子、寂靜、片刻的享受、與自己在一起**。
+- 文字：短、安靜、像一張手寫小卡；多描述當下的感受與季節，少用「效率、達成、衝刺」這類催促的字。提醒用邀請語氣（「起來走走吧」「把心事交給雁子」）。
+- 季節：節氣、節日、數九已經在今日頁；之後的主題色、插畫、開場畫面可隨四季微調（春淡綠、夏青、秋赭、冬灰白）。
+- 留白：一張卡片只做一件事，次要的收合；新功能預設收起，用到才出現。
+- 聲音與動態：輕、慢、可關；減少動態設定時全部停止。
+- 圖像：植物與自然的手繪、木刻感，避免 emoji 與鮮豔圖示。

@@ -1,0 +1,37 @@
+// 健身連續模式：計時型全程自動（提示音預先排在音訊時鐘上），次數型按「完成這組」後休息自動倒數，最後一列記錄
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});const errs=[];let fail=0;
+fs.writeFileSync(SP+'tsf.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const c=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+await c.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');
+  window.__st=[];const o=OscillatorNode.prototype.start;OscillatorNode.prototype.start=function(t){window.__st.push(Math.round(((t||0)-this.context.currentTime)*10)/10);return o.apply(this,arguments)};
+  if(localStorage.getItem('studydesk-v1'))return;
+  localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{hidden:[],optIn:{sport:true},sports:['gym'],gymFlow:{time:{prep:3,buf:3,items:[['棒式',5,2]]},reps:{prep:3,rest:10,items:[['深蹲',12,2]]}}}},days:{},mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}}))});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+SP+'tsf.html#sport');await pg.waitForTimeout(800);
+ok(/連續模式/.test(await pg.textContent('main')),'健身頁有「連續模式」');
+await pg.click('[data-act=flKind][data-v=time]');await pg.waitForTimeout(200);
+ok(/全程約/.test(await pg.textContent('main')),'計時型：列出動作與全程時間');
+await pg.evaluate(()=>window.__st=[]);await pg.click('[data-act=flGo]');await pg.waitForTimeout(400);
+const st=await pg.evaluate(()=>window.__st.slice());const ahead=Math.max(...st);
+ok(ahead>=15,'開始時就把整段的提示音排好（最遠排到 '+ahead+' 秒後，鎖定螢幕也會響）');
+ok(/準備/.test(await pg.textContent('.flownow')),'先進入「準備」');
+await pg.waitForTimeout(3600);ok(/棒式/.test(await pg.textContent('.flownow'))&&/第 1 \/ 2 組/.test(await pg.textContent('.flownow')),'準備後自動進入第 1 組');
+await pg.waitForTimeout(5200);ok(/調整一下|銜接/.test(await pg.textContent('.flownow')),'做完自動進入銜接緩衝');
+await pg.waitForTimeout(3200);ok(/第 2 \/ 2 組/.test(await pg.textContent('.flownow')),'緩衝後自動進入第 2 組');
+await pg.waitForTimeout(5500);ok(/做完了/.test(await pg.textContent('main')),'全部做完：出現一列的記錄');
+await pg.click('[data-act=flRpe][data-n="3"]');await pg.click('[data-act=flSave]');await pg.waitForTimeout(300);
+let db=await pg.evaluate(()=>JSON.parse(localStorage.getItem('studydesk-v1')));let k=Object.keys(db.days)[0];let r=db.days[k].sport.slice(-1)[0];
+ok(r.type==='gym'&&r.ex[0].n==='棒式'&&r.ex[0].sets.length===2&&r.rpe===6,'記下：棒式 2 組、強度存好');
+// reps
+await pg.click('[data-act=flKind][data-v=reps]');await pg.waitForTimeout(200);await pg.click('[data-act=flGo]');await pg.waitForTimeout(3600);
+ok(await pg.isVisible('[data-act=flSet]'),'次數型：準備後出現「完成這組」');
+await pg.evaluate(()=>window.__st=[]);await pg.click('[data-act=flSet]');await pg.waitForTimeout(300);
+ok(/休息/.test(await pg.textContent('.flownow')),'按完成這組：進入組間休息');
+const st2=await pg.evaluate(()=>window.__st.slice());ok(st2.some(x=>x>=9),'休息結束的提示音已排好（'+Math.max(...st2)+' 秒後）');
+await pg.click('[data-act=flPause]');await pg.waitForTimeout(1500);const t1=await pg.textContent('#spTime');await pg.waitForTimeout(1200);ok(t1===await pg.textContent('#spTime'),'暫停：倒數停住');
+await pg.click('[data-act=flPause]');await pg.click('[data-act=flSkip]');await pg.waitForTimeout(300);ok(/第 2 \/ 2 組/.test(await pg.textContent('.flownow')),'跳過休息：進入第 2 組');
+await pg.click('[data-act=flSet]');await pg.waitForTimeout(300);ok(/做完了/.test(await pg.textContent('main')),'最後一組完成：結束');
+await pg.screenshot({path:SP+'flow.png'});
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

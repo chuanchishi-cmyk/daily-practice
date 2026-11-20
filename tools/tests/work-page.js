@@ -1,0 +1,27 @@
+// 工作上班頁：番茄鐘沿用設定、休息時照顧身體（護眼 20 秒、喝水、走走、伸展）、久坐提醒、彈性補記、今天的三件事與會談
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];let fail=0;
+fs.writeFileSync(SP+'twk.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const c=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+await c.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');if(localStorage.getItem('studydesk-v1'))return;
+  const D=new Date(),k=D.getFullYear()+'-'+String(D.getMonth()+1).padStart(2,'0')+'-'+String(D.getDate()).padStart(2,'0'),n=Date.now();
+  localStorage.setItem('sd-pomo',JSON.stringify({mode:'short',running:false,endAt:0,left:null,startedAt:null,sub:'T',proj:'',phase:'',task:'',cycles:1,cday:k}));
+  localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{hidden:[],optIn:{work:true}}},days:{[k]:{date:k,counts:{},sessions:[{t:n-90*60000,min:25,sub:'T'},{t:n-60*60000,min:25,sub:'T'},{t:n-30*60000,min:25,sub:'T'}],j:{top3:[{t:'回覆客戶信',done:true},{t:'準備週會簡報'}]}}},mocks:{},mistakes:{},projects:{p1:{name:'新品專案',stages:[],next:{who:'李主管',date:k,time:'16:00'}}},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}}))});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+SP+'twk.html#work');await pg.waitForTimeout(800);
+const m=await pg.textContent('main');
+ok(/工作上班/.test(m)&&await pg.$('.card.pomo'),'工作上班頁：有番茄鐘（沿用同一個計時與設定）');
+ok(/已經坐著專注了 75 分鐘/.test(m),'久坐提醒：坐了 75 分鐘，提醒起來走走');
+ok(/回覆客戶信/.test(m)&&/準備週會簡報/.test(m),'今天的三件事');
+ok(/新品專案・李主管/.test(m),'今天的會談');
+ok(await pg.isVisible('.brktip'),'短休時：番茄鐘下方提示休息時做一件事');
+await pg.click('.caretile[data-k=walk]');await pg.waitForTimeout(300);
+ok(!/已經坐著專注/.test(await pg.textContent('main'))&&/今天 1 次/.test(await pg.textContent('.caretile[data-k=walk]')),'按「起身走走」：記一次，久坐提醒消失');
+await pg.click('.caretile[data-k=water]');await pg.click('.caretile[data-k=water]');await pg.waitForTimeout(200);ok(/2 \/ 8 杯/.test(await pg.textContent('.caretile[data-k=water]')),'喝水：2 / 8 杯');
+await pg.click('.caretile[data-k=eye]');await pg.waitForTimeout(1300);const t=+(await pg.textContent('#careT'));ok(t>=17&&t<=19,'護眼：開始 20 秒倒數（剩 '+t+' 秒）');
+await pg.click('[data-act=wkRec][data-m="30"]');await pg.waitForTimeout(300);ok(await pg.isVisible('#modal .box'),'彈性記錄：補記 30 分打開紀錄表');
+await pg.click('#modal [data-act=recCancel]');
+await pg.goto('file://'+SP+'twk.html#today');await pg.waitForTimeout(600);ok(await pg.isVisible('.card.pomo .brktip'),'今日頁的番茄鐘：休息時也有同樣的提示');
+await pg.screenshot({path:SP+'work.png',fullPage:true});
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

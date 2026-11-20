@@ -26,9 +26,9 @@ await pg.fill('#nuName','Python 入門');await pg.fill('#nuN','12');await pg.cli
 ok(await pg.locator('.useg').count()===12,'建立 12 集：進度格 12 個');
 ok(/第 1 集・看/.test(await pg.textContent('.pwfold .bigstep')),'最小一步：第 1 集・看');
 // jump around: check 第 3 集 做
-await pg.locator('.urow').nth(2).locator('.upill input').nth(1).click();await pg.waitForTimeout(200);
+await pg.locator('.urow').nth(2).locator('.upill').nth(1).click();await pg.waitForTimeout(200);
 ok(/第 3 集・看/.test(await pg.textContent('.pwfold .bigstep')),'在第 3 集勾了「做」：最小一步跟到第 3 集（'+(await pg.textContent('.pwfold .bigstep')).trim()+'）');
-for(const i of [0,2]){await pg.locator('.urow').nth(2).locator('.upill input').nth(i).click();await pg.waitForTimeout(150)}await pg.waitForTimeout(200);
+for(const i of [0,2]){await pg.locator('.urow').nth(2).locator('.upill').nth(i).click();await pg.waitForTimeout(150)}await pg.waitForTimeout(200);
 ok(/第 1 集・看/.test(await pg.textContent('.pwfold .bigstep')),'第 3 集完成：回到第一個還沒完成的（第 1 集）');
 ok(/完成 1 \/ 12/.test(await pg.textContent('header .chips')),'標頭：完成 1 / 12 集');
 await pg.fill('#newUnit','');await pg.click('[data-act=unitAdd]');await pg.waitForTimeout(200);ok(await pg.locator('.useg').count()===13,'加入：自動編號第 13 集');

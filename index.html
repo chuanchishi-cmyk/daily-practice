@@ -1353,7 +1353,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.15'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.20.16'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1945,7 +1945,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  minor 一般更新 → 不發 NEW，寫成 tipList() 裡的資訊卡，依使用情況週期性介紹（最多 3 天一則）
 //  fix   調整除錯 → 靜默更新，只寫進 CHANGELOG
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
-const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理；雜念停車場、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
+const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
  {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）'},
  {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
@@ -1965,7 +1965,7 @@ const CHANGELOG=[
  {d:'2026-11-20',lv:'minor',t:'雁書：寄出後換成「信已啟程」的等待畫面；回信送達前可以修改或撤回（會先陪你停一下，想想要不要讓它照原樣飛）'},
  {d:'2026-11-20',lv:'minor',t:'靜心回饋：可以指定回應的老師（在「看更多說明」裡，設定一次就會套用，隨時可改回輪流）'},
  {d:'2026-11-20',lv:'fix',t:'安裝說明頁的功能介紹與最近更新，跟著版本自動更新'},
- {d:'2026-11-20',lv:'major',t:'隨手記：每一頁右下角都能隨手記下想到的事；雜念停車場、計畫筆記和覺察片段集中在一起，可以放進三件事或轉成計畫步驟'},
+ {d:'2026-11-20',lv:'major',t:'隨手記：每一頁右下角都能隨手記下想到的事；今日的隨手記、計畫筆記和覺察片段集中在一起，可以放進三件事或轉成計畫步驟'},
  {d:'2026-11-20',lv:'minor',t:'計畫地圖：各階段可以同時進行，最小一步會從其他階段遞補，也能「換一個」；新增「跟著一套課程」的計畫，一個單元一個單元「看 → 做 → 檢查」，順序不拘'},
  {d:'2026-11-20',lv:'minor',t:'作息觀測：我的節奏頁加上每兩週的作息變化；實際作息跟測驗差很多時，會先問你要不要更新'},
  {d:'2026-11-20',lv:'minor',t:'我的節奏：可選擇打開「驅動力對照」，比較最近日記裡常出現的價值和測驗結果'},

@@ -1326,7 +1326,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.20.16'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.23.1'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1920,6 +1920,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-23',lv:'minor',t:'claude.ai 版的設定新增「網站版・手機 App」入口：說明兩個版本的差別、怎麼用備份檔把紀錄搬過去'},
  {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）'},
  {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
  {d:'2026-11-20',lv:'minor',t:'接電話會自動計算通話時間，記下來電時一起存，工作頁顯示今天通話幾通、幾分鐘；工作的事可一鍵放進三件事或轉成計畫步驟；有提醒的事可加到手機行事曆'},
@@ -2809,8 +2810,12 @@ function vPrefs(){
   <section class="card" style="margin-bottom:16px"><div class="row sb"><div><h2 style="margin:0">使用說明</h2><p class="muted" style="margin:4px 0 0">第一次使用的簡介，以及怎麼把日課加到手機主畫面。</p></div><div class="row"><button class="sm" data-act="wAgain">再看一次簡介</button><button class="sm" data-act="fbOpen">問題回報</button>${STANDALONE?'<a class="btn sm" href="guide.html" target="_blank" rel="noopener">完整說明</a>':''}</div></div></section>
   ${STANDALONE?fold('claudeai','claude.ai 版','雁書由 AI 回信、AI 建議、雲端同步',`<p style="margin-top:0">日課也有一個在 claude.ai 上的版本，功能相同，多了幾樣需要 AI 或連線的功能：</p>
     <ul style="margin:0 0 8px;padding-left:18px"><li>雁書：由 AI 讀完你的信，親自寫回信</li><li>我的節奏：AI 依你的回答寫建議；驅動力對照可以請 AI 讀讀看</li><li>直接把會談加到 Google 日曆</li><li>登入後資料存在你的私人雲端空間，換裝置也看得到</li></ul>
-    <p class="muted" style="margin:0 0 10px">兩個版本的資料不會自動互通。想搬過去：先在這裡「下載備份檔」，到 claude.ai 版的設定裡匯入。</p>
+    <p class="muted" style="margin:0 0 10px">兩個版本的資料不會自動互通。想搬過去：先在這裡「下載備份檔」，再到 claude.ai 版的「設定 → 資料保護」按「從備份還原」。</p>
     <a class="btn" href="https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe" target="_blank" rel="noopener">打開 claude.ai 版</a>`):''}
+  ${STANDALONE?'':fold('webapp','網站版・手機 App','加到手機主畫面、離線也能用、鎖定畫面照樣響',`<p style="margin-top:0">日課也有一個放在 GitHub 上的網站版，免登入 claude.ai，打開就能用：</p>
+    <ul style="margin:0 0 8px;padding-left:18px"><li>加到手機主畫面，就像一般 App；沒有網路也能記錄</li><li>番茄鐘、白噪音、瑜珈與間歇，螢幕鎖定照樣響</li><li>用 Google 帳號同步手機和電腦（存在你自己的雲端硬碟）</li><li>可以切換英文介面</li></ul>
+    <p class="muted" style="margin:0 0 10px">雁書的 AI 回信、AI 建議只在 claude.ai 版。兩個版本的資料不會自動互通；想搬過去：先在這裡「設定 → 資料保護」按「下載備份檔」，再到網站版的「設定 → 資料保護」按「從備份還原」。</p>
+    <div class="row" style="flex-wrap:wrap"><a class="btn" href="https://chuanchishi-cmyk.github.io/daily-practice/" target="_blank" rel="noopener">打開網站版</a><a class="btn sec" href="https://chuanchishi-cmyk.github.io/daily-practice/guide.html" target="_blank" rel="noopener">安裝說明</a></div>`)}
   ${fold('changelog','更新紀錄',`版本 ${APP_VER}・${fmtMD(CHANGELOG[0].d)} 更新`,changelogHTML())}
   ${fbAdminHTML()}
   `;

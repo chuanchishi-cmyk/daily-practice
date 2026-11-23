@@ -1774,3 +1774,14 @@
 =隱私權政策	Privacy policy
 =每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。	Every page has “Quick notes” in the bottom-right corner. Jot down whatever comes up and deal with it later — set a reminder if needed. Today’s notes, plan notes and recent mindful moments gather here; you can add them to your top three or turn them into plan steps. Work items live separately under “Work”.
 =隨手記：每一頁右下角都能隨手記下想到的事；今日的隨手記、計畫筆記和覺察片段集中在一起，可以放進三件事或轉成計畫步驟	Quick notes: jot things down from the bottom-right corner of any page; today’s notes, plan notes and mindful moments gather in one place, and can go into your top three or become plan steps
+=網站版・手機 App	Website · phone app
+=加到手機主畫面、離線也能用、鎖定畫面照樣響	Add to your home screen, works offline, rings on the lock screen
+=日課也有一個放在 GitHub 上的網站版，免登入 claude.ai，打開就能用：	Rike also has a website version on GitHub — no claude.ai sign-in, just open it:
+=加到手機主畫面，就像一般 App；沒有網路也能記錄	Add it to your home screen like any app; logging works offline
+=番茄鐘、白噪音、瑜珈與間歇，螢幕鎖定照樣響	Pomodoro, white noise, yoga and intervals keep sounding on the lock screen
+=用 Google 帳號同步手機和電腦（存在你自己的雲端硬碟）	Sync phone and computer with your Google account (stored in your own Drive)
+=可以切換英文介面	English interface available
+=雁書的 AI 回信、AI 建議只在 claude.ai 版。兩個版本的資料不會自動互通；想搬過去：先在這裡「設定 → 資料保護」按「下載備份檔」，再到網站版的「設定 → 資料保護」按「從備份還原」。	AI letter replies and AI suggestions are only in the claude.ai version. The two versions don’t share data automatically; to move over, tap “Download backup” in Settings → Data protection here, then “Restore from backup” in the website’s Settings → Data protection.
+=打開網站版	Open the website
+=兩個版本的資料不會自動互通。想搬過去：先在這裡「下載備份檔」，再到 claude.ai 版的「設定 → 資料保護」按「從備份還原」。	The two versions don’t share data automatically. To move over, tap “Download backup” here, then “Restore from backup” in the claude.ai version’s Settings → Data protection.
+=claude.ai 版的設定新增「網站版・手機 App」入口：說明兩個版本的差別、怎麼用備份檔把紀錄搬過去	The claude.ai version’s settings now link to the website / phone app, explaining the differences and how to move your records with a backup file

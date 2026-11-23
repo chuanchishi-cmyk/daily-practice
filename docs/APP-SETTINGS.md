@@ -43,7 +43,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js）
 ```
 
 ---
@@ -257,6 +257,7 @@ node tools/tests/work-words.js
 node tools/tests/notes-remind.js
 node tools/tests/work-notes.js
 node tools/tests/sync-renew.js
+node tools/tests/mistakes-v2.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
@@ -577,6 +578,17 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 單元名稱不再被擠成「W…」：`.ulist` 是 container，寬度 ≤520px 時名稱一行、步驟一行（不看螢幕寬，看卡片寬，所以電腦的窄欄也適用）。
 - 每顆步驟最寬 15em，太長省略，`title` 顯示全文。
 - 記住每個單元滑到哪（`UPS`），勾選後重繪不會跳回開頭；第一次顯示時對準第一個還沒做的步驟。展開「其他／已完成」時重新計算（`toggle` 事件）。
+
+## 36g. 錯題本 v2・第一批（2026-11-23，規格：「日課改善規格：目標衝刺與錯題本」）
+
+設計給所有考試（以及比賽、演出、發表情境）通用；文字跟著目標情境（`EXS` 的 `rule/rulePh/src/srcPh/add1/revHint`）。
+- **錯因**：可自訂、可複選（膠囊 `.cpill`）。`cfg.mkCauses={_all:[…], 科目id:[…]}`；科目有自己的清單時用自己的，否則用 `_all`，再沒有就用情境預設（考試：觀念、記不熟、粗心、時間不夠、題型不熟、看錯題目）＋舊卡用過的錯因（舊使用者原本的「單字」「聽不清楚」不會消失）。編輯時可勾「這個科目用自己的清單」。
+- **表單**：收成「＋ 記一題」，按了才展開；連續新增（`MKF` 暫存科目、錯因、出處、草稿；加入後只清題目、正解、規則，游標回題目）。題目欄 Enter 加入、Shift＋Enter 換行（輸入法組字中的 Enter 不算）。出處記在 `sd-mk-src`，下次自動帶入。
+- **新欄位**（全選填）：`src` 出處、`rule` 規則・下次怎麼做、`edited`；`causes` 可多個；`hist[].ok` 多一個 `'fuzzy'`。舊卡不用遷移。
+- **卡片**：題目、錯因、出處、規則第一句；「看正解」收正解與完整規則；「已複習 n/5 次・下次 m/d」（n＝`stage`）。列表只留「編輯」「×」；編輯不動 `stage/due/hist`。
+- **複習模式**（`revOpen`，彈窗 `.revbox`）：一次一張，先只顯示題目、出處、錯因與「先重做一次」提示，按「翻面」（空白鍵）才出現正解與規則，再選忘了／模糊／記得（鍵盤 1／2／3）。記得：下一輪；模糊：輪次不變、明天；忘了：第一輪、明天。結束顯示三種各幾題。今日頁「待複習項目」的「開始複習」直接開這個模式。
+- 第二批（每日上限、篩選搜尋、近期錯因前三、同類錯誤附加、從計時與隨手記加錯題）、第三批（目標分數、計時記錯題數、週回顧、預定日期）尚未做。
+- 測試：`tools/tests/mistakes-v2.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

@@ -189,6 +189,27 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .caretile.on{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface))}
 .brktip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
 .brkbtn{display:inline-flex;align-items:center;gap:6px;border-radius:999px}.brkbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mkform{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--sunk)}
+.mkhint{font-size:calc(11.5px * var(--fs,1))}
+.cpills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cpill{min-height:0!important;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:calc(13px * var(--fs,1))}
+.cpill[aria-pressed=true]{background:color-mix(in srgb,var(--focus) 16%,var(--surface));border-color:color-mix(in srgb,var(--focus) 55%,var(--line));color:var(--ink)}
+.cpill[aria-pressed=true]::before{content:'✓ ';color:var(--focus)}
+.mkcedit{margin-top:4px}
+.mkq{font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
+.mkmeta{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:3px;font-size:calc(12.5px * var(--fs,1))}
+.mkrule{margin-top:4px;padding-left:8px;border-left:2px solid color-mix(in srgb,var(--focus) 50%,var(--line));font-size:calc(13.5px * var(--fs,1))}
+.mkst{font-size:calc(12px * var(--fs,1));margin-top:3px}
+.mkcard.editing .fields{margin:0}
+.revbox{width:min(560px,100%)}
+.revprog{height:3px;border-radius:2px;background:var(--line);overflow:hidden}.revprog i{display:block;height:100%;background:var(--focus);transition:width .3s}
+.revsub{display:flex;align-items:center;gap:6px;font-size:calc(13px * var(--fs,1))}
+.revq{font-size:calc(18px * var(--fs,1));line-height:1.6;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere;padding:6px 0}
+.revhint{margin:4px 0 0;color:var(--muted);text-align:center}
+.revflip{align-self:center;min-width:9em}
+.revback{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--sunk);border:1px solid var(--line)}.revback p{margin:4px 0 0;white-space:pre-wrap}
+.revbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.revbtns button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px}.revbtns span{font-size:calc(11.5px * var(--fs,1));opacity:.8}
+.revdone{font-size:calc(17px * var(--fs,1));margin:4px 0 0}.revsum{display:flex;gap:16px}
 .spquick{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}.spquick input[type=text]{flex:1 1 10em;min-width:0}.spquick input[type=number]{width:62px}
 .gymex:first-of-type{border-top:0}
 .gymex .chip{margin:2px 2px 2px 0}
@@ -1339,7 +1360,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.23.2'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.23.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1775,7 +1796,7 @@ function saveRecord(){
   if(!r.manual){P.task='';savP()}
   closeModal();toast('已記錄 '+s.min+' 分鐘');render();
 }
-function closeModal(){$('#modal').innerHTML='';REC=null}
+function closeModal(){$('#modal').innerHTML='';REC=null;if(REV){REV=null;render()}}
 
 /* ---------- today view ---------- */
 function top3HTML(k){
@@ -1897,7 +1918,7 @@ function dueHTML(){
   const d=dueList();
   if(!d.length)return `<p class="empty">今天沒有要複習的項目。<a href="#exam">${esc(exL('bookAdd'))}</a></p>`;
   return `<div class="list">${d.slice(0,5).map(([id,m])=>`<div class="li">${mkDot(m.sub)}<div class="grow">${esc((m.q||'').slice(0,40))}</div><span class="pill ${m.due<today()?'bad':'warn'}">${m.due<today()?'逾期':'今天'}</span></div>`).join('')}</div>
-  <div class="row sb" style="margin-top:10px"><span class="muted">共 ${d.length} 題</span><a class="btn" href="#exam" data-act="goReview">開始複習</a></div>`;
+  <div class="row sb" style="margin-top:10px"><span class="muted">共 ${d.length} 題</span><button class="pri" data-act="goReview">開始複習</button></div>`;
 }
 function nextStepsHTML(){
   const ids=Object.keys(S.projects);
@@ -1941,6 +1962,8 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-23',lv:'major',t:'錯題本改版：複習模式一次一張卡，先重做一次再翻面，選「忘了／模糊／記得」；模糊會停在同一輪、明天再看'},
+ {d:'2026-11-23',lv:'minor',t:'錯題本：錯因可以自訂、可以多選，每個科目可以有自己的清單；按「＋ 記一題」才展開表單，加入後科目、錯因、出處會保留，題目欄按 Enter 就加入；新增「出處」「規則・下次怎麼做」；卡片可以編輯，不影響複習進度；顯示「已複習 n/5 次」'},
  {d:'2026-11-23',lv:'fix',t:'計畫地圖（跟課學習）：單元的步驟太多時改成可左右滑的一列，不再擠掉單元名稱；手機上單元名稱和步驟分兩行，太長的步驟名稱先省略，電腦上有 ‹ › 按鈕'},
  {d:'2026-11-23',lv:'minor',t:'claude.ai 版的設定新增「網站版・手機 App」入口：說明兩個版本的差別、怎麼用備份檔把紀錄搬過去'},
  {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）'},
@@ -2259,18 +2282,84 @@ const MK_OLD=[{id:'mk1',n:'閱讀',c:0},{id:'mk2',n:'聽力',c:3},{id:'mk3',n:'�
 const MK_DEF=[{id:'mk5',n:'其他',c:7}];
 function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:(Object.values(S.mistakes||{}).some(m=>/^mk[1-4]$/.test(m.sub))?MK_OLD:MK_DEF)}
 function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_OLD.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
+// 錯題本 v2：錯因可自訂（每個科目可有自己的清單）、可複選；連續新增；出處、規則；可編輯；複習模式（先重做再翻面）
+let mkFormOpen=false,mkEditId=null,mkCauseEdit=false,REV=null;
+const MKF={sub:'',causes:[],src:lsGet('sd-mk-src','')||'',q:'',a:'',r:''},MKE={causes:[]};
+function mkCauseOwn(sub){const m=cfg().mkCauses||{};return !!(sub&&Array.isArray(m[sub]))}
+function mkCauseList(sub){const m=cfg().mkCauses||{};if(mkCauseOwn(sub))return m[sub];if(Array.isArray(m._all))return m._all;
+  const d=exL('causes').slice();Object.values(S.mistakes||{}).forEach(x=>(x.causes||[]).forEach(c=>{if(c&&!d.includes(c))d.push(c)}));return d}
+const mkFirst=t=>{const s=String(t||'').trim(),m=s.match(/^[^。！？!?\n]*[。！？!?]?/);return ((m&&m[0])||s).slice(0,90)};
+function mkPills(sel,sub,scope){const L=mkCauseList(sub).slice();(sel||[]).forEach(c=>{if(c&&!L.includes(c))L.push(c)});
+  return `<div class="cpills" role="group" aria-label="${esc(exL('cause'))}">${L.map(c=>`<button type="button" class="cpill" data-act="mkCauseT" data-scope="${scope}" data-v="${esc(c)}" aria-pressed="${(sel||[]).includes(c)}">${esc(c)}</button>`).join('')}</div>`}
+function mkSubOpts(sel){return `<option value="">（選擇${esc(exL('subj'))}）</option>${mkSubs().map(x=>`<option value="${x.id}"${x.id===sel?' selected':''}>${esc(x.n)}</option>`).join('')}${sel&&!mkSubs().some(x=>x.id===sel)?`<option value="${esc(sel)}" selected>${esc(mkSub(sel).n)}</option>`:''}<option value="__add">＋ 自填…</option>`}
+function mkCauseEditHTML(){const sub=MKF.sub,own=mkCauseOwn(sub),L=mkCauseList(sub);
+  return `<div class="mkcedit"><div class="tags">${L.map(c=>`<span class="tagc editing">${esc(c)}<button class="tdel" data-act="mkCauseDel" data-v="${esc(c)}" aria-label="刪除「${esc(c)}」">×</button></span>`).join('')}</div>
+    <span class="row" style="margin-top:6px"><input id="mkCauseNew" type="text" placeholder="例：計算錯、公式記錯、文法" style="flex:1" enterkeyhint="done"><button class="sm sec" data-act="mkCauseAdd">加入</button></span>
+    ${sub?`<label class="chk" style="margin-top:6px"><input type="checkbox" data-ch="mkCauseOwn" ${own?'checked':''}> 「${esc(mkSub(sub).n)}」用自己的${esc(exL('cause'))}清單</label>`:''}
+    <p class="muted" style="margin:4px 0 0;font-size:calc(12px * var(--fs,1))">${sub&&own?'這份清單只用在目前選的這一項。':sub?'這份清單是共用的；勾上面的選項，可以替目前選的這一項另外設一份。':'這份清單是共用的。'}刪除不影響已經記下的卡片。</p></div>`}
+function mkFormHTML(){
+  if(!mkFormOpen)return `<div class="row sb" style="margin-bottom:12px"><button class="sec" data-act="mkFormT">${esc(exL('add1'))}</button>${dueList().length?`<button class="pri" data-act="revOpen">開始複習（${dueList().length}）</button>`:''}</div>`;
+  const n=Object.values(S.mistakes).filter(m=>m.created===today()).length;
+  return `<div class="mkform">
+    <div class="fields">
+      <label class="f"><span class="row sb">${esc(exL('subj'))}<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS">${mkSubOpts(MKF.sub)}</select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、民法、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
+      <label class="f w2">${esc(exL('src'))}（選填）<input id="msSrc" type="text" data-in="mkf" data-k="src" value="${esc(MKF.src)}" placeholder="${esc(exL('srcPh'))}"></label>
+      <label class="f" style="grid-column:1/-1">${esc(exL('item'))}<textarea id="msQ" rows="2" data-in="mkf" data-k="q" placeholder="${esc(exL('itemPh'))}" enterkeyhint="done">${esc(MKF.q)}</textarea><span class="muted mkhint">按 Enter 加入，Shift＋Enter 換行</span></label>
+      <div class="f" style="grid-column:1/-1"><span class="row sb">${esc(exL('cause'))} <span class="muted" style="margin-right:auto;margin-left:6px">可以多選</span><button class="ghost sm" data-act="mkCauseEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkCauseEdit?'完成':'編輯'}</button></span>${mkCauseEdit?mkCauseEditHTML():mkPills(MKF.causes,MKF.sub,'new')}</div>
+      <label class="f" style="grid-column:1/-1">${esc(exL('answer'))}（選填）<textarea id="msA" rows="2" data-in="mkf" data-k="a" placeholder="${esc(exL('answerPh'))}">${esc(MKF.a)}</textarea></label>
+      <label class="f" style="grid-column:1/-1">${esc(exL('rule'))}（選填）<textarea id="msR" rows="2" data-in="mkf" data-k="r" placeholder="${esc(exL('rulePh'))}">${esc(MKF.r)}</textarea></label>
+    </div>
+    <div class="row sb" style="margin:10px 0 14px;flex-wrap:wrap;gap:8px"><span class="row"><button class="sec" data-act="msAdd">${esc(exL('bookAdd'))}</button><button class="ghost sm" data-act="mkFormT">收起</button></span><span class="muted" style="font-size:calc(12px * var(--fs,1))">${n?`今天記了 ${n} ${exScene()==='exam'||exScene()==='custom'||exScene()==='talk'?'題':'項'}・`:''}加入後${esc(exL('subj'))}、${esc(exL('cause'))}、${esc(exL('src'))}會保留，可以接著記下一${exScene()==='exam'||exScene()==='custom'||exScene()==='talk'?'題':'項'}</span></div>
+  </div>`}
+function mkCardHTML(id,m){
+  if(mkEditId===id)return `<div class="li mkcard editing" style="display:block"><div class="fields">
+    <label class="f">${esc(exL('subj'))}<select id="mkE_s">${mkSubOpts(m.sub||'').replace('<option value="__add">＋ 自填…</option>','')}</select></label>
+    <label class="f w2">${esc(exL('src'))}<input id="mkE_src" type="text" value="${esc(m.src||'')}" placeholder="${esc(exL('srcPh'))}"></label>
+    <label class="f" style="grid-column:1/-1">${esc(exL('item'))}<textarea id="mkE_q" rows="2">${esc(m.q||'')}</textarea></label>
+    <div class="f" style="grid-column:1/-1">${esc(exL('cause'))}${mkPills(MKE.causes,m.sub,'edit')}</div>
+    <label class="f" style="grid-column:1/-1">${esc(exL('answer'))}<textarea id="mkE_a" rows="2">${esc(m.a||'')}</textarea></label>
+    <label class="f" style="grid-column:1/-1">${esc(exL('rule'))}<textarea id="mkE_r" rows="2">${esc(m.rule||'')}</textarea></label></div>
+    <div class="row" style="margin-top:8px"><button class="sec sm" data-act="msSave" data-id="${id}">儲存</button><button class="ghost sm" data-act="msEditX">取消</button><span class="muted" style="font-size:calc(12px * var(--fs,1))">修改不影響複習進度</span></div></div>`;
+  const st=Math.min(m.stage||0,SRS.length),more=m.a||(m.rule&&mkFirst(m.rule)!==String(m.rule).trim());
+  return `<div class="li mkcard" style="align-items:flex-start">${mkDot(m.sub)}<div class="grow" style="min-width:0">
+    <div class="mkq">${esc(m.q)}</div>
+    ${(m.causes||[]).length||m.src?`<div class="mkmeta">${(m.causes||[]).filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}${m.src?`<span class="muted">${esc(m.src)}</span>`:''}</div>`:''}
+    ${m.rule?`<div class="mkrule">${esc(mkFirst(m.rule))}</div>`:''}
+    ${more?`<details><summary class="muted">看${esc(exL('answer'))}</summary>${m.a?`<div class="qa"><b>${esc(exL('answer'))}</b>　${esc(m.a)}</div>`:''}${m.rule?`<div class="qa"><b>${esc(exL('rule'))}</b>　${esc(m.rule)}</div>`:''}</details>`:''}
+    <div class="muted mkst">${m.due?`已複習 ${st}/${SRS.length} 次・下次 ${fmtMD(m.due)}`:'已熟練'}</div></div>
+    <span class="row" style="gap:2px;flex:none"><button class="ghost sm" data-act="msEdit" data-id="${id}">編輯</button><button class="ghost sm" data-act="msDel" data-id="${id}" aria-label="刪除">×</button></span></div>`}
+// 複習結果：記得往下一輪；模糊停在同一輪、明天再看；忘了回到第一輪、明天再來
+function mkReview(id,v){const m=clone(S.mistakes[id]);if(!m)return;m.hist=(m.hist||[]).concat([{d:today(),ok:v==='f'?'fuzzy':v==='1'}]);
+  if(v==='1'){m.stage=(m.stage||0)+1;m.due=m.stage>=SRS.length?null:addDays(today(),SRS[m.stage])}else if(v==='f'){m.due=addDays(today(),1)}else{m.stage=0;m.due=addDays(today(),1)}save('mistakes',id,m)}
+function revOpen(){const ids=dueList().map(([id])=>id);if(!ids.length)return toast('今天沒有要複習的'+(exScene()==='exam'||exScene()==='custom'?'題目':'項目'));REV={ids,i:0,flip:false,n:{ok:0,fz:0,ng:0}};revRender()}
+function revRender(){if(!REV)return;const R0=REV,tot=R0.ids.length;let body;
+  if(R0.i>=tot){body=`<div class="row sb"><h2 id="revT" style="margin:0">複習完了</h2><button class="ghost sm" data-act="revClose" aria-label="關閉">×</button></div>
+    <p class="revdone">今天複習了 <b class="num">${tot}</b> ${exScene()==='exam'||exScene()==='custom'||exScene()==='talk'?'題':'項'}</p>
+    <div class="revsum"><span>記得 <b class="num">${R0.n.ok}</b></span><span>模糊 <b class="num">${R0.n.fz}</b></span><span>忘了 <b class="num">${R0.n.ng}</b></span></div>
+    <p class="muted" style="margin:0">模糊和忘了的，明天會再出現一次。</p><button class="pri" data-act="revClose">完成</button>`}
+  else{const id=R0.ids[R0.i],m=S.mistakes[id]||{},nx=SRS[Math.min((m.stage||0)+1,SRS.length-1)];
+    body=`<div class="row sb"><span class="muted num" id="revT">複習 ${R0.i+1} / ${tot}</span><button class="ghost sm" data-act="revClose" aria-label="關閉">×</button></div>
+    <div class="revprog" aria-hidden="true"><i style="width:${Math.round(R0.i/tot*100)}%"></i></div>
+    <div class="revsub">${mkDot(m.sub)}<span>${esc(mkSub(m.sub).n||'')}</span>${m.src?`<span class="muted">・${esc(m.src)}</span>`:''}</div>
+    <div class="revq">${esc(m.q||'')}</div>
+    ${(m.causes||[]).filter(Boolean).length?`<div class="mkmeta">${m.causes.filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}</div>`:''}
+    ${R0.flip?`<div class="revback">${m.a?`<div><b>${esc(exL('answer'))}</b><p class="qa">${esc(m.a)}</p></div>`:''}${m.rule?`<div><b>${esc(exL('rule'))}</b><p class="qa">${esc(m.rule)}</p></div>`:''}${!m.a&&!m.rule?`<p class="muted" style="margin:0">這張卡還沒寫${esc(exL('answer'))}。複習完可以在列表按「編輯」補上。</p>`:''}</div>
+      <div class="revbtns"><button data-act="revAns" data-v="0"><b>忘了</b><span>明天再來</span></button><button data-act="revAns" data-v="f"><b>模糊</b><span>明天再看一次</span></button><button class="pri" data-act="revAns" data-v="1"><b>記得</b><span>${m.stage+1>=SRS.length?'熟練了':nx+' 天後'}</span></button></div>`
+    :`<p class="revhint">${esc(exL('revHint'))}</p><button class="pri revflip" data-act="revFlip">翻面</button>`}`}
+  const box=$('#modal .revbox');if(box)box.innerHTML=body;else $('#modal').innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="revT"><div class="box revbox">${body}</div></div>`;
+  setTimeout(()=>{const b=$('#modal .revbox .pri');b&&b.focus({preventScroll:true})},30)}
 const mkDot=id=>`<span class="dot" style="background:var(--c${mkSub(id).c})" title="${esc(mkSub(id).n)}"></span>`;
 const ENC=['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'];
 function encLine(p){if(T.running)return exL('encRun');if(T.left===0)return exL('encDone');const d=Math.floor(Date.now()/864e5),E=exL('enc');return E[(d+T.seg)%E.length]}
 /* ---------- goal scenes: same page, different wording ---------- */
 const EXS={
- exam:{n:'考試',ev:'考試',pre:'考前',timer:'測驗計時',timerRun:'測驗計時中',dates:'考試日期',dateAdd:'新增考試或截止日',datesHint:'例如語言檢定、國家考試、研究所筆試、證照或申請截止日。',namePh:'例：多益、研究所筆試、申請截止',score:'模考紀錄',scoreShort:'模考',scorePh:'例：第 3 回模擬考、官方模考',book:'錯題本',bookAdd:'加入錯題本',due:'待複習錯題',item:'題目或摘要',itemPh:'例：第 12 題，推論題',cause:'錯因',causes:['觀念','單字','粗心','時間不夠','題型不熟','聽不清楚'],answer:'正解與學到什麼',answerPh:'下次看到這種題目要注意什麼',subj:'科目',titlePh:'開始你的考試',chip:'設定考試日期',
+ exam:{n:'考試',ev:'考試',pre:'考前',timer:'測驗計時',timerRun:'測驗計時中',dates:'考試日期',dateAdd:'新增考試或截止日',datesHint:'例如語言檢定、國家考試、研究所筆試、證照或申請截止日。',namePh:'例：多益、研究所筆試、申請截止',score:'模考紀錄',scoreShort:'模考',scorePh:'例：第 3 回模擬考、官方模考',book:'錯題本',bookAdd:'加入錯題本',due:'待複習錯題',item:'題目或摘要',itemPh:'例：第 12 題，推論題',cause:'錯因',causes:['觀念','記不熟','粗心','時間不夠','題型不熟','看錯題目'],answer:'正解',answerPh:'正確答案或正確做法',rule:'規則・下次怎麼做',rulePh:'例：題目問「最主要」時，先找段落的主旨句',src:'出處',srcPh:'例：第 3 回模考・第 12 題・音檔 0:35',add1:'＋ 記一題',revHint:'先不看答案，重做一次這一題；做完再翻面對答案。',subj:'科目',titlePh:'開始你的考試',chip:'設定考試日期',
    enc:['準備好了就按開始，接下來這段時間只屬於你。','把手機放遠一點，專心面對眼前這一題。','不必完美，完整做完一次練習就很好。','每一次計時練習，都讓考場更熟悉一點。','卡住的題目先跳過，最後再回來。','累了就喝口水、伸個懶腰，再回來。'],encRun:'專心作答中，每段結束都會響鈴提醒你。',encDone:'完成了！給自己一點肯定，記得在下方記錄分數或錯題。'},
- race:{n:'比賽',ev:'比賽',pre:'賽前',timer:'訓練計時',timerRun:'訓練計時中',dates:'比賽日期',dateAdd:'新增比賽或截止日',datesHint:'例如馬拉松、球賽、棋賽、程式競賽或報名截止日。',namePh:'例：台北馬拉松、全國賽、報名截止',score:'成績紀錄',scoreShort:'成績',scorePh:'例：10K 配速 5:30、隊內練習賽',book:'待加強',bookAdd:'加入待加強',due:'待加強項目',item:'項目或情況',itemPh:'例：後段體力下滑、起跑太快',cause:'原因',causes:['體能','技術','節奏','心理','準備不足','傷痛'],answer:'調整方法',answerPh:'下次怎麼練、怎麼調整',subj:'類別',titlePh:'開始你的比賽',chip:'設定比賽日期',
+ race:{n:'比賽',ev:'比賽',pre:'賽前',timer:'訓練計時',timerRun:'訓練計時中',dates:'比賽日期',dateAdd:'新增比賽或截止日',datesHint:'例如馬拉松、球賽、棋賽、程式競賽或報名截止日。',namePh:'例：台北馬拉松、全國賽、報名截止',score:'成績紀錄',scoreShort:'成績',scorePh:'例：10K 配速 5:30、隊內練習賽',book:'待加強',bookAdd:'加入待加強',due:'待加強項目',item:'項目或情況',itemPh:'例：後段體力下滑、起跑太快',cause:'原因',causes:['體能','技術','節奏','心理','準備不足','傷痛'],answer:'調整方法',answerPh:'下次怎麼練、怎麼調整',rule:'提醒自己的一句話',rulePh:'例：前 5 公里不看錶，照感覺跑',src:'哪一場・哪一段',srcPh:'例：11/3 練習賽・第 30 分鐘',add1:'＋ 記一項',revHint:'先回想當時的情況，想一想下次怎麼做，再翻面。',subj:'類別',titlePh:'開始你的比賽',chip:'設定比賽日期',
    enc:['暖身做足了再開始，身體會感謝你。','照今天的計畫練，不必一次拚到底。','注意呼吸和節奏，穩定比速度重要。','每一次訓練，都讓比賽那天更熟悉一點。','累了就調整，受傷才是最大的退步。','練完記得收操和補水。'],encRun:'專心訓練中，每段結束都會響鈴提醒你。',encDone:'完成了！記下今天的成績和身體感受。'},
- show:{n:'演出',ev:'演出',pre:'演出前',timer:'練習計時',timerRun:'練習計時中',dates:'演出日期',dateAdd:'新增演出或截止日',datesHint:'例如音樂會、比賽、評鑑、徵選或報名截止日。',namePh:'例：期末音樂會、鋼琴檢定、徵選',score:'自評紀錄',scoreShort:'自評',scorePh:'例：整首走一遍、錄音自評',book:'待加強段落',bookAdd:'加入待加強',due:'待加強段落',item:'段落或問題',itemPh:'例：第二樂章 32–40 小節換把位',cause:'原因',causes:['技巧','記譜','節奏','音準','表情','緊張'],answer:'練習方法',answerPh:'怎麼練這一段、要注意什麼',subj:'曲目／部分',titlePh:'開始你的演出',chip:'設定演出日期',
+ show:{n:'演出',ev:'演出',pre:'演出前',timer:'練習計時',timerRun:'練習計時中',dates:'演出日期',dateAdd:'新增演出或截止日',datesHint:'例如音樂會、比賽、評鑑、徵選或報名截止日。',namePh:'例：期末音樂會、鋼琴檢定、徵選',score:'自評紀錄',scoreShort:'自評',scorePh:'例：整首走一遍、錄音自評',book:'待加強段落',bookAdd:'加入待加強',due:'待加強段落',item:'段落或問題',itemPh:'例：第二樂章 32–40 小節換把位',cause:'原因',causes:['技巧','記譜','節奏','音準','表情','緊張'],answer:'練習方法',answerPh:'怎麼練這一段、要注意什麼',rule:'提醒自己的一句話',rulePh:'例：換氣前先放鬆肩膀',src:'哪一首・哪一段',srcPh:'例：第二樂章・第 48 小節',add1:'＋ 記一項',revHint:'先實際（或在腦中）練一次這一段，再翻面。',subj:'曲目／部分',titlePh:'開始你的演出',chip:'設定演出日期',
    enc:['先慢後快，慢練是最快的路。','今天只專心練一個段落也很好。','錄下來聽一次，耳朵會告訴你答案。','每一次完整走一遍，都讓舞台更熟悉一點。','手酸了就休息，別硬撐。','享受音樂本身，不只是準確。'],encRun:'專心練習中，每段結束都會響鈴提醒你。',encDone:'完成了！記下今天的自評和要加強的段落。'},
- talk:{n:'發表',ev:'發表',pre:'發表前',timer:'演練計時',timerRun:'演練計時中',dates:'發表日期',dateAdd:'新增發表或截止日',datesHint:'例如論文口試、研討會報告、簡報、面試或繳交截止日。',namePh:'例：碩論口試、研討會報告、面試',score:'演練紀錄',scoreShort:'演練',scorePh:'例：完整演練一次、模擬口試',book:'待準備的問題',bookAdd:'加入問題清單',due:'待準備的問題',item:'問題或卡住的地方',itemPh:'例：研究方法為什麼選質性訪談',cause:'類型',causes:['內容不熟','說不清楚','超時','沒想到的問題','緊張','資料不足'],answer:'回答要點',answerPh:'準備怎麼回答、要引用什麼',subj:'類別',titlePh:'開始你的發表',chip:'設定發表日期',
+ talk:{n:'發表',ev:'發表',pre:'發表前',timer:'演練計時',timerRun:'演練計時中',dates:'發表日期',dateAdd:'新增發表或截止日',datesHint:'例如論文口試、研討會報告、簡報、面試或繳交截止日。',namePh:'例：碩論口試、研討會報告、面試',score:'演練紀錄',scoreShort:'演練',scorePh:'例：完整演練一次、模擬口試',book:'待準備的問題',bookAdd:'加入問題清單',due:'待準備的問題',item:'問題或卡住的地方',itemPh:'例：研究方法為什麼選質性訪談',cause:'類型',causes:['內容不熟','說不清楚','超時','沒想到的問題','緊張','資料不足'],answer:'回答要點',answerPh:'準備怎麼回答、要引用什麼',rule:'提醒自己的一句話',rulePh:'例：先講結論，再補一個例子',src:'來源',srcPh:'例：彩排・第 2 個提問',add1:'＋ 記一題',revHint:'先試著說一次你的回答，再翻面。',subj:'類別',titlePh:'開始你的發表',chip:'設定發表日期',
    enc:['先講給自己聽一遍，卡住的地方就是要準備的地方。','開頭和結尾最重要，先練熟這兩段。','計時演練，才知道哪裡要刪。','每一次演練，都讓台上更熟悉一點。','想像評審會問的三個問題，先寫下來。','講慢一點，停頓也是表達。'],encRun:'專心演練中，每段結束都會響鈴提醒你。',encDone:'完成了！記下這次演練的狀況和被問倒的問題。'}};
 const EXS_TIMERS={
  race:[{id:'r1',name:'暖身',segs:[{n:'暖身',s:600}]},{id:'r2',name:'間歇訓練',segs:[{n:'快',s:240},{n:'慢',s:120},{n:'快',s:240},{n:'慢',s:120},{n:'快',s:240}]},{id:'r3',name:'模擬比賽',segs:[{n:'比賽',s:3600}]},{id:'r4',name:'收操',segs:[{n:'收操伸展',s:600}]}],
@@ -2423,17 +2512,10 @@ function vExam(){
     <div class="tablewrap"><table><thead><tr><th>日期</th>${sp.secs.map(([,n])=>`<th class="num">${esc(n)}</th>`).join('')}${sp.total==='none'?'':'<th class="num">總</th>'}<th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${sp.secs.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}${sp.total==='none'?'':`<td class="num"><b>${total(m)}</b></td>`}<td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:`<p class="empty">還沒有${scale==='custom'?'這種計分方式的':''}${esc(exL('score'))}。每次${esc(exL('scoreShort'))}後填入分數，這裡會畫出各項的趨勢。</p>`}
   </section>
   <section class="card" id="mistakes"><h2>${esc(exL('book'))} <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
-    <div class="fields" style="margin-bottom:10px">
-      <label class="f"><span class="row sb">${esc(exL('subj'))}<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS"><option value="">（選擇科目）</option>${mkSubs().map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('')}<option value="__add">＋ 自填…</option></select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、法學、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
-      <label class="f w2">${esc(exL('item'))}<input id="msQ" type="text" placeholder="${esc(exL('itemPh'))}"></label>
-      <label class="f">${esc(exL('cause'))}<select id="msC">${exL('causes').map(x=>`<option>${esc(x)}</option>`).join('')}</select></label>
-      <label class="f" style="grid-column:1/-1">${esc(exL('answer'))}<textarea id="msA" rows="2" placeholder="${esc(exL('answerPh'))}"></textarea></label>
-    </div>
-    <div class="row sb" style="margin-bottom:14px"><button class="sec" data-act="msAdd">${esc(exL('bookAdd'))}</button>
-      <div class="legend">${Object.entries(causeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div></div>
+    ${mkFormHTML()}
+    ${Object.keys(causeCount).length?`<div class="legend" style="margin-bottom:10px">${Object.entries(causeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div>`:''}
     <div class="seg" style="margin-bottom:10px">${[['due','待複習 '+dueList().length],['all','全部 '+mlist.length],['master','已熟練']].map(([m,n])=>`<button data-act="msF" data-m="${m}" aria-pressed="${mkFilter===m}">${n}</button>`).join('')}</div>
-    <div class="list">${shown.length?shown.map(([id,m])=>`<div class="li" style="align-items:flex-start">${mkDot(m.sub)}<div class="grow"><div><b>${esc(m.q)}</b> <span class="muted">${(m.causes||[]).join('、')}</span></div>${m.a?`<details><summary class="muted">看正解</summary><div class="qa">${esc(m.a)}</div></details>`:''}<div class="muted">第 ${m.stage+1}/${SRS.length+1} 輪・${m.due?'下次 '+fmtMD(m.due):'已熟練'}</div></div>
-      ${m.due?`<button class="sm" data-act="msRev" data-id="${id}" data-ok="0">忘了</button><button class="sm sec" data-act="msRev" data-id="${id}" data-ok="1">記得</button>`:''}<button class="ghost sm" data-act="msDel" data-id="${id}" aria-label="刪除">×</button></div>`).join(''):`<p class="empty">${mkFilter==='due'?'今天沒有待複習的題目。':'這裡還是空的。'}</p>`}</div>
+    <div class="list">${shown.length?shown.map(([id,m])=>mkCardHTML(id,m)).join(''):`<p class="empty">${mkFilter==='due'?'今天沒有待複習的題目。':'這裡還是空的。'}</p>`}</div>
   </section>`;
 }
 
@@ -2893,7 +2975,7 @@ const A={
   recCancel:closeModal,
   delSess:el=>{if(!twoStep(el))return;editDay(el.dataset.k,d=>{d.sessions=d.sessions.filter(s=>s.id!==el.dataset.id)});render()},
   cnt:el=>{const id=el.dataset.id,x=cfg().counters.find(c=>c.id===id)||{step:1};editDay(el.dataset.k,d=>{d.counts[id]=Math.max(0,(+d.counts[id]||0)+(+el.dataset.d)*(+x.step||1))});render()},
-  goReview:()=>{mkFilter='due';setTimeout(()=>{const m=$('#mistakes');m&&m.scrollIntoView()},60)},
+  goReview:()=>revOpen(),
   calSel:el=>{calSel=el.dataset.k;if(el.dataset.k.slice(0,7)!==calM)calM=el.dataset.k.slice(0,7);render()},
   calNav:el=>{const d=+el.dataset.d;if(!d){calM=today().slice(0,7);calSel=today()}else{const x=parseD(calM+'-01');x.setMonth(x.getMonth()+d);calM=ymd(x).slice(0,7)}render()},
   toJournal:el=>{jDay=el.dataset.k},
@@ -2957,10 +3039,25 @@ const A={
   exDel:el=>{if(!twoStep(el))return;editCfg(c=>c.exams.splice(+el.dataset.i,1));render()},
   mkSubEditT:()=>{mkSubEdit=!mkSubEdit;mkSubAdding=false;render()},
   mkSubDel:el=>{const id=el.dataset.id,t=mkSubs().find(x=>x.id===id);if(!t)return;editCfg(c=>{c.mkSubjects=mkSubs().filter(x=>x.id!==id);c.mkArchived=(c.mkArchived||[]).concat([t])});toast('已刪除「'+t.n+'」，舊的紀錄仍保留');render()},
-  mkSubAdd:()=>{const n=$('#mkSubNew').value.trim();if(!n)return toast('先寫科目名稱');if(mkSubs().some(x=>x.n===n))return toast('已經有「'+n+'」');const id='mk'+rid();editCfg(c=>{c.mkSubjects=mkSubs().concat([{id,n,c:mkSubs().length%12}])});mkSubAdding=false;render();setTimeout(()=>{const sel=$('#msS');if(sel)sel.value=id},20)},
+  mkSubAdd:()=>{const n=$('#mkSubNew').value.trim();if(!n)return toast('先寫科目名稱');if(mkSubs().some(x=>x.n===n))return toast('已經有「'+n+'」');const id='mk'+rid();editCfg(c=>{c.mkSubjects=mkSubs().concat([{id,n,c:mkSubs().length%12}])});mkSubAdding=false;MKF.sub=id;render();setTimeout(()=>{const sel=$('#msS');if(sel)sel.value=id},20)},
   mockAdd:()=>{const m={date:$('#mkD').value||today(),scale:exScale(),note:$('#mkN').value.trim()};let any=false;scoreSpec(exScale()).secs.forEach(([k])=>{const v=$('#mk_'+k).value;m[k]=v===''?'':+v;if(v!=='')any=true});if(!any)return toast('至少填一科分數');save('mocks',rid(),m);toast('已新增'+exL('score'));render()},
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
-  msAdd:()=>{const q=$('#msQ').value.trim();if(!q)return toast('先寫下題目或摘要');save('mistakes',rid(),{sub:(($('#msS')||{}).value||'').replace('__add',''),q,a:$('#msA').value.trim(),causes:[$('#msC').value],created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]});toast('已加入，明天會提醒複習');render()},
+  msAdd:()=>{const g=id=>(($(id)||{}).value||'').trim();const q=g('#msQ');if(!q){toast('先寫下'+exL('item'));const i=$('#msQ');i&&i.focus();return}
+    MKF.src=g('#msSrc');const m={sub:(($('#msS')||{}).value||MKF.sub||'').replace('__add',''),q,a:g('#msA'),causes:MKF.causes.slice(),created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]};const r=g('#msR');if(r)m.rule=r;if(MKF.src)m.src=MKF.src;
+    save('mistakes',rid(),m);lsSet('sd-mk-src',MKF.src);MKF.sub=m.sub;MKF.q=MKF.a=MKF.r='';toast('已加入，明天會提醒複習');render();setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
+  mkFormT:()=>{mkFormOpen=!mkFormOpen;mkCauseEdit=false;render();if(mkFormOpen)setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
+  mkCauseT:el=>{const v=el.dataset.v,L=el.dataset.scope==='edit'?MKE.causes:MKF.causes,i=L.indexOf(v);if(i<0)L.push(v);else L.splice(i,1);el.setAttribute('aria-pressed',i<0?'true':'false')},
+  mkCauseEditT:()=>{mkCauseEdit=!mkCauseEdit;render()},
+  mkCauseAdd:()=>{const i=$('#mkCauseNew'),n=(i&&i.value||'').trim();if(!n)return toast('先寫'+exL('cause'));const L=mkCauseList(MKF.sub);if(L.includes(n))return toast('已經有「'+n+'」');const k=mkCauseOwn(MKF.sub)?MKF.sub:'_all';editCfg(c=>{c.mkCauses=Object.assign({},c.mkCauses||{},{[k]:L.concat([n])})});render();setTimeout(()=>{const j=$('#mkCauseNew');j&&j.focus()},30)},
+  mkCauseDel:el=>{const v=el.dataset.v,k=mkCauseOwn(MKF.sub)?MKF.sub:'_all',L=mkCauseList(MKF.sub).filter(x=>x!==v);editCfg(c=>{c.mkCauses=Object.assign({},c.mkCauses||{},{[k]:L})});MKF.causes=MKF.causes.filter(x=>x!==v);render()},
+  msEdit:el=>{const m=S.mistakes[el.dataset.id];if(!m)return;mkEditId=el.dataset.id;MKE.causes=(m.causes||[]).filter(Boolean).slice();render();setTimeout(()=>{const i=$('#mkE_q');i&&i.focus()},30)},
+  msEditX:()=>{mkEditId=null;render()},
+  msSave:el=>{const id=el.dataset.id,m=clone(S.mistakes[id]);if(!m)return;const g=k=>(($(k)||{}).value||'').trim(),q=g('#mkE_q');if(!q)return toast(exL('item')+'不能空白');
+    Object.assign(m,{sub:g('#mkE_s'),q,a:g('#mkE_a'),rule:g('#mkE_r'),src:g('#mkE_src'),causes:MKE.causes.slice(),edited:today()});save('mistakes',id,m);mkEditId=null;toast('已修改，複習進度不變');render()},
+  revOpen:()=>revOpen(),
+  revFlip:()=>{if(REV){REV.flip=true;revRender()}},
+  revAns:el=>{if(!REV||!REV.flip)return;const v=el.dataset.v;mkReview(REV.ids[REV.i],v);REV.n[v==='1'?'ok':v==='f'?'fz':'ng']++;REV.i++;REV.flip=false;revRender()},
+  revClose:()=>closeModal(),
   msF:el=>{mkFilter=el.dataset.m;render()},
   msRev:el=>{const m=clone(S.mistakes[el.dataset.id]);const ok=el.dataset.ok==='1';m.hist=(m.hist||[]).concat([{d:today(),ok}]);if(ok){m.stage++;m.due=m.stage>=SRS.length?null:addDays(today(),SRS[m.stage])}else{m.stage=0;m.due=addDays(today(),1)}save('mistakes',el.dataset.id,m);render()},
   msDel:el=>{if(!twoStep(el))return;remove('mistakes',el.dataset.id);render()},
@@ -4211,7 +4308,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{qnRem:el=>{qnRemind=el.value;const t=$('#qnRemT');if(t){t.hidden=el.value!=='t';if(!t.hidden)t.focus()}},flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{mkCauseOwn:el=>{const sub=MKF.sub;if(!sub)return;editCfg(c=>{const m=Object.assign({},c.mkCauses||{});if(el.checked)m[sub]=mkCauseList(sub).slice();else delete m[sub];c.mkCauses=m});render()},qnRem:el=>{qnRemind=el.value;const t=$('#qnRemT');if(t){t.hidden=el.value!=='t';if(!t.hidden)t.focus()}},flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -4318,7 +4415,7 @@ Object.assign(A,{
 Object.assign(C,{
   npType:el=>{comboSet(el,'other');const r=isResearch(el.value);['#npMethodWrap','#npMethodNote'].forEach(q=>{const e=$(q);if(e)e.hidden=!r})},
   npMethod:el=>{comboSet(el,'custom')},
-  msS:el=>{if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
+  msS:el=>{if(el.value!=='__add'){MKF.sub=el.value;{const L=mkCauseList(MKF.sub);MKF.causes=MKF.causes.filter(x=>L.includes(x))}render();return}if(el.value==='__add'){mkSubAdding=true;render();setTimeout(()=>{const i=$('#mkSubNew');i&&i.focus()},30)}},
   examTitle:el=>{editCfg(c=>{c.examTitle=el.value.trim()})},rmOn:el=>{const id=el.dataset.id;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{on:el.checked})});render()},rmF:el=>{const id=el.dataset.id;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{f:el.value})});render()},rmT:el=>{const id=el.dataset.id;if(!el.value)return;editCfg(c=>{c.reminders=Object.assign({},c.reminders);c.reminders[id]=Object.assign({},c.reminders[id],{t:el.value})});render()},exPage:el=>{editCfg(c=>{c.exPage=el.value.trim().slice(0,8)});render()},exLabel:el=>{editCfg(c=>{c.exLabels=Object.assign({},c.exLabels);const v=el.value.trim();if(v)c.exLabels[el.dataset.k]=v;else delete c.exLabels[el.dataset.k]});render()},
   pjF:el=>{const f=el.dataset.f;editProj(p=>{p[f]=el.value});render();if((f==='type'&&el.value==='other')||(f==='method'&&el.value==='custom'))setTimeout(()=>{const i=$(f==='type'?'#pjTX':'#pjMX');i&&i.focus()},30)},
   loopSet:el=>{const l=loopParse(el.value);if(!l.length)return toast('至少寫一項');if(l.join('、')===(proj(curProj).loop||[]).join('、'))return;editProj(p=>{p.loop=l;p.stages.forEach(s=>{if(!s.steps.some(x=>x.done))s.steps=l.map(t=>({id:rid(),t,done:false,due:''}))})});toast('已更新循環');render()},
@@ -5073,10 +5170,13 @@ Object.assign(IN,{blkF:el=>{editPage(el.dataset.p,p=>{blk(p,el.dataset.b)[el.dat
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.tagName==='A'&&el.getAttribute('href')&&el.getAttribute('href').startsWith('#')&&el.dataset.act!=='goReview'&&el.dataset.act!=='toJournal'){e.preventDefault()}f(el,e)});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ch]');if(el&&C[el.dataset.ch])C[el.dataset.ch](el,e)});
-document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
+document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.in==='mkf'){MKF[e.target.dataset.k]=e.target.value;return}const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
 document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('others'))stagesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='parkIn'&&!e.isComposing){e.preventDefault();A.parkAdd();return}
+  if(e.key==='Enter'&&!e.shiftKey&&e.target.id==='msQ'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();A.msAdd();return}
+  if(e.key==='Enter'&&e.target.id==='mkCauseNew'&&!e.isComposing){e.preventDefault();A.mkCauseAdd();return}
+  if(REV&&$('#modal .revbox')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){if(!REV.flip&&(e.key===' '||e.key==='Enter')&&REV.i<REV.ids.length){e.preventDefault();A.revFlip();return}if(REV.flip&&['1','2','3'].includes(e.key)){e.preventDefault();A.revAns({dataset:{v:{1:'0',2:'f',3:'1'}[e.key]}});return}}
   if(e.key==='Enter'&&e.target.id==='ptagName'&&!e.isComposing){e.preventDefault();A.ptagSave();return}
   if(e.target.closest('input,textarea,select,[contenteditable]'))return;
   if($('#modal').innerHTML){if(e.key==='Escape')closeModal();return}

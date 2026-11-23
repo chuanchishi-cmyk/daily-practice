@@ -1785,3 +1785,6 @@
 =打開網站版	Open the website
 =兩個版本的資料不會自動互通。想搬過去：先在這裡「下載備份檔」，再到 claude.ai 版的「設定 → 資料保護」按「從備份還原」。	The two versions don’t share data automatically. To move over, tap “Download backup” here, then “Restore from backup” in the claude.ai version’s Settings → Data protection.
 =claude.ai 版的設定新增「網站版・手機 App」入口：說明兩個版本的差別、怎麼用備份檔把紀錄搬過去	The claude.ai version’s settings now link to the website / phone app, explaining the differences and how to move your records with a backup file
+=計畫地圖（跟課學習）：單元的步驟太多時改成可左右滑的一列，不再擠掉單元名稱；手機上單元名稱和步驟分兩行，太長的步驟名稱先省略，電腦上有 ‹ › 按鈕	Plan map (courses): when a unit has many steps they become a row you can swipe sideways, so the unit name is no longer squeezed; on narrow screens the name and steps sit on two lines, long step names are shortened, and computers get ‹ › buttons
+=往前看步驟	Previous steps
+=往後看步驟	More steps

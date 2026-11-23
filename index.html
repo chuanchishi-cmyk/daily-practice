@@ -844,7 +844,20 @@ button.useg{position:relative;width:20px;height:24px;min-height:0!important;min-
 .urow .uname{flex:1 1 4em;min-width:3em;max-width:12em;border-color:transparent;background:transparent;font-weight:600;padding:4px 6px;text-overflow:ellipsis}
 .urow>.ghost{opacity:.45;padding:2px 6px;min-height:0!important}.urow:hover>.ghost{opacity:.9}
 .urow.done .uname{color:var(--muted);font-weight:400}
-.upills{display:flex;gap:4px;flex-wrap:nowrap;flex:0 0 auto;justify-content:flex-end}
+.urow{flex-wrap:wrap}
+.urow .uname{flex:0 1 10em}
+.upwrap{position:relative;flex:1 1 0;min-width:0;display:flex}
+.upills{display:flex;gap:4px;flex-wrap:nowrap;flex:1 1 auto;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 1px}
+.upills::-webkit-scrollbar{display:none}
+.upills.ovf{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl,0px),#000 calc(100% - var(--fr,0px)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl,0px),#000 calc(100% - var(--fr,0px)),transparent 100%)}
+.upills.ovf:not(.atend){--fr:30px}.upills.ovf:not(.atstart){--fl:30px}
+.upill{flex:0 0 auto;max-width:15em;scroll-snap-align:start}
+.upill .ut{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.upnav{display:none;position:absolute;top:50%;transform:translateY(-50%);z-index:1;width:26px;height:26px;min-height:0!important;padding:0;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:16px;line-height:1;box-shadow:0 1px 4px rgb(0 0 0/.12)}
+.upnav.prev{left:-4px}.upnav.next{right:-4px}
+@media (hover:hover) and (pointer:fine){.upwrap:has(.upills.ovf:not(.atend)) .upnav.next,.upwrap:has(.upills.ovf:not(.atstart)) .upnav.prev{display:block}}
+.ulist{container-type:inline-size}
+@container (max-width:520px){.urow .uname{flex:1 1 auto;max-width:none}.upwrap{flex-basis:100%;order:3;padding:0 0 2px 4px}}
 .upill{position:relative;display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;font-size:calc(12.5px * var(--fs,1));cursor:pointer;user-select:none}
 .upill input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
 .upill.on::before{content:'✓';font-size:.9em;color:var(--good)}
@@ -1353,7 +1366,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.23.1'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.23.2'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1441,6 +1454,13 @@ function editing(){const a=document.activeElement;return a&&$('#main').contains(
 function softRender(){if(editing()){pendingRender=true;return}render()}
 document.addEventListener('focusout',()=>{if(pendingRender)setTimeout(()=>{if(!editing()&&pendingRender){pendingRender=false;render()}},250)});
 let lastR=null,welcomed=false;
+// 跟課學習：每個單元的步驟太多時，改成可左右滑的一列（兩端淡出、電腦上有 ‹ › 按鈕），記住滑到哪；第一次顯示時對準第一個還沒做的步驟
+const UPS={};
+function upState(el){const ov=el.scrollWidth>el.clientWidth+2;el.classList.toggle('ovf',ov);el.classList.toggle('atstart',el.scrollLeft<4);el.classList.toggle('atend',el.scrollLeft+el.clientWidth>=el.scrollWidth-4)}
+function upFix(){document.querySelectorAll('.upills').forEach(el=>{const k=el.dataset.st;if(el.scrollWidth>el.clientWidth+2){if(UPS[k]!=null)el.scrollLeft=UPS[k];else{const f=el.querySelector('.upill:not(.on)');if(f&&f.offsetLeft-el.offsetLeft>el.clientWidth*.6)el.scrollLeft=f.offsetLeft-el.offsetLeft-12}}upState(el)})}
+document.addEventListener('scroll',e=>{const el=e.target;if(el&&el.classList&&el.classList.contains('upills')){UPS[el.dataset.st]=el.scrollLeft;upState(el)}},true);
+window.addEventListener('resize',()=>{try{upFix()}catch{}});
+document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('udone'))try{upFix()}catch{}},true);
 function render(){
   if(R!=='journal')JORD=null;
   const m=$('#main');const sy=window.scrollY;const sw=lastR!==null&&lastR!==R;lastR=R;
@@ -1449,6 +1469,7 @@ function render(){
   if(!welcomed&&backend!=='loading'){welcomed=true;setTimeout(maybeWelcome,2900)}
   if(sw){m.classList.remove('enter');void m.offsetWidth;m.classList.add('enter');const lg=document.querySelector('.blogo');if(lg){lg.classList.remove('turn');void lg.offsetWidth;lg.classList.add('turn')}window.scrollTo(0,0)}else window.scrollTo(0,sy);
   {const tg=document.querySelector('#pTags:not(.editing) .tagc.on'),bx=tg&&tg.parentElement;if(bx&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,tg.offsetLeft-bx.offsetLeft-16)}
+  upFix();
   tick(true);
 }
 
@@ -1947,6 +1968,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-23',lv:'fix',t:'計畫地圖（跟課學習）：單元的步驟太多時改成可左右滑的一列，不再擠掉單元名稱；手機上單元名稱和步驟分兩行，太長的步驟名稱先省略，電腦上有 ‹ › 按鈕'},
  {d:'2026-11-23',lv:'minor',t:'claude.ai 版的設定新增「網站版・手機 App」入口：說明兩個版本的差別、怎麼用備份檔把紀錄搬過去'},
  {d:'2026-11-20',lv:'fix',t:'雲端同步：關掉 App 再打開，一小時內不必重新連線；過期後點一下同步標籤就續上，會記住你的 Google 帳號，不用再選帳號（設定、提示卡與完整說明的文字也一併更新）'},
  {d:'2026-11-20',lv:'minor',t:'工作隨手記：工作上班頁的隨手記和今日的分開，提示改用客戶、同事、主管的說法；隨手記視窗可切換生活／工作／全部；工作頁可一鍵把紀錄標籤換成專案、會議、信件與聯絡'},
@@ -2576,7 +2598,7 @@ function unitTrack(p,cur){const n=p.stages.length,d=p.stages.filter(stageDone).l
   return `<div class="utrack" role="list">${p.stages.map(s=>{const m=s.steps.length||1,k=s.steps.filter(x=>x.done).length;return `<button class="useg${stageDone(s)?' done':''}${cur&&s.id===cur.id?' on':''}" data-act="stSel" data-id="${s.id}" role="listitem" title="${esc(s.name)}：${k}/${m}" aria-label="${esc(s.name)}，完成 ${k}/${m}"><i style="height:${stageDone(s)?100:k/m*100}%"></i></button>`}).join('')}</div>
   <div class="row sb muted" style="margin-top:6px;font-size:calc(12px * var(--fs,1))"><span>完成 ${d} / ${n} ${esc(p.unit||'單元')}・每格一${(p.unit||'單元')==='單元'?'個單元':esc(p.unit)}，點一下打開</span><span class="num">${Math.round(projProgress(p)*100)}%</span></div>`}
 function unitRow(p,s,cur){const on=cur&&s.id===cur.id;
-  return `<div class="urow${on?' on':''}${stageDone(s)?' done':''}"><input class="uname" type="text" id="un${s.id}" data-ch="stF" data-f="name" data-id="${s.id}" value="${esc(s.name)}" aria-label="單元名稱"><span class="upills">${s.steps.map(x=>`<label class="upill${x.done?' on':''}"><input type="checkbox" data-ch="stepChk" data-st="${s.id}" data-id="${x.id}" ${x.done?'checked':''}>${esc(x.t)}</label>`).join('')}</span><button class="ghost sm" data-act="stDel" data-id="${s.id}" aria-label="刪除這個單元">×</button></div>`}
+  return `<div class="urow${on?' on':''}${stageDone(s)?' done':''}"><input class="uname" type="text" id="un${s.id}" data-ch="stF" data-f="name" data-id="${s.id}" value="${esc(s.name)}" aria-label="單元名稱"><span class="upwrap"><button class="upnav prev" data-act="upNav" data-d="-1" tabindex="-1" aria-label="往前看步驟">‹</button><span class="upills" data-st="${s.id}">${s.steps.map(x=>`<label class="upill${x.done?' on':''}" title="${esc(x.t)}"><input type="checkbox" data-ch="stepChk" data-st="${s.id}" data-id="${x.id}" ${x.done?'checked':''}><span class="ut">${esc(x.t)}</span></label>`).join('')}</span><button class="upnav next" data-act="upNav" data-d="1" tabindex="-1" aria-label="往後看步驟">›</button></span><button class="ghost sm" data-act="stDel" data-id="${s.id}" aria-label="刪除這個單元">×</button></div>`}
 function unitsCard(p,cur){const open=p.stages.filter(s=>!stageDone(s)),done=p.stages.filter(stageDone);
   const show=open.slice(0,4);if(cur&&open.includes(cur)&&!show.includes(cur))show.push(cur);const rest=open.filter(s=>!show.includes(s));
   return `<section class="card unitcard"><h2>${esc(p.unit||'單元')} <span class="muted">每個${esc(p.unit||'單元')}：${p.loop.map(esc).join(' → ')}・順序不拘，做到哪勾到哪</span></h2>
@@ -2868,6 +2890,7 @@ const A={
   ptoggle:()=>{const was=P.running;const pend=$('#ptagName');if(!was&&pend&&pend.value.trim())A.ptagSave();was?pPause():pStart();render();if(was){const i=$('#pPause');i&&i.focus()}},
   parkAdd:()=>{const i=$('#parkIn'),t=i.value.trim();if(!t)return toast('先寫下想到的事');const n=new Date();editDay(today(),d=>{d.j.park=d.j.park||[];d.j.park.push(Object.assign({id:rid(),t:pad(n.getHours())+':'+pad(n.getMinutes()),text:t,done:false},workCtx()?{ctx:'work',kind:'待辦'}:{}))});render();setTimeout(()=>{const j=$('#parkIn');j&&j.focus()},30)},
   qnOpen:()=>qnOpen(),
+  upNav:el=>{const u=el.parentNode.querySelector('.upills');if(u)u.scrollBy({left:(+el.dataset.d)*u.clientWidth*.7,behavior:'smooth'})},
   qnCtx:el=>{qnCtx=el.dataset.v;if(!qnKinds().includes(qnKind))qnKind='待辦';qnRefresh()},
   clampT:el=>{const k=el.dataset.key;CLAMP.has(k)?CLAMP.delete(k):CLAMP.add(k);const m=$('.qnbox');if(m&&m.contains(el))qnRefresh();else render()},
   parkMoreT:()=>{parkMore=!parkMore;render()},

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>節日小卡</title>
+<style>
+:root{--bg:#f6f3ee;--surface:#fffdfa;--ink:#3b3631;--muted:#8a8178;--line:#e8e2d8;--accent:#c2704f;--r:14px;
+--f-body:-apple-system,"PingFang TC","Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif;
+--f-display:"Noto Serif TC","Songti TC","PMingLiU",serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1a17;--surface:#25221e;--ink:#ece6dd;--muted:#a3998e;--line:#37322c;--accent:#e08d6b}}
+:root[data-theme="dark"]{--bg:#1c1a17;--surface:#25221e;--ink:#ece6dd;--muted:#a3998e;--line:#37322c;--accent:#e08d6b}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);padding:24px 16px}
+h1{font-family:var(--f-display);font-size:20px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;max-width:980px}
+.card{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.card img{flex:none;border-radius:10px;background:#f6f3ee}
+.card h2{font-family:var(--f-display);font-size:17px;margin:0}
+.date{margin:2px 0 6px;font-size:12px;color:var(--accent)}
+.line{margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
+</style></head><body>
+<h1>節日小卡（設計稿）</h1>
+<div class="grid">
+  <article class="card">
+    <img src="yuandan.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>元旦</h2><p class="date">國曆 1 月 1 日</p><p class="line">一元復始，萬象更新。寫一張新禧帖，給新的一年。</p></div>
+  </article>
+  <article class="card">
+    <img src="chuxi.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>除夕</h2><p class="date">農曆十二月最後一日（含小年夜）</p><p class="line">隔年飯插上春花，叫「萬年糧」，祈願年年有餘。</p></div>
+  </article>
+  <article class="card">
+    <img src="chunjie.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>春節</h2><p class="date">農曆正月初一</p><p class="line">門上貼福，迎接新歲。</p></div>
+  </article>
+  <article class="card">
+    <img src="yuanxiao.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>元宵</h2><p class="date">農曆正月十五</p><p class="line">提燈、賞燈、猜燈謎，年節在燈火裡收尾。</p></div>
+  </article>
+  <article class="card">
+    <img src="heping.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>和平紀念日</h2><p class="date">2 月 28 日</p><p class="line">靜下心來，記得過去，祈願和平。</p></div>
+  </article>
+  <article class="card">
+    <img src="ertong.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>兒童節</h2><p class="date">4 月 4 日</p><p class="line">放一隻風箏，讓童心飛高一點。</p></div>
+  </article>
+  <article class="card">
+    <img src="laodong.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>勞動節</h2><p class="date">5 月 1 日</p><p class="line">提盒裝好飯菜，向每一份勞動致意。</p></div>
+  </article>
+  <article class="card">
+    <img src="duanwu.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>端午</h2><p class="date">農曆五月初五</p><p class="line">包粽子、掛艾草、划龍舟。</p></div>
+  </article>
+  <article class="card">
+    <img src="jiaoshi.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>教師節</h2><p class="date">9 月 28 日（孔子誕辰）</p><p class="line">「上大人，孔乙己」——舊時學童的第一張描紅。謝謝老師。</p></div>
+  </article>
+  <article class="card">
+    <img src="zhongqiu.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>中秋</h2><p class="date">農曆八月十五</p><p class="line">供月餅、擺果盤，等月亮升起，一家團圓。</p></div>
+  </article>
+  <article class="card">
+    <img src="guoqing.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>國慶日</h2><p class="date">10 月 10 日</p><p class="line">爆竹聲中，慶祝佳節。</p></div>
+  </article>
+  <article class="card">
+    <img src="guangfu.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>光復節</h2><p class="date">10 月 25 日</p><p class="line">擊鼓相慶，記得這一天。</p></div>
+  </article>
+  <article class="card">
+    <img src="xingxian.webp" width="88" height="88" alt="">
+    <div class="txt"><h2>行憲紀念日</h2><p class="date">12 月 25 日</p><p class="line">白紙黑字的約定，守住彼此的權利。</p></div>
+  </article>
+</div>
+</body></html>

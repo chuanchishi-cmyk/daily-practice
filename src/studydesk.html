@@ -1374,7 +1374,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.27.4'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.27.5'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1998,6 +1998,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-27',lv:'fix',t:'今日小語：驅動力的話每天換說法；起床後、午後、傍晚、睡前這幾個時間點先說作息提醒，其他時候以驅動力的話為主'},
  {d:'2026-11-27',lv:'minor',t:'春節卡：前兩天是小年夜、前一天是除夕，春節從初一顯示到初五'},
  {d:'2026-11-27',lv:'minor',t:'我的節奏：驅動力測驗的題庫變成三倍，每個價值都測兩句，「重新測驗」會換一批題目；作息的變化下方顯示下一次兩週比對與兩個月報告的時間'},
  {d:'2026-11-27',lv:'fix',t:'今日小語最多三句'},
@@ -4736,6 +4737,8 @@ const blOfNow=()=>{const h=new Date().getHours();return (BL.find(b=>{const e=b.h
 const drvPick=(R,salt)=>{if(!R||!R.drv.length)return null;const d=Math.floor(Date.now()/864e5)+(salt||0);return R.drv[d%R.drv.length]};
 // one line per driver, in the language of what moves that person
 const DRV_DAY={SD:'今天的做法由你決定，先挑一件你自己想推進的事開始。',ST:'換個地點，或給自己一個限時挑戰，讓今天多一點新鮮感。',HE:'完成一段就好好犒賞自己一下，享受也是前進的力量。',AC:'把今天的進度記下來，看得見的成果會推著你往前。',PO:'你是自己這一天的主導者，先決定最重要的那一件事。',FA:'一步一步做好就好，穩穩地累積，就是最好的樣子。',SE:'先完成一件確定的小事，讓今天有個踏實的開始。',TR:'固定的節奏是你的力量，照著習慣的時間開始就好。',CO:'照著計畫一步一步做，就是對自己最好的承諾。',HU:'今天不必特別出色，安靜地做好眼前的事就很好。',UN:'想想你在做的事能帶給別人什麼，那份意義會給你力量。',BE:'想想這件事能幫到誰，為在乎的人努力，會更有力氣。'};
+const DRV_DAY2={SD:'照你自己的步調來，今天想先推進哪一件，就從那件開始。',ST:'今天試一個沒用過的做法，哪怕只是換張桌子坐。',HE:'先替自己準備一杯喜歡的飲料，舒服的開始會走得更遠。',AC:'替今天定一個看得見的小目標，做完就打個勾。',PO:'先決定今天由你拍板的那件事，其他的再排。',FA:'先在沒人看的地方做個草稿，熟了再拿出來。',SE:'先把今天確定要做的事寫下來，心會比較安定。',TR:'照著平常的順序開始，熟悉的節奏會帶著你走。',CO:'把答應過的事排在前面，做到了，心裡就踏實。',HU:'不必和誰比，把手上這一件做好就好。',UN:'想想這件事做好了，能讓誰過得好一點。',BE:'今天做的事，也是為了在乎的人，這份心意會撐著你。'};
+const DRV_EVE2={SD:'今天哪個決定是你自己做的？那份自主，明天也帶著。',ST:'今天有什麼小小的新鮮事？記下來，明天再找一個。',HE:'今晚留一段時間給讓你開心的事，這也是充電。',AC:'今天的進度記下來了嗎？一點一點，都算數。',PO:'今天你帶動了哪件事？明天想先掌握哪一件？',FA:'今天做得不夠好的地方，就當成私下的練習吧。',SE:'今天完成的事，都是明天的底氣。',TR:'今天的節奏穩嗎？穩下來，就是很好的一天。',CO:'今天守住了哪個約定？給自己一點肯定。',HU:'平凡地過完一天，也是一種踏實。',UN:'今天有沒有一個瞬間，你為別人想了一下？',BE:'今天有誰因為你而輕鬆一點？也謝謝願意付出的自己。'};
 const DRV_EVE={SD:'今天有哪一件事，是你照自己的方式完成的？那就是你的力量。',ST:'今天有沒有一點新鮮的發現？明天可以再試一個不一樣的做法。',HE:'今天有好好享受某個片刻嗎？記得，休息和樂趣也是照顧自己。',AC:'把今天做到的寫下來，明天回頭看，會更清楚自己走了多遠。',PO:'回頭看看，今天你主導了哪些選擇？明天想先掌握哪一件？',FA:'今天不完美也沒關係，你已經穩穩地做了不少。',SE:'今天有什麼讓你覺得踏實？明天可以從那裡再出發。',TR:'今天的作息有照著你的節奏走嗎？穩定本身就是成果。',CO:'今天照著計畫走了多少？做到的部分，就是對自己的承諾。',HU:'今天平平淡淡地做好份內的事，就很值得肯定。',UN:'今天做的事，有沒有一點點讓世界更好？哪怕很小也算。',BE:'今天你照顧了誰？也別忘了，好好照顧自己。'};
 const DRV_SHORT={SD:'用你自己的方式就好。',ST:'可以換個新做法試試。',HE:'達標時記得犒賞自己。',AC:'看得見的進度，最能推動你。',PO:'由你決定下一步。',FA:'穩穩累積就很好。',SE:'一步一步，很踏實。',TR:'固定的節奏是你的力量。',CO:'照著計畫走就好。',HU:'安靜地做好就很好。',UN:'記得它的意義。',BE:'也想想它能幫到誰。'};
 function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=today(),ss=(day(k).sessions||[]),mins=ss.reduce((a,s)=>a+(+s.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),done=tp.filter(x=>x.done).length;
@@ -4748,8 +4751,12 @@ function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=tod
   else if(b&&R.idea&&b===R.idea)a=`現在是你的靈感時段，適合發想、寫作，或想想卡住的問題。`;
   else if(R.peak){const pb=BL.find(x=>x.k===R.peak),h=new Date().getHours();a=pb&&h<pb.h?`你的高峰在${blName(R.peak)}，把最重要的事留給那段時間。`:(mins?`今天已經專注 ${fmtMin(mins)}，${tp.length&&done===tp.length?'三件事也都完成了，':''}節奏很好。`:'')}
   if(!a&&eve)a='晚上了，可以慢慢放慢步調，留點時間給自己。';
-  const d=drvPick(R);const c=d?(wind||(eve&&b!==R.peak)?DRV_EVE[d]:DRV_DAY[d]):'';
-  return capSent((a+c).trim(),3)}
+  const d=drvPick(R),alt=Math.floor(Date.now()/864e5)%2,c=d?(wind||(eve&&b!==R.peak)?(alt?DRV_EVE2:DRV_EVE)[d]:(alt?DRV_DAY2:DRV_DAY)[d]):'';
+  // 一天中的幾個節點（起床後開始、午後低潮、傍晚、睡前）先說作息，再接驅動力；其他時候驅動力在前。最多三句
+  const wk=R.wake!=null?R.wake:450,h=new Date().getHours(),node=wind||(nowM>=wk+60&&nowM<=wk+150)||(b&&b===R.low)||(h>=13&&h<15)||(h>=18&&h<20);
+  const aS=(a.match(/[^。！？!?]+[。！？!?]?/g)||[]),cS=(c.match(/[^。！？!?]+[。！？!?]?/g)||[]).slice(0,2);
+  const parts=node?aS.slice(0,Math.max(1,3-cS.length)).concat(cS):cS.concat(aS.slice(0,Math.max(0,3-cS.length)));
+  return capSent(parts.join('').trim(),3)}
 function capSent(t,n){const m=String(t||'').match(/[^。！？!?]+[。！？!?]?/g)||[];return m.slice(0,n).join('').trim()}
 // journal feedback (time-of-day + content + driver)
 function jFeedback(k){const j=day(k).j||{},R=myRhythm(),h=new Date().getHours(),per=h<4?'late':h<11?'morning':h<17?'day':h<21?'evening':'night';

@@ -16,8 +16,8 @@ for(const [d,want] of [['2027-02-03',''],['2027-02-04','小年夜'],['2027-02-05
 {const S={meta:{main:{rhAdj:null}},days:{},mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}};
  // reuse a finished quiz result from fixture if available
  const fx=JSON.parse(fs.readFileSync(require('path').join(__dirname,'fixtures/quiz-v3.json'),'utf8'));S.quiz={q1:fx};
- for(const h of ['09','14','19','23']){const [c,pg]=await open('2026-11-27T'+h+':10:00+08:00',S);const t=await pg.evaluate(()=>{const e=[...document.querySelectorAll('.todaynotes .tn')].find(x=>/今日小語/.test(x.textContent));return e?e.querySelector('.tnt').textContent:''});
-   const n=(t.match(/[。！？!?]/g)||[]).length;ok(n<=3,`${h}:10 今日小語 ${n} 句（${t.slice(0,30)}…）`);await c.close()}}
+ for(const h of ['09','11','14','16','19','23']){const [c,pg]=await open('2026-11-27T'+h+':10:00+08:00',S);const t=await pg.evaluate(()=>{const e=[...document.querySelectorAll('.todaynotes .tn')].find(x=>/今日小語/.test(x.textContent));return e?e.querySelector('.tnt').textContent:''});
+   const n=(t.match(/[。！？!?]/g)||[]).length;ok(n<=3&&n>=1,`${h}:10 今日小語 ${n} 句：${t}`);await c.close()}}
 // 驅動力：每個價值兩句、重新測驗換題
 {const [c,pg]=await open('2026-11-27T10:00:00+08:00',null,'#quiz');
  const get=async()=>{await pg.evaluate(()=>{const q=JSON.parse(localStorage.getItem('sd-quiz')||'null')||{};q.v=3;q.step=3;q.a=Object.assign({reg:'n'},q.a);localStorage.setItem('sd-quiz',JSON.stringify(q))});await pg.reload();await pg.waitForTimeout(500);

@@ -71,4 +71,60 @@ await pg.waitForSelector('[data-act=revOpen]',{timeout:5000}).catch(async()=>con
 for(let i=0;i<tot;i++){await pg.click('[data-act=revFlip]');await pg.click('[data-act=revAns][data-v="1"]');await pg.waitForTimeout(80)}
 await pg.click('.revbox .pri');await pg.waitForTimeout(200);db=await DB();ok(db.mistakes.old1.stage===2&&db.mistakes.old1.due==='2026-12-01'&&!(await pg.$('[data-act=revOpen]')),'記得：往下一輪（7 天後）；複習完，「開始複習」按鈕消失');
 await pg.screenshot({path:SP+'mistakes-v2.png'});
+
+// ---------- 第二批：每日上限與排序、篩選搜尋、最近常錯、附加到舊卡、從計時與隨手記加 ----------
+{const c2=await b.newContext({viewport:{width:390,height:844},timezoneId:'Asia/Taipei'});
+await c2.addInitScript(()=>{sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');
+  const D=Date;window.__off=new D(sessionStorage.getItem('__t')||'2026-11-23T10:00:00+08:00')-D.now();class FD extends D{constructor(...a){if(a.length)super(...a);else super(D.now()+window.__off)}static now(){return D.now()+window.__off}};window.Date=FD;
+  if(localStorage.getItem('studydesk-v1'))return;
+  localStorage.setItem('sd-tips',JSON.stringify({done:{'n-qn':'yes','n-work':'yes'},last:'',cur:null}));
+  const M={};for(let i=1;i<=26;i++){M['c'+i]={sub:i%2?'mkA':'mkB',q:'卡 '+i+(i===5?'：分數的通分':''),causes:[i<=3?'粗心':'觀念'],src:i===7?'第 2 回模考・第 7 題':'',rule:i===9?'先畫數線':'',created:i<=3?'2026-11-21':'2026-10-01',stage:1,due:i<=10?'2026-11-20':'2026-11-23',hist:[]}}
+  M.c3.due='2026-11-23';M.c3.created='2026-11-22';
+  localStorage.setItem('studydesk-v1',JSON.stringify({meta:{main:{hidden:[],optIn:{},mkSubjects:[{id:'mkA',n:'數學',c:1},{id:'mkB',n:'英文',c:3}],todayWidgets:['due'],timers:[{id:'t1',name:'數學限時',segs:[{n:'作答',s:60}]}]}},days:{'2026-11-23':{j:{park:[{id:'p1',t:'09:00',text:'三角函數的正負號又搞錯',done:false}]}}},mocks:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{},mistakes:M}))});
+const p2=await c2.newPage();p2.on('pageerror',e=>errs.push(e.message));
+const DB2=()=>p2.evaluate(()=>JSON.parse(localStorage.getItem('studydesk-v1')));
+await p2.goto('file://'+SP+'tmk2.html#exam');await p2.waitForTimeout(700);
+ok(/待複習 20/.test(await p2.textContent('#mistakes'))&&/另有 6 題明天再來/.test(await p2.textContent('#mistakes')),'每日上限 20：待複習 20 題，另有 6 題明天再來');
+const dueBefore=(await DB2()).mistakes;ok(Object.values(dueBefore).filter(m=>m.due<='2026-11-23').length===26,'上限不改 due（26 張仍到期）');
+const firstIds=await p2.$$eval('#mkList .mkcard .mkq',e=>e.map(x=>x.textContent));
+ok(/^卡 1$/.test(firstIds[0])&&firstIds.slice(0,10).every(t=>+t.match(/\d+/)[0]<=10),'放最久的先（11/20 到期的 10 張排前面）');
+const i3=firstIds.findIndex(t=>/^卡 3$/.test(t)),i11=firstIds.findIndex(t=>/^卡 11$/.test(t));ok(i3===9&&i3<i11,'同一天到期：近 7 天常錯的錯因（粗心）優先');
+await p2.selectOption('[data-ch=mkCap]','30');await p2.waitForTimeout(200);ok(/待複習 26/.test(await p2.textContent('#mistakes'))&&(await DB2()).meta.main.mkDailyCap===30,'調成每天 30 題');
+await p2.selectOption('[data-ch=mkCap]','20');await p2.waitForTimeout(200);
+await p2.click('[data-act=msF][data-m=all]');await p2.waitForTimeout(150);
+await p2.selectOption('[data-ch=mkFSub]','mkA');await p2.waitForTimeout(150);await p2.selectOption('[data-ch=mkFCause]','粗心');await p2.waitForTimeout(150);
+let qs=await p2.$$eval('#mkList .mkq',e=>e.map(x=>x.textContent));ok(qs.length===2&&qs.every(t=>/卡 (1|3)$/.test(t)),'科目＋錯因篩選可疊加（數學・粗心 2 張）');
+await p2.click('[data-act=mkFClear]').catch(()=>{});await p2.selectOption('[data-ch=mkFSub]','');await p2.selectOption('[data-ch=mkFCause]','');await p2.waitForTimeout(150);
+await p2.fill('#mkQ','模考');await p2.waitForTimeout(150);qs=await p2.$$eval('#mkList .mkq',e=>e.map(x=>x.textContent));ok(qs.length===1&&qs[0]==='卡 7','搜尋出處');
+await p2.fill('#mkQ','數線');await p2.waitForTimeout(150);qs=await p2.$$eval('#mkList .mkq',e=>e.map(x=>x.textContent));ok(qs.length===1&&qs[0]==='卡 9','搜尋規則');
+ok(await p2.$eval('#mkQ',e=>document.activeElement===e),'打字搜尋時游標不會跑掉');
+await p2.fill('#mkQ','');await p2.waitForTimeout(150);
+const top=await p2.textContent('.mktop');ok(/數學・粗心\s*2/.test(top.replace(/\s+/g,' '))&&/英文・粗心\s*1/.test(top.replace(/\s+/g,' ')),'近 7 天前三名：數學・粗心 2、英文・粗心 1（'+top.replace(/\s+/g,' ').trim()+'）');
+await p2.click('[data-act=mkRange][data-v=all]');await p2.waitForTimeout(150);ok(/觀念/.test(await p2.textContent('.mktop')),'切到「全部」：觀念排進前三');
+await p2.click('[data-act=mkRange][data-v="7"]');await p2.waitForTimeout(150);
+await p2.locator('.mktopb').first().click();await p2.waitForTimeout(200);qs=await p2.$$eval('#mkList .mkq',e=>e.map(x=>x.textContent));ok(qs.length===2,'點前三名：篩出那些卡');
+await p2.click('[data-act=mkFClear]');await p2.waitForTimeout(150);
+// similar -> attach
+await p2.click('[data-act=mkFormT]');await p2.waitForTimeout(150);await p2.selectOption('#msS','mkA');await p2.waitForTimeout(150);
+ok(!(await p2.$('.mksim')),'還沒選錯因時不提示');
+await p2.click('[data-act=mkCauseT][data-v=粗心]');await p2.waitForTimeout(150);
+ok(/已經有 2 張/.test(await p2.textContent('.mksim')),'同科目同錯因：提示「已經有 2 張」');
+await p2.fill('#msQ','又把分母加起來');await p2.selectOption('#mkSimSel','c1');await p2.click('[data-act=msAttach]');await p2.waitForTimeout(250);
+let m1=(await DB2()).mistakes.c1;ok(m1.stage===0&&m1.due==='2026-11-24'&&m1.again===1&&m1.agains[0].q==='又把分母加起來','附加到舊卡：回到第一輪、明天複習、又錯 +1');
+ok(Object.keys((await DB2()).mistakes).length===26,'附加不會多一張卡');
+await p2.click('[data-act=msF][data-m=all]');await p2.waitForTimeout(150);ok(/又錯 1 次/.test(await p2.locator('.mkcard').filter({has:p2.locator('.mkq',{hasText:/^卡 1$/})}).first().textContent()),'卡片顯示「又錯 1 次」');
+await p2.click('[data-act=mkFormT] >> text=收起');await p2.waitForTimeout(150);
+// from timer post
+await p2.evaluate(()=>{localStorage.setItem('sd-tpost',JSON.stringify({id:'x',k:'2026-11-23',min:10}))});await p2.reload();await p2.waitForTimeout(600);
+await p2.click('[data-act=tMk]');await p2.waitForTimeout(300);ok(await p2.$eval('#msS',e=>e.value)==='mkA'&&await p2.$eval('#msQ',e=>document.activeElement===e),'計時完成「記到錯題本」：打開表單、帶入科目（數學）');
+await p2.click('[data-act=mkFormT] >> text=收起');await p2.waitForTimeout(150);
+// from quick notes
+await p2.click('[data-act=qnOpen]');await p2.waitForTimeout(300);await p2.locator('.qnrow',{hasText:'三角函數'}).locator('[data-act=qnMk]').click();await p2.waitForTimeout(400);
+ok(await p2.inputValue('#msQ')==='三角函數的正負號又搞錯','隨手記「轉到錯題本」：題目帶入');
+await p2.selectOption('#msS','mkA');await p2.press('#msQ','Enter');await p2.waitForTimeout(250);
+const db2=await DB2();ok(Object.values(db2.mistakes).some(m=>m.q==='三角函數的正負號又搞錯'&&m.created==='2026-11-23')&&db2.days['2026-11-23'].j.park[0].done===true,'加入後：新增錯題（今天日期），隨手記標成處理完');
+// today card cap
+await p2.goto('file://'+SP+'tmk2.html#today');await p2.reload();await p2.waitForTimeout(500);ok(/另有 \d+ 題明天再來/.test(await p2.textContent('main')),'今日頁也顯示「另有 N 題明天再來」');
+await p2.click('[data-act=goReview]');await p2.waitForTimeout(200);ok(/\/ 20/.test(await p2.textContent('#revT')),'複習模式一次最多 20 張');
+await c2.close()}
 console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

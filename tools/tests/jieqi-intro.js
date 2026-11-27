@@ -15,6 +15,9 @@ const txt=async(pg,sel)=>pg.evaluate(s=>[...document.querySelectorAll(s)].map(e=
 // --- 節氣 ---
 for(const [d,want] of [['2026-11-20','再過 2 天是小雪'],['2026-11-19',''],['2026-09-26','後天是教師節'],['2026-12-25','聖誕節'],['2026-11-22','今天小雪'],['2026-11-24','小雪'],['2026-11-25',''],['2026-12-22','今天冬至'],['2027-02-04','今天立春'],['2026-09-24','明天是中秋'],['2026-09-25','中秋'],['2026-06-19','端午']]){
   const [c,pg]=await open(d);const t=await txt(pg,'.jq');ok(want?t.includes(want):!t,`${d}：${want?'顯示「'+t+'」':'不顯示節氣卡'}`);await c.close()}
+// 節氣卡五天的話都不一樣（大雪 12/7：12/5–12/9）
+{const L=[];for(const d of ['2026-12-05','2026-12-06','2026-12-07','2026-12-08','2026-12-09']){const [c,pg]=await open(d);L.push(await txt(pg,'.jq .jql'));await c.close()}
+ ok(new Set(L).size===5&&L.every(Boolean)&&/明天大雪/.test(L[1])&&/穩穩地維持日常/.test(L[2]),'大雪前後五天，每天的話都不同：'+L.map(x=>x.slice(0,8)).join('／'))}
 {const [c,pg]=await open('2026-12-31');const t=await txt(pg,'.todaynotes');ok(/今天進入二九/.test(t)&&/(\d+／81 瓣|畫一瓣)/.test(t),'冬至數九（12/31 進入二九）：'+t.slice(0,70));await c.close()}
 // --- 第 7 天 ---
 {const [c,pg]=await open('2026-11-19',{days:8});const t=await txt(pg,'.tipcard');ok(/日課開始認識你了/.test(t)&&/上午/.test(t),'第 8 天：回顧卡「'+t.slice(0,70)+'…」');await c.close()}

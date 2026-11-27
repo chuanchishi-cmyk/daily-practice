@@ -189,6 +189,11 @@ label.f>input,label.f>select,label.f>textarea{color:var(--ink)}
 .caretile.on{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface))}
 .brktip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
 .brkbtn{display:inline-flex;align-items:center;gap:6px;border-radius:999px}.brkbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mkstats{border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:10px 0;margin:0 0 12px}
+.mktop{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}.mktopb{display:inline-flex;align-items:center;gap:6px;min-height:0!important;padding:5px 10px;border-radius:10px;font-size:calc(13px * var(--fs,1))}.mktopb>.num:first-child{color:var(--muted);font-size:.85em}.mktopb b{margin-left:2px}
+.mkfilter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.mkfilter select{flex:0 1 auto;max-width:42%}.mkfilter input{flex:1 1 140px;min-width:0}
+.mkcap{display:inline-flex;align-items:center;gap:6px;font-size:calc(12.5px * var(--fs,1))}.mkcap select{min-height:0;padding:2px 6px}
+.mksim{margin-top:8px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--warn,#c9a227) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--warn,#c9a227) 35%,var(--line));font-size:calc(13px * var(--fs,1))}.mksim p{margin:0 0 6px}
 .mkform{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--sunk)}
 .mkhint{font-size:calc(11.5px * var(--fs,1))}
 .cpills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
@@ -1360,7 +1365,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.23.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.27.1'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1538,7 +1543,7 @@ function qnItems(){const out=[],t=today();
 function qnRow(x,pids){const src=x.src==='park'?(x.k===today()?'今天':fmtMD(x.k)):x.src==='pnote'?x.pj:'覺察片段・'+fmtMD(x.k),ref=`data-src="${x.src}" data-id="${esc(x.id)}" data-k="${esc(x.k||'')}"`;
   const pick=qnPick===x.id?`<div class="row qnpick"><select id="qnPj" aria-label="放到哪個計畫">${pids.map(id=>`<option value="${esc(id)}">${esc(proj(id).name)}</option>`).join('')}</select><button class="sm sec" data-act="qnStepGo" ${ref}>加入</button><button class="ghost sm" data-act="qnPickX">取消</button></div>`:'';
   return `<div class="qnrow${x.done?' done':''}">${x.src!=='mom'?`<input type="checkbox" data-ch="qnDone" ${ref} ${x.done?'checked':''} aria-label="處理完了">`:'<span class="qndot" aria-hidden="true"></span>'}<div class="grow"><div class="qa">${noteTxt(x.text,'q'+x.src+x.id)}${x.callMin?`<span class="muted"> ・通話 ${x.callMin} 分</span>`:''}${remTxt(x)}</div><div class="muted qnmeta">${x.kind?`<span class="pill mut">${esc(x.kind)}</span> `:''}${esc(src)}</div>${pick}</div>
-  ${x.src==='mom'?'<a class="xlink" href="#journal" data-act="close">日記 →</a>':x.done?'':`<span class="qnact"><button class="ghost sm" data-act="qnTop" ${ref}>放進三件事</button>${pids.length&&isOn('plan')?`<button class="ghost sm" data-act="qnStep" ${ref}>轉成步驟</button>`:''}<button class="ghost sm" data-act="qnDel" ${ref} aria-label="刪除">×</button></span>`}</div>`}
+  ${x.src==='mom'?'<a class="xlink" href="#journal" data-act="close">日記 →</a>':x.done?'':`<span class="qnact"><button class="ghost sm" data-act="qnTop" ${ref}>放進三件事</button>${pids.length&&isOn('plan')?`<button class="ghost sm" data-act="qnStep" ${ref}>轉成步驟</button>`:''}${isOn('exam')?`<button class="ghost sm" data-act="qnMk" ${ref}>轉到${esc(exL('book'))}</button>`:''}<button class="ghost sm" data-act="qnDel" ${ref} aria-label="刪除">×</button></span>`}</div>`}
 function qnBody(){const all=qnItems().filter(x=>qnCtx==='all'||x.ctx===qnCtx),list=all.filter(x=>qnFilter==='all'||!x.done),pids=Object.keys(S.projects),v=(($('#qnIn')||{}).value)||'';
   return `<div class="row sb"><h2 id="qnT" style="margin:0">隨手記</h2><span class="row" style="gap:6px">${isOn('work')||WK()?`<div class="seg">${[['life','生活'],['work','工作'],['all','全部']].map(([v,n])=>`<button data-act="qnCtx" data-v="${v}" aria-pressed="${qnCtx===v}">${n}</button>`).join('')}</div>`:''}<button class="ghost sm" data-act="close" aria-label="關閉">×</button></span></div>${callBarHTML()}
   <p class="muted" style="margin:4px 0 8px">想到什麼先記下來，等一下再處理；需要的話設個提醒。今天的隨手記、計畫筆記、最近的覺察片段都集中在這裡。</p>
@@ -1635,7 +1640,7 @@ function tRestHTML(){if(!TPOST&&!TFIX)return '';const w=cfg().pomo.work,acc=Math
   if(TFIX)return `<div class="tpost"><p><b>訂正中</b> <span class="num" id="fixTime">${mmss(fixLeft())}</span> <span class="muted">訂正的時間也會記進這組練習</span></p><div class="row"><button class="sec sm" data-act="fixStop">完成訂正</button></div></div>`;
   const due=acc>=w||long;
   return `<div class="tpost${due?' due':''}"><p>${due?(long?`<b>剛做完 ${TPOST.min} 分鐘的長時間練習，休息久一點吧。</b>`:`<b>已經專注 ${acc} 分鐘，休息一下吧。</b>`):`完成一組（${TPOST.min} 分）。距離上次休息累計 <b class="num">${acc}</b> 分，滿 ${w} 分會提醒休息。`}</p>
-    <div class="row"><button class="sm${due?' ghost':' sec'}" data-act="fixGo">開始訂正</button><button class="sm${due?' sec':' ghost'}" data-act="tRest">休息 ${long||((P.cycles+1)%cfg().pomo.every===0)?Math.round(modeSec('long')/60):Math.round(modeSec('short')/60)} 分鐘</button><button class="ghost sm" data-act="tPostNo">再一組</button></div></div>`}
+    <div class="row"><button class="sm${due?' ghost':' sec'}" data-act="fixGo">開始訂正</button><button class="sm${due?' sec':' ghost'}" data-act="tRest">休息 ${long||((P.cycles+1)%cfg().pomo.every===0)?Math.round(modeSec('long')/60):Math.round(modeSec('short')/60)} 分鐘</button><button class="ghost sm" data-act="tPostNo">再一組</button><button class="ghost sm" data-act="tMk">記到${esc(exL('book'))}</button></div></div>`}
 function testsOf(keys){const L=[];keys.forEach(k=>(day(k).tests||[]).forEach(x=>L.push(Object.assign({k},x))));return L}
 function testSum(keys){const L=testsOf(keys);return {sets:L.filter(x=>x.full).length,part:L.filter(x=>!x.full).length,min:L.reduce((a,x)=>a+(+x.min||0)+(+x.fix||0),0),L}}
 function tAdvance(){
@@ -1832,6 +1837,9 @@ const JQ=[
  ['小雪','臘梅','凌寒、幽香','天黑得早，晚上可以早點收尾，把最重要的事放在白天。'],
  ['大雪','松枝','堅貞、長青','寒冷的日子，穩穩地維持日常，就是一種力量。'],
  ['冬至','冬青','常綠、守候','一年中夜最長的一天，好好休息，陽氣從今天開始回升。']];
+// 節氣卡每天的話：前兩天、前一天、（當天用 JQ 第四欄）、後一天、後兩天
+const JQ_DAYS={"小寒":["冷意一天比一天深，今晚早點把被子曬暖、把明天的衣服備好。","寒氣正要來，把要做的事排得鬆一點，留點時間給熱茶和暖身。","冷的日子，坐下來專注前先搓搓手、動動肩，身體暖了心也定。","竹子在寒風裡依然挺直，今天也穩穩做完一件小事就好。"],"大寒":["最冷的幾天要到了，記得穿暖、睡飽，比多做一點更重要。","一年快走完了，回頭看看這一年，有哪件事你一直默默做著。","寒到極處，春就不遠了。今天把一件拖著的小事收尾。","梅花在最冷時開，不急不慢。給自己一點耐心，慢慢來。"],"立春":["春天快來了，想想今年想慢慢培養的一個習慣。","明天立春，把書桌整理乾淨，迎接新的開始。","春天的第二天，昨天開始的小事，今天再做一次。","新的節奏剛起步，三天不算長，但每一天都算數。"],"雨水":["雨水將至，空氣變得濕潤，出門記得帶把傘，也帶點耐心。","春雨要來了，不急著開花，先把根扎深一點。","細雨裡，適合讀一段書、整理一份筆記，安安靜靜的。","雨後的土最鬆軟，今天開始的事，最容易長出來。"],"驚蟄":["春雷快響了，身體也在慢慢醒來，早上可以多伸展一下。","明天驚蟄，把冬天擱著的計畫拿出來，看看先做哪一步。","醒過來的不只是蟲子，也試試在午後起來走十分鐘。","萬物都在動，專注一段時間後，記得讓身體也動一動。"],"春分":["白天越來越長，可以把散步排進傍晚。","明天晝夜等長，今晚想想這陣子是工作多，還是休息多。","春天過了一半，花開得正好，出門看看，也看看自己。","平衡不是每天一樣多，而是長遠看來，兩邊都有照顧到。"],"清明":["清明前，把房間或桌面整理一角，心也會跟著清爽。","天氣漸暖，適合把想念的人、想做的事，各寫下一件。","清明時節，走一段路、看一眼新綠，讓眼睛休息一下。","柳枝隨風擺動，不硬撐，也不斷。今天就照自己的步調。"],"穀雨":["雨水滋養穀物，也滋養你這陣子一點一點的累積。","春天快結束了，看看春初開始的事，進行到哪裡了。","雨後牡丹開得正好，今天給自己一件小小的獎勵。","把春天沒做完的事列出來，留下最重要的一件，其他放下也可以。"],"立夏":["夏天要來了，早上天亮得早，可以試著早一點起床。","明天立夏，把作息往前挪一點，讓早晨多一段安靜的時間。","初夏的早晨最清爽，把最需要動腦的事放在這時候。","天氣變熱，水瓶放在手邊，專注時也記得喝水。"],"小滿":["麥子慢慢飽滿，不必一次到位，每天多一點就好。","明天小滿，看看手上的事，有沒有哪件已經可以先交出去。","小滿不滿，留一點餘裕，才有空間迎接意外。","今天也做到七八分就好，剩下的明天再說。"],"芒種":["忙碌的季節要到了，先把這週最重要的三件事寫下來。","明天芒種，有收有種，想想哪些事該收尾、哪些該開始。","事情多的時候，一個番茄鐘只做一件事，心反而比較快。","播下的種子不會馬上發芽，今天繼續澆水就好。"],"夏至":["白天快到最長了，傍晚的光很好，留給自己走一段路。","明天夏至，把午後容易累的時段，安排成輕鬆一點的事。","一年過了一半，看看年初寫下的心願，還記得嗎。","日頭最盛之後，白天會慢慢變短，作息也可以跟著穩下來。"],"小暑":["熱起來了，專注的時間短一點、休息多一點也沒關係。","明天小暑，把最難的事排在早上涼快的時候。","午後悶熱，泡杯茶、洗把臉，讓心跟著涼下來。","梔子花香淡淡的，今天做事也不求快，求穩。"],"大暑":["一年最熱的日子快到了，睡眠要顧好，比多做更重要。","暑氣正盛，難的事放在清晨，傍晚留給散步。","熱的時候容易煩躁，先停下來喝口水，再回到手上的事。","盛夏也會過去，把這段時間撐住的自己，好好謝一謝。"],"立秋":["秋天快到了，可以開始想想下半年想收穫什麼。","明天立秋，把夏天亂掉的作息，慢慢調回來。","早晚有一點涼意，適合安靜地讀書、寫字。","秋天的第一週，挑一件想收成的事，排進每天的計畫。"],"處暑":["暑氣慢慢退了，晚上睡得比較好，可以早點休息。","明天處暑，夏天的熱鬧要收起來了，給自己一個安靜的晚上。","天氣轉涼，把散掉的專注慢慢收回來，一次一件。","夏天結束了，寫下這個夏天做到的一件事。"],"白露":["早晚開始有露水，睡前加件衣服，也留點時間給自己。","明天白露，晚上少滑一點手機，讓心先慢下來。","秋夜漸長，適合讀一段書，或寫幾行日記。","桂花香淡淡飄著，今天找一件讓你覺得舒服的小事做。"],"秋分":["晝夜又快一樣長了，看看這陣子的節奏，是不是剛剛好。","明天秋分，適合重新整理目標，留下最重要的幾件。","秋天過了一半，楓葉慢慢轉紅，改變也是一點一點來的。","把今年剩下的時間，分成幾個小段，一段一段走。"],"寒露":["露水開始變涼，早上出門記得帶件外套。","明天寒露，夜晚變長，晚上可以早點收尾、早點睡。","秋深了，心容易往內收，靜坐幾分鐘，看看心裡在想什麼。","蘆葦在風裡搖擺卻不折斷，柔軟也是一種力量。"],"霜降":["天氣要轉冷了，早上起床先喝杯溫水，暖暖身子。","明天霜降，秋天最後一個節氣，把秋天的計畫收個尾。","霜落了，空氣清冷，適合專心做一件需要安靜的事。","山茶在寒意裡慢慢開，不爭先，也不落後。"],"立冬":["冬天快來了，把作息安排得規律一點，身體會比較穩。","明天立冬，想想今年最後兩個月，最想把力氣放在哪裡。","冬天是收藏的季節，把散落的事收攏，一件一件做好。","天冷容易賴床，前一晚把早上的第一件事寫好，起床就有方向。"],"小雪":["天黑得越來越早，傍晚前把重要的事做完，晚上留給休息。","明天小雪，屋裡暖暖的時候，最適合讀書和整理。","冷的日子，坐久了起來走走、喝杯熱的，再繼續。","臘梅在寒天裡開著，香氣不濃卻很久，像每天一點的累積。"],"大雪":["冬意越來越深，穩穩維持日常，就已經很不容易。","明天大雪，今年剩下不多了，挑一件最想完成的，專心做它。","寒冷的早晨，暖身之後再開始第一件事，心會比較定。","松柏在冬天依然青綠，今天也照著自己的節奏走。"],"冬至":["一年最長的夜要來了，這幾天早點睡，好好養精神。","明天冬至，回頭看看這一年，寫下三件想感謝的事。","冬至過了，白天會一天比一天長，新的力氣慢慢回來。","陽氣剛開始回升，不急著衝，先把作息穩住。"]};
+function jqLine(nm,off,line){const L=JQ_DAYS[nm];if(!L||!off)return line;return L[{"-2":0,"-1":1,"1":2,"2":3}[off]]||line}
 const JQ_C=[5.4055,20.12,3.87,18.73,5.63,20.646,4.81,20.1,5.52,21.04,5.678,21.37,7.108,22.83,7.5,23.13,7.646,23.042,8.318,23.438,7.438,22.36,7.18,21.94];
 // 插畫：毛利梅園《梅園草木花譜》、岩崎灌園《本草圖譜》（江戶時代，公有領域），出處見 art/jieqi/CREDITS.md
 const JQ_PY='xiaohan dahan lichun yushui jingzhe chunfen qingming guyu lixia xiaoman mangzhong xiazhi xiaoshu dashu liqiu chushu bailu qiufen hanlu shuangjiang lidong xiaoxue daxue dongzhi'.split(' ');
@@ -1866,7 +1874,7 @@ function jqHTML(){const k=today(),f0=festNow(k),h=holNow(k),q0=jqNow(k),nx0=jqNe
   let q=q0,pre=null;const nx=nx0;if(nx&&nx.n<=2)pre=nx;if(!pre&&(!q||q.n>2))return '';const t=pre||q,[nm,pl,yi,line]=t.j,img=JQ_IMG[nm],pose=JQ_POSE[pl]||'side';
   const sj=nm==='冬至'&&!pre?shujiu(k):null;
   const head=pre?`再過 ${pre.n} 天是${nm}`:q.n===0?`今天${nm}`:nm;
-  return `<section class="jq${img?' has-art p-'+pose:''}" aria-label="節氣：${nm}">${img?`<img class="jqart" src="${img}" alt="${pl}" loading="lazy">`:`<span class="jqseal" aria-hidden="true">${nm}</span>`}<div class="jqt"><p class="jqh"><b>${head}</b><span>${pl}・${yi}</span></p><p class="jql">${esc(line)}${sj?`　冬至起數九，像畫消寒圖一樣，每天一點。`:''}${!pre&&q.n===0?alsoTxt:''}</p></div></section>`}
+  return `<section class="jq${img?' has-art p-'+pose:''}" aria-label="節氣：${nm}">${img?`<img class="jqart" src="${img}" alt="${pl}" loading="lazy">`:`<span class="jqseal" aria-hidden="true">${nm}</span>`}<div class="jqt"><p class="jqh"><b>${head}</b><span>${pl}・${yi}</span></p><p class="jql">${esc(jqLine(nm,pre?-pre.n:q.n,line))}${sj?`　冬至起數九，像畫消寒圖一樣，每天一點。`:''}${!pre&&q.n===0?alsoTxt:''}</p></div></section>`}
 function shujiuLine(){const s=shujiu(today());if(!s||s.x===0||s.dayIn!==1)return null;return {k:'數九',t:s.pet?`今天進入${NINE[s.nine-1]}九。從冬至起的 ${s.x+1} 天裡，你有 ${s.pet} 天在練習，消寒圖已畫了 ${s.pet}／81 瓣。`:`今天進入${NINE[s.nine-1]}九。從今天起，每練習一天，就在消寒圖上畫一瓣。`}}
 /* ---------- time of day: follows the person's own sleep time (My Rhythm); without it, a typical adult day ---------- */
 const BED_DEF=1410,WAKE_DEF=450; // 23:30 睡、07:30 起
@@ -1913,12 +1921,17 @@ function sessionsHTML(k,del=true){
     <div class="grow"><div>${esc(s.task||subj(s.sub).name)}</div><div class="muted">${s.task?esc(subj(s.sub).name):''}${pj?'・'+esc(pj.name):''}${s.out?`・產出 ${s.out} ${esc(s.unit||'')}`:''}${s.note?'・'+esc(s.note):''}${s.why?'・提前結束：'+esc(s.why):''}</div></div>
     <span class="num">${s.min}′</span>${del?`<button class="ghost sm" data-act="delSess" data-k="${k}" data-id="${s.id}" aria-label="刪除這筆">×</button>`:''}</div>`}).join('')}</div>`;
 }
-function dueList(){const t=today();return Object.entries(S.mistakes).filter(([,m])=>m.due&&m.due<=t).sort((a,b)=>a[1].due<b[1].due?-1:1)}
+// 待複習：放最久的先；同一天到期的，近 7 天最常錯的錯因先。每天最多 cfg.mkDailyCap 題（預設 20，0＝不限），超過的明天再來（不改 due）
+function mkCap(){const v=cfg().mkDailyCap;return v===0||v==='0'?0:(+v||20)}
+function mkRecentFreq(days){const from=addDays(today(),-(days-1)),f={};Object.values(S.mistakes||{}).forEach(m=>{const n=(m.created>=from?1:0)+((m.agains||[]).filter(a=>a.d>=from).length);if(n)(m.causes||[]).forEach(c=>{if(c)f[c]=(f[c]||0)+n})});return f}
+function dueAll(){const t=today(),f=mkRecentFreq(7),sc=m=>Math.max(0,...(m.causes||[]).map(c=>f[c]||0));return Object.entries(S.mistakes).filter(([,m])=>m.due&&m.due<=t).sort((a,b)=>a[1].due!==b[1].due?(a[1].due<b[1].due?-1:1):sc(b[1])-sc(a[1]))}
+function dueList(){const d=dueAll(),c=mkCap();return c?d.slice(0,c):d}
+function dueMore(){const c=mkCap();return c?Math.max(0,dueAll().length-c):0}
 function dueHTML(){
   const d=dueList();
   if(!d.length)return `<p class="empty">今天沒有要複習的項目。<a href="#exam">${esc(exL('bookAdd'))}</a></p>`;
   return `<div class="list">${d.slice(0,5).map(([id,m])=>`<div class="li">${mkDot(m.sub)}<div class="grow">${esc((m.q||'').slice(0,40))}</div><span class="pill ${m.due<today()?'bad':'warn'}">${m.due<today()?'逾期':'今天'}</span></div>`).join('')}</div>
-  <div class="row sb" style="margin-top:10px"><span class="muted">共 ${d.length} 題</span><button class="pri" data-act="goReview">開始複習</button></div>`;
+  <div class="row sb" style="margin-top:10px"><span class="muted">今天 ${d.length} 題${dueMore()?`・另有 ${dueMore()} 題明天再來`:''}</span><button class="pri" data-act="goReview">開始複習</button></div>`;
 }
 function nextStepsHTML(){
   const ids=Object.keys(S.projects);
@@ -1962,6 +1975,10 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-27',lv:'minor',t:'錯題本：每天複習有上限（預設 20 題，可調），放最久的先、近 7 天最常錯的錯因優先，其餘明天再來；可以依科目、錯因篩選，也能搜尋題目、規則、出處'},
+ {d:'2026-11-27',lv:'minor',t:'錯題本：「最近常錯」列出近 7 天／30 天／全部的前三名「科目・錯因」，點一下就篩出那些卡；同類錯誤已經有卡時，可以附加到舊卡（回到第一輪、記一次「又錯」）；練習計時完成、隨手記都能直接轉到錯題本'},
+ {d:'2026-11-27',lv:'minor',t:'節氣卡：前兩天到後兩天，每天的話都不一樣'},
+ {d:'2026-11-27',lv:'minor',t:'靜心回饋與雁書加入聖嚴法師《牛的印跡》（Hoofprint of the Ox）：昏沉時的跪姿、念頭像牧牛、練習像調琴弦、十牛圖等'},
  {d:'2026-11-23',lv:'major',t:'錯題本改版：複習模式一次一張卡，先重做一次再翻面，選「忘了／模糊／記得」；模糊會停在同一輪、明天再看'},
  {d:'2026-11-23',lv:'minor',t:'錯題本：錯因可以自訂、可以多選，每個科目可以有自己的清單；按「＋ 記一題」才展開表單，加入後科目、錯因、出處會保留，題目欄按 Enter 就加入；新增「出處」「規則・下次怎麼做」；卡片可以編輯，不影響複習進度；顯示「已複習 n/5 次」'},
  {d:'2026-11-23',lv:'fix',t:'計畫地圖（跟課學習）：單元的步驟太多時改成可左右滑的一列，不再擠掉單元名稱；手機上單元名稱和步驟分兩行，太長的步驟名稱先省略，電腦上有 ‹ › 按鈕'},
@@ -2283,7 +2300,7 @@ const MK_DEF=[{id:'mk5',n:'其他',c:7}];
 function mkSubs(){const c=cfg();return Array.isArray(c.mkSubjects)?c.mkSubjects:(Object.values(S.mistakes||{}).some(m=>/^mk[1-4]$/.test(m.sub))?MK_OLD:MK_DEF)}
 function mkSub(id){return mkSubs().find(x=>x.id===id)||(cfg().mkArchived||[]).find(x=>x.id===id)||MK_OLD.find(x=>x.id===id)||(()=>{const t=subj(id);return {id,n:t.name,c:t.c}})()}
 // 錯題本 v2：錯因可自訂（每個科目可有自己的清單）、可複選；連續新增；出處、規則；可編輯；複習模式（先重做再翻面）
-let mkFormOpen=false,mkEditId=null,mkCauseEdit=false,REV=null;
+let mkFormOpen=false,mkEditId=null,mkCauseEdit=false,REV=null,mkFSub='',mkFCause='',mkQ='',mkRange='7';
 const MKF={sub:'',causes:[],src:lsGet('sd-mk-src','')||'',q:'',a:'',r:''},MKE={causes:[]};
 function mkCauseOwn(sub){const m=cfg().mkCauses||{};return !!(sub&&Array.isArray(m[sub]))}
 function mkCauseList(sub){const m=cfg().mkCauses||{};if(mkCauseOwn(sub))return m[sub];if(Array.isArray(m._all))return m._all;
@@ -2305,12 +2322,33 @@ function mkFormHTML(){
       <label class="f"><span class="row sb">${esc(exL('subj'))}<button class="ghost sm" data-act="mkSubEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkSubEdit?'完成':'編輯'}</button></span>${mkSubEdit?`<div class="tags">${mkSubs().map(x=>`<span class="tagc editing" style="--tc:var(--c${x.c})">${esc(x.n)}<button class="tdel" data-act="mkSubDel" data-id="${x.id}" aria-label="刪除「${esc(x.n)}」">×</button></span>`).join('')}</div>`:`<select id="msS" data-ch="msS">${mkSubOpts(MKF.sub)}</select>`}${mkSubAdding||mkSubEdit?`<span class="row" style="margin-top:6px"><input id="mkSubNew" type="text" placeholder="例：數學、民法、日文文法" style="flex:1"><button class="sm sec" data-act="mkSubAdd">加入</button></span>`:''}</label>
       <label class="f w2">${esc(exL('src'))}（選填）<input id="msSrc" type="text" data-in="mkf" data-k="src" value="${esc(MKF.src)}" placeholder="${esc(exL('srcPh'))}"></label>
       <label class="f" style="grid-column:1/-1">${esc(exL('item'))}<textarea id="msQ" rows="2" data-in="mkf" data-k="q" placeholder="${esc(exL('itemPh'))}" enterkeyhint="done">${esc(MKF.q)}</textarea><span class="muted mkhint">按 Enter 加入，Shift＋Enter 換行</span></label>
-      <div class="f" style="grid-column:1/-1"><span class="row sb">${esc(exL('cause'))} <span class="muted" style="margin-right:auto;margin-left:6px">可以多選</span><button class="ghost sm" data-act="mkCauseEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkCauseEdit?'完成':'編輯'}</button></span>${mkCauseEdit?mkCauseEditHTML():mkPills(MKF.causes,MKF.sub,'new')}</div>
+      <div class="f" style="grid-column:1/-1"><span class="row sb">${esc(exL('cause'))} <span class="muted" style="margin-right:auto;margin-left:6px">可以多選</span><button class="ghost sm" data-act="mkCauseEditT" style="padding:0 6px;font-size:calc(12px * var(--fs,1))">${mkCauseEdit?'完成':'編輯'}</button></span>${mkCauseEdit?mkCauseEditHTML():mkPills(MKF.causes,MKF.sub,'new')}${mkCauseEdit?'':mkSimHTML()}</div>
       <label class="f" style="grid-column:1/-1">${esc(exL('answer'))}（選填）<textarea id="msA" rows="2" data-in="mkf" data-k="a" placeholder="${esc(exL('answerPh'))}">${esc(MKF.a)}</textarea></label>
       <label class="f" style="grid-column:1/-1">${esc(exL('rule'))}（選填）<textarea id="msR" rows="2" data-in="mkf" data-k="r" placeholder="${esc(exL('rulePh'))}">${esc(MKF.r)}</textarea></label>
     </div>
     <div class="row sb" style="margin:10px 0 14px;flex-wrap:wrap;gap:8px"><span class="row"><button class="sec" data-act="msAdd">${esc(exL('bookAdd'))}</button><button class="ghost sm" data-act="mkFormT">收起</button></span><span class="muted" style="font-size:calc(12px * var(--fs,1))">${n?`今天記了 ${n} ${exScene()==='exam'||exScene()==='custom'||exScene()==='talk'?'題':'項'}・`:''}加入後${esc(exL('subj'))}、${esc(exL('cause'))}、${esc(exL('src'))}會保留，可以接著記下一${exScene()==='exam'||exScene()==='custom'||exScene()==='talk'?'題':'項'}</span></div>
   </div>`}
+function mkShown(){const t=today(),q=mkQ.trim().toLowerCase(),dl=new Set(dueList().map(([id])=>id));
+  return Object.entries(S.mistakes).filter(([id,m])=>(mkFilter==='due'?dl.has(id):mkFilter==='master'?!m.due:true)&&(!mkFSub||m.sub===mkFSub)&&(!mkFCause||(m.causes||[]).includes(mkFCause))&&(!q||[m.q,m.rule,m.src,m.a].some(x=>String(x||'').toLowerCase().includes(q))))
+    .sort((a,b)=>{if(mkFilter==='due'){const o=[...dl];return o.indexOf(a[0])-o.indexOf(b[0])}const x=a[1].due||'9',y=b[1].due||'9';return x<y?-1:x>y?1:0})}
+function mkListHTML(){const L=mkShown(),any=mkFSub||mkFCause||mkQ.trim();
+  return L.length?L.map(([id,m])=>mkCardHTML(id,m)).join(''):`<p class="empty">${any?'沒有符合的卡片。<button class="linkbtn" data-act="mkFClear">清除篩選</button>':mkFilter==='due'?'今天沒有待複習的題目。':'這裡還是空的。'}</p>`}
+// 最近常錯：「科目・錯因」前三名（新增的卡＋附加到舊卡的「又錯」都算），點一下篩出那些卡
+function mkTop(range){const from=range==='all'?'':addDays(today(),-(+range-1)),c={},tot={};
+  Object.values(S.mistakes||{}).forEach(m=>{const n=(!from||m.created>=from?1:0)+((m.agains||[]).filter(a=>!from||a.d>=from).length);if(!n)return;(m.causes||[]).filter(Boolean).forEach(x=>{const k=(m.sub||'')+'\u0001'+x;c[k]=(c[k]||0)+n;tot[x]=(tot[x]||0)+n})});
+  return {top:Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,n])=>{const [sub,cause]=k.split('\u0001');return {sub,cause,n}}),tot}}
+function mkStatsHTML(){if(!Object.keys(S.mistakes||{}).length)return '';const {top,tot}=mkTop(mkRange);
+  return `<div class="mkstats"><div class="row sb" style="gap:8px;flex-wrap:wrap"><b style="font-size:calc(13.5px * var(--fs,1))">最近常錯</b><div class="seg">${[['7','近 7 天'],['30','近 30 天'],['all','全部']].map(([v,n])=>`<button data-act="mkRange" data-v="${v}" aria-pressed="${mkRange===v}">${n}</button>`).join('')}</div></div>
+    ${top.length?`<div class="mktop">${top.map((x,i)=>`<button class="mktopb" data-act="mkTopPick" data-sub="${esc(x.sub)}" data-c="${esc(x.cause)}"><span class="num">${i+1}</span>${x.sub?`${mkDot(x.sub)}${esc(mkSub(x.sub).n)}・`:''}${esc(x.cause)}<b class="num">${x.n}</b></button>`).join('')}</div>
+    <div class="legend">${Object.entries(tot).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div>`:`<p class="muted" style="margin:6px 0 0">${mkRange==='all'?'還沒有記錄錯因。':'這段時間沒有新的錯題。'}</p>`}</div>`}
+function mkFilterHTML(){const subs=[...new Set(Object.values(S.mistakes).map(m=>m.sub).filter(Boolean))],causes=[...new Set(Object.values(S.mistakes).flatMap(m=>m.causes||[]).filter(Boolean))];
+  return `<div class="mkfilter"><select data-ch="mkFSub" aria-label="篩選${esc(exL('subj'))}"><option value="">全部${esc(exL('subj'))}</option>${subs.map(id=>`<option value="${esc(id)}"${id===mkFSub?' selected':''}>${esc(mkSub(id).n)}</option>`).join('')}</select><select data-ch="mkFCause" aria-label="篩選${esc(exL('cause'))}"><option value="">全部${esc(exL('cause'))}</option>${causes.map(c=>`<option${c===mkFCause?' selected':''}>${esc(c)}</option>`).join('')}</select><input type="search" id="mkQ" data-in="mkq" value="${esc(mkQ)}" placeholder="搜尋題目、規則、出處" aria-label="搜尋">${mkFSub||mkFCause||mkQ.trim()?'<button class="ghost sm" data-act="mkFClear">清除篩選</button>':''}</div>`}
+// 同一個科目、同一種錯因已經有卡：提示可以附加到舊卡（舊卡回到第一輪、明天複習，「又錯」＋1）
+function mkSimHTML(){const sub=MKF.sub,cs=MKF.causes;if(!sub||!cs.length)return '<div id="mkSim"></div>';
+  const L=Object.entries(S.mistakes).filter(([,m])=>m.sub===sub&&(m.causes||[]).some(c=>cs.includes(c))).sort((a,b)=>((b[1].again||0)-(a[1].again||0))||((b[1].created||'')>(a[1].created||'')?1:-1));
+  if(!L.length)return '<div id="mkSim"></div>';
+  return `<div id="mkSim" class="mksim"><p>「${esc(mkSub(sub).n)}・${esc(cs.join('、'))}」已經有 <b class="num">${L.length}</b> 張。如果這題是同一個老問題，可以附加到舊卡，讓它重新開始複習：</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><select id="mkSimSel" aria-label="選一張舊卡" style="flex:1;min-width:0">${L.slice(0,30).map(([id,m])=>`<option value="${id}">${esc(String(m.q||'').replace(/\s+/g,' ').slice(0,36))}${m.again?`（又錯 ${m.again} 次）`:''}</option>`).join('')}</select><button class="sm" data-act="msAttach">附加到這張</button></div></div>`}
 function mkCardHTML(id,m){
   if(mkEditId===id)return `<div class="li mkcard editing" style="display:block"><div class="fields">
     <label class="f">${esc(exL('subj'))}<select id="mkE_s">${mkSubOpts(m.sub||'').replace('<option value="__add">＋ 自填…</option>','')}</select></label>
@@ -2323,7 +2361,7 @@ function mkCardHTML(id,m){
   const st=Math.min(m.stage||0,SRS.length),more=m.a||(m.rule&&mkFirst(m.rule)!==String(m.rule).trim());
   return `<div class="li mkcard" style="align-items:flex-start">${mkDot(m.sub)}<div class="grow" style="min-width:0">
     <div class="mkq">${esc(m.q)}</div>
-    ${(m.causes||[]).length||m.src?`<div class="mkmeta">${(m.causes||[]).filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}${m.src?`<span class="muted">${esc(m.src)}</span>`:''}</div>`:''}
+    ${(m.causes||[]).length||m.src||m.again?`<div class="mkmeta">${m.again?`<span class="pill warn">又錯 ${m.again} 次</span>`:''}${(m.causes||[]).filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}${m.src?`<span class="muted">${esc(m.src)}</span>`:''}</div>`:''}
     ${m.rule?`<div class="mkrule">${esc(mkFirst(m.rule))}</div>`:''}
     ${more?`<details><summary class="muted">看${esc(exL('answer'))}</summary>${m.a?`<div class="qa"><b>${esc(exL('answer'))}</b>　${esc(m.a)}</div>`:''}${m.rule?`<div class="qa"><b>${esc(exL('rule'))}</b>　${esc(m.rule)}</div>`:''}</details>`:''}
     <div class="muted mkst">${m.due?`已複習 ${st}/${SRS.length} 次・下次 ${fmtMD(m.due)}`:'已熟練'}</div></div>
@@ -2342,7 +2380,7 @@ function revRender(){if(!REV)return;const R0=REV,tot=R0.ids.length;let body;
     <div class="revprog" aria-hidden="true"><i style="width:${Math.round(R0.i/tot*100)}%"></i></div>
     <div class="revsub">${mkDot(m.sub)}<span>${esc(mkSub(m.sub).n||'')}</span>${m.src?`<span class="muted">・${esc(m.src)}</span>`:''}</div>
     <div class="revq">${esc(m.q||'')}</div>
-    ${(m.causes||[]).filter(Boolean).length?`<div class="mkmeta">${m.causes.filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}</div>`:''}
+    ${(m.causes||[]).filter(Boolean).length||m.again?`<div class="mkmeta">${m.again?`<span class="pill warn">又錯 ${m.again} 次</span>`:''}${(m.causes||[]).filter(Boolean).map(c=>`<span class="pill mut">${esc(c)}</span>`).join('')}</div>`:''}
     ${R0.flip?`<div class="revback">${m.a?`<div><b>${esc(exL('answer'))}</b><p class="qa">${esc(m.a)}</p></div>`:''}${m.rule?`<div><b>${esc(exL('rule'))}</b><p class="qa">${esc(m.rule)}</p></div>`:''}${!m.a&&!m.rule?`<p class="muted" style="margin:0">這張卡還沒寫${esc(exL('answer'))}。複習完可以在列表按「編輯」補上。</p>`:''}</div>
       <div class="revbtns"><button data-act="revAns" data-v="0"><b>忘了</b><span>明天再來</span></button><button data-act="revAns" data-v="f"><b>模糊</b><span>明天再看一次</span></button><button class="pri" data-act="revAns" data-v="1"><b>記得</b><span>${m.stage+1>=SRS.length?'熟練了':nx+' 天後'}</span></button></div>`
     :`<p class="revhint">${esc(exL('revHint'))}</p><button class="pri revflip" data-act="revFlip">翻面</button>`}`}
@@ -2475,8 +2513,6 @@ function vExam(){
   const total=m=>scoreTotal(m,sp);
   const mlist=Object.entries(S.mistakes);
   const t=today();
-  const shown=mlist.filter(([,m])=>mkFilter==='due'?m.due&&m.due<=t:mkFilter==='master'?!m.due:true).sort((a,b)=>(a[1].due||'9')<(b[1].due||'9')?-1:1);
-  const causeCount={};mlist.forEach(([,m])=>(m.causes||[]).forEach(x=>causeCount[x]=(causeCount[x]||0)+1));
   return `<header class="ph"><div style="flex:1;min-width:0"><p class="eyebrow">${esc(exPage())}</p><input class="pgtitle" id="examTitle" type="text" data-ch="examTitle" value="${esc(c.examTitle==='托福準備'||c.examTitle==='考試準備'?'':(c.examTitle||''))}" placeholder="${esc(exL('titlePh'))}" aria-label="名稱（點一下可以改）" title="點一下寫下你要準備的目標"></div><div class="chips">${examChips()}</div></header>
   ${exScenePanel()}
   <div class="grid2">
@@ -2511,11 +2547,13 @@ function vExam(){
     ${ms.length?`<div class="gridA"><div>${lineChart(series,{ymax,labels:ms.map(([,m])=>fmtMD(m.date))})}<div class="legend">${sp.secs.map(x=>`<span><i class="dot" style="background:var(--c${secColor(x)})"></i>${esc(x[1])}</span>`).join('')}</div></div>
     <div class="tablewrap"><table><thead><tr><th>日期</th>${sp.secs.map(([,n])=>`<th class="num">${esc(n)}</th>`).join('')}${sp.total==='none'?'':'<th class="num">總</th>'}<th></th></tr></thead><tbody>${ms.slice().reverse().map(([id,m])=>`<tr title="${esc(m.note)}"><td>${fmtMD(m.date)}</td>${sp.secs.map(([k])=>`<td class="num">${m[k]===''||m[k]==null?'—':m[k]}</td>`).join('')}${sp.total==='none'?'':`<td class="num"><b>${total(m)}</b></td>`}<td><button class="ghost sm" data-act="mockDel" data-id="${id}" aria-label="刪除">×</button></td></tr>`).join('')}</tbody></table></div></div>`:`<p class="empty">還沒有${scale==='custom'?'這種計分方式的':''}${esc(exL('score'))}。每次${esc(exL('scoreShort'))}後填入分數，這裡會畫出各項的趨勢。</p>`}
   </section>
-  <section class="card" id="mistakes"><h2>${esc(exL('book'))} <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2>
-    ${mkFormHTML()}
-    ${Object.keys(causeCount).length?`<div class="legend" style="margin-bottom:10px">${Object.entries(causeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b class="num">${v}</b></span>`).join('')}</div>`:''}
-    <div class="seg" style="margin-bottom:10px">${[['due','待複習 '+dueList().length],['all','全部 '+mlist.length],['master','已熟練']].map(([m,n])=>`<button data-act="msF" data-m="${m}" aria-pressed="${mkFilter===m}">${n}</button>`).join('')}</div>
-    <div class="list">${shown.length?shown.map(([id,m])=>mkCardHTML(id,m)).join(''):`<p class="empty">${mkFilter==='due'?'今天沒有待複習的題目。':'這裡還是空的。'}</p>`}</div>
+  <section class="card" id="mistakes"><div class="row sb" style="flex-wrap:wrap;gap:6px"><h2 style="margin:0">${esc(exL('book'))} <span class="muted">依 1、3、7、14、30 天間隔複習</span></h2><label class="mkcap muted">每天最多複習<select data-ch="mkCap" aria-label="每天最多複習幾題">${[10,20,30,50,0].map(v=>`<option value="${v}"${mkCap()===v?' selected':''}>${v?v+' 題':'不限'}</option>`).join('')}</select></label></div>
+    <div style="margin-top:12px">${mkFormHTML()}</div>
+    ${mkStatsHTML()}
+    <div class="seg" style="margin-bottom:8px">${[['due','待複習 '+dueList().length],['all','全部 '+mlist.length],['master','已熟練']].map(([m,n])=>`<button data-act="msF" data-m="${m}" aria-pressed="${mkFilter===m}">${n}</button>`).join('')}</div>
+    ${mlist.length>3||mkFSub||mkFCause||mkQ?mkFilterHTML():''}
+    ${mkFilter==='due'&&dueMore()?`<p class="muted" style="margin:0 0 8px">今天先複習 ${dueList().length} 題，另有 ${dueMore()} 題明天再來。</p>`:''}
+    <div class="list" id="mkList">${mkListHTML()}</div>
   </section>`;
 }
 
@@ -3044,9 +3082,9 @@ const A={
   mockDel:el=>{if(!twoStep(el))return;remove('mocks',el.dataset.id);render()},
   msAdd:()=>{const g=id=>(($(id)||{}).value||'').trim();const q=g('#msQ');if(!q){toast('先寫下'+exL('item'));const i=$('#msQ');i&&i.focus();return}
     MKF.src=g('#msSrc');const m={sub:(($('#msS')||{}).value||MKF.sub||'').replace('__add',''),q,a:g('#msA'),causes:MKF.causes.slice(),created:today(),stage:0,due:addDays(today(),SRS[0]),hist:[]};const r=g('#msR');if(r)m.rule=r;if(MKF.src)m.src=MKF.src;
-    save('mistakes',rid(),m);lsSet('sd-mk-src',MKF.src);MKF.sub=m.sub;MKF.q=MKF.a=MKF.r='';toast('已加入，明天會提醒複習');render();setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
+    save('mistakes',rid(),m);lsSet('sd-mk-src',MKF.src);MKF.sub=m.sub;if(MKF.fromNote){qnEdit(MKF.fromNote,x=>{x.done=true});MKF.fromNote=null}MKF.q=MKF.a=MKF.r='';toast('已加入，明天會提醒複習');render();setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
   mkFormT:()=>{mkFormOpen=!mkFormOpen;mkCauseEdit=false;render();if(mkFormOpen)setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
-  mkCauseT:el=>{const v=el.dataset.v,L=el.dataset.scope==='edit'?MKE.causes:MKF.causes,i=L.indexOf(v);if(i<0)L.push(v);else L.splice(i,1);el.setAttribute('aria-pressed',i<0?'true':'false')},
+  mkCauseT:el=>{const v=el.dataset.v,L=el.dataset.scope==='edit'?MKE.causes:MKF.causes,i=L.indexOf(v);if(i<0)L.push(v);else L.splice(i,1);el.setAttribute('aria-pressed',i<0?'true':'false');if(el.dataset.scope!=='edit'){const h=$('#mkSim');if(h)h.outerHTML=mkSimHTML()}},
   mkCauseEditT:()=>{mkCauseEdit=!mkCauseEdit;render()},
   mkCauseAdd:()=>{const i=$('#mkCauseNew'),n=(i&&i.value||'').trim();if(!n)return toast('先寫'+exL('cause'));const L=mkCauseList(MKF.sub);if(L.includes(n))return toast('已經有「'+n+'」');const k=mkCauseOwn(MKF.sub)?MKF.sub:'_all';editCfg(c=>{c.mkCauses=Object.assign({},c.mkCauses||{},{[k]:L.concat([n])})});render();setTimeout(()=>{const j=$('#mkCauseNew');j&&j.focus()},30)},
   mkCauseDel:el=>{const v=el.dataset.v,k=mkCauseOwn(MKF.sub)?MKF.sub:'_all',L=mkCauseList(MKF.sub).filter(x=>x!==v);editCfg(c=>{c.mkCauses=Object.assign({},c.mkCauses||{},{[k]:L})});MKF.causes=MKF.causes.filter(x=>x!==v);render()},
@@ -3055,6 +3093,14 @@ const A={
   msSave:el=>{const id=el.dataset.id,m=clone(S.mistakes[id]);if(!m)return;const g=k=>(($(k)||{}).value||'').trim(),q=g('#mkE_q');if(!q)return toast(exL('item')+'不能空白');
     Object.assign(m,{sub:g('#mkE_s'),q,a:g('#mkE_a'),rule:g('#mkE_r'),src:g('#mkE_src'),causes:MKE.causes.slice(),edited:today()});save('mistakes',id,m);mkEditId=null;toast('已修改，複習進度不變');render()},
   revOpen:()=>revOpen(),
+  mkRange:el=>{mkRange=el.dataset.v;render()},
+  mkTopPick:el=>{mkFSub=el.dataset.sub||'';mkFCause=el.dataset.c||'';mkFilter='all';render();setTimeout(()=>{const l=$('#mkList');l&&l.scrollIntoView({block:'start',behavior:'smooth'})},40)},
+  mkFClear:()=>{mkFSub=mkFCause=mkQ='';render()},
+  msAttach:()=>{const id=($('#mkSimSel')||{}).value,m=clone(S.mistakes[id]);if(!m)return;const g=k=>(($(k)||{}).value||'').trim();
+    m.stage=0;m.due=addDays(today(),1);m.again=(m.again||0)+1;m.agains=(m.agains||[]).concat([Object.assign({d:today()},g('#msQ')?{q:g('#msQ')}:{},g('#msSrc')?{src:g('#msSrc')}:{})]);save('mistakes',id,m);
+    MKF.src=g('#msSrc');lsSet('sd-mk-src',MKF.src);if(MKF.fromNote){qnEdit(MKF.fromNote,x=>{x.done=true});MKF.fromNote=null}MKF.q=MKF.a=MKF.r='';toast(`已附加到舊卡（又錯 ${m.again} 次），明天重新複習`);render();setTimeout(()=>{const i=$('#msQ');i&&i.focus()},30)},
+  tMk:()=>{const n=(tPreset().name||'')+' '+tPreset().segs.map(x=>x.n).join(' '),hit=mkSubs().find(x=>x.n&&n.includes(x.n));if(hit)MKF.sub=hit.id;mkFormOpen=true;render();setTimeout(()=>{const m=$('#mistakes');m&&m.scrollIntoView({behavior:'smooth'});const i=$('#msQ');i&&i.focus({preventScroll:true})},60)},
+  qnMk:el=>{const d=el.dataset,t=qnText(d);if(!t)return;closeModal();MKF.q=t;MKF.fromNote={src:d.src,k:d.k,id:d.id};mkFormOpen=true;mkFilter='due';if(R!=='exam')location.hash='#exam';else render();setTimeout(()=>{const m=$('#mistakes');m&&m.scrollIntoView();const i=$('#msQ');i&&i.focus({preventScroll:true})},120)},
   revFlip:()=>{if(REV){REV.flip=true;revRender()}},
   revAns:el=>{if(!REV||!REV.flip)return;const v=el.dataset.v;mkReview(REV.ids[REV.i],v);REV.n[v==='1'?'ok':v==='f'?'fz':'ng']++;REV.i++;REV.flip=false;revRender()},
   revClose:()=>closeModal(),
@@ -4031,20 +4077,25 @@ const MZ_M={
  dull:[
   {m:'昏沉和散亂，是靜坐時最常見的兩種狀態。用功時太緊張，神經一繃緊就容易累，累了自然想睡，所以第一步其實是放鬆，而不是更用力。輕微的昏沉，睜大眼睛、把注意力提到眉心，通常就能清醒；很重的昏沉，最好的方法反而是乾脆睡一會兒。也可以留意時段：飯後或熬夜後最容易昏沉，換到精神好的時候坐，會輕鬆很多。下次坐前先活動一下肩頸、洗把臉，坐的時間也可以先短一點，清醒地坐十分鐘，勝過昏沉地坐半小時。',s:'聖嚴法師《禪的體驗‧禪的開示》頁 41–43；《禪的生活》頁 59–60'},
   {m:'想睡的時候，可以不急著趕走它，先在心裡輕輕說：「想睡、想睡」，眼皮重就知道「沉重」。這樣清楚地看著，有時睡意會自己退去，心又變得清明。如果一直只看同一個點、太安靜，也容易昏沉，這時可以改成觀察腹部的起伏，或加上身體接觸坐墊的感覺，讓心有一點事做。坐和走交替練習，也是對治昏沉的好方法。如果睡意始終不退，也不必責怪自己，那可能只是身體需要休息，今天早點睡，明天再坐。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 37；《Ⅱ》頁 28–30'},
-  {m:'昏沉常有兩種來源：一是真的累了、睡不夠；二是對練習的對象提不起興趣，心力變得薄弱。前者需要的是休息，好好睡一覺，比硬撐更有幫助；後者可以讓練習多一點新鮮感，例如換成行走靜心，或在吸氣時感受空氣的清涼、吐氣時感受溫暖，讓注意力有個鮮明的地方停留。也可以想想最近的作息：睡得夠嗎？吃得太飽嗎？很多時候，調整一下生活，比在坐墊上用力有效。下次不妨換個時段試試。',s:'帕奧禪師《如實知見》'}],
+  {m:'昏沉常有兩種來源：一是真的累了、睡不夠；二是對練習的對象提不起興趣，心力變得薄弱。前者需要的是休息，好好睡一覺，比硬撐更有幫助；後者可以讓練習多一點新鮮感，例如換成行走靜心，或在吸氣時感受空氣的清涼、吐氣時感受溫暖，讓注意力有個鮮明的地方停留。也可以想想最近的作息：睡得夠嗎？吃得太飽嗎？很多時候，調整一下生活，比在坐墊上用力有效。下次不妨換個時段試試。',s:'帕奧禪師《如實知見》'},
+  {m:'想睡的時候，有一個很實用的姿勢：離開坐墊，跪在硬地板上，大腿、臀部和上身挺直，雙手合掌、稍微往前伸離胸口，把注意力穩穩放在指尖。身體得自己撐住，人就不容易沉下去。也可以起身快步走幾圈，走路時只是走，不想別的，疲累和昏沉都會散開。輕微想睡就把眼睛睜大一點，真的很睏就閉眼休息一下；只是別養成一想睡就停下來的習慣，多數時候換個方式，練習可以繼續。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 38、40、45'}],
  tense:[
   {m:'靜坐的目的可以說得很簡單：學會放鬆身心，以及隨時能安定身心，兩者是一體的兩面，能放鬆就能安定。放鬆的方法就是「不用力」：眼球不用力、臉部不用力、肩膀和手臂不用力，再檢查小腹，小腹一直緊著，久了會呼吸不順。如果數呼吸時頭會痛，通常是在用頭腦「想」呼吸，把注意力放回身體和坐墊接觸的地方，頭就會輕鬆。下次開始前，花一分鐘從頭到腳掃過一遍，哪裡緊就讓哪裡鬆一點。',s:'聖嚴法師《禪的體驗‧禪的開示》頁 226、253；《聖嚴法師教默照禪》頁 31'},
-  {m:'有人把呼吸想像成一只直立的水瓶：吸氣時，水從瓶底慢慢升起，經過腹部、胸口到喉嚨；吐氣時，水位一路往下降，直到瓶底。不必刻意控制，只是溫和地詢問身體：「怎麼呼吸對你最好？」也許把肩膀放低一點，也許胸口打開一點。試著找到讓身體覺得舒服的呼吸方式，緊繃會在不知不覺中鬆開。這樣的呼吸沒有要達成什麼，只因為呼吸本身值得被好好感受。下次覺得緊時，就回到這只水瓶。',s:'比約恩．納提科《我可能錯了》第 3 章'}],
+  {m:'有人把呼吸想像成一只直立的水瓶：吸氣時，水從瓶底慢慢升起，經過腹部、胸口到喉嚨；吐氣時，水位一路往下降，直到瓶底。不必刻意控制，只是溫和地詢問身體：「怎麼呼吸對你最好？」也許把肩膀放低一點，也許胸口打開一點。試著找到讓身體覺得舒服的呼吸方式，緊繃會在不知不覺中鬆開。這樣的呼吸沒有要達成什麼，只因為呼吸本身值得被好好感受。下次覺得緊時，就回到這只水瓶。',s:'比約恩．納提科《我可能錯了》第 3 章'},
+  {m:'坐姿不是要把身體鎖成一塊硬板，而是讓它一點一點放鬆，直到自己找到平衡。脊椎像一疊杯子，一個穩穩疊在另一個上面；骨架對了，肩膀、胸口和小腹就不必出力撐著。坐得太用力，常是心裡緊張焦急的訊號。呼吸也一樣：不要替它定速度，刻意控制，反而會頭暈、胸口發緊；放鬆，讓它自己找到平順的節奏，呼吸會慢慢變細、變長。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 36、43'}],
  restless:[
   {m:'多數調心的方法，都是用來對治散亂的心，最基本的就是數呼吸：只數吐氣，從一到十，周而復始。數數本身也是一個念頭，但它用一個單純的念頭代替紛亂的念頭，心就有了落腳處。調心最要緊的是不可心急，心若老是焦急地期待什麼、擔心什麼，只會更疲憊。心太躁時，也可以先活動幾分鐘或慢慢走路，再坐下來。下次坐不住時，先別急著要安靜，從「數到十」這樣一個小目標開始，數亂了就從一重來。',s:'聖嚴法師《禪的體驗‧禪的開示》頁 43；《禪的生活》頁 53、108–109'},
-  {m:'心浮動不安的時候，就像一堆灰燼被石頭擊中，灰塵四處飛揚。這時不需要用力壓制，越壓越亂；先讓吐氣慢一點、長一點，讓揚起的灰塵自己慢慢落下。也可以把呼吸分成幾小段來數，每次吸氣在心裡默數到五，吐氣也數到五，注意力就比較不容易跑掉。數的目的不是數字本身，而是讓心一直跟著呼吸。數到五或十就好，不要數得太快，也不必在意數字對不對，平靜地數，讓數字陪著呼吸。下次心亂時，先從長長的吐氣開始。',s:'帕奧禪師《如實知見》；焦諦卡禪師《禪修之旅》第二講'}],
+  {m:'心浮動不安的時候，就像一堆灰燼被石頭擊中，灰塵四處飛揚。這時不需要用力壓制，越壓越亂；先讓吐氣慢一點、長一點，讓揚起的灰塵自己慢慢落下。也可以把呼吸分成幾小段來數，每次吸氣在心裡默數到五，吐氣也數到五，注意力就比較不容易跑掉。數的目的不是數字本身，而是讓心一直跟著呼吸。數到五或十就好，不要數得太快，也不必在意數字對不對，平靜地數，讓數字陪著呼吸。下次心亂時，先從長長的吐氣開始。',s:'帕奧禪師《如實知見》；焦諦卡禪師《禪修之旅》第二講'},
+  {m:'一般人的心像鐘擺，在兩頭擺盪：精神好時散亂、念頭翻騰，累了就昏沉。散亂是最常見的難題，數呼吸正是對治它的方法。剛開始數，常數到一半就跑掉，或想著「這樣數對不對」；沒關係，一次又一次把注意力帶回數字，紛亂會慢慢被收攏，專注的時間一段比一段長。練習的進展就是這個樣子：不是一下子安靜，而是斷斷續續的線，慢慢連成一條。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 44–46'}],
  thoughts:[
   {m:'念頭很多不需要害怕，也不用費力去降伏它。只要認得它，不跟著它跑，也不急著把它推開，念頭沒有被接下去，自己就會離開。就像貓守在洞口等老鼠：放鬆地看著，老鼠出來也好、不出來也好，出來就看見牠，跑了也不追。練習久了，會發現察覺念頭的時候，它往往已經過去了。下次念頭很多時，可以在心裡輕輕說一聲「想」，像跟它打個招呼，然後回到呼吸，不必和它講道理。',s:'虛雲老和尚開示，收於聖嚴法師《禪門修證指要》頁 233；《禪的生活》頁 53、58'},
   {m:'有位泰國禪師用蜘蛛來比喻：蜘蛛結好網，就安靜地待在網中央；有蟲子撞上來，牠過去處理一下，又回到中央。念頭和感受就像撞上網的小蟲，來了就知道，處理完再回到呼吸這個中心。念頭越常出現，越不要為此煩躁，反而要把心情放鬆，輕輕地回到氣息上就好。不管念頭是什麼，覺知的心只要清楚，念頭就只是進來又離開。下次心被拉走時，記得那隻在網中央、不慌不忙的蜘蛛。',s:'《阿姜查的禪修世界（二）》；帕奧禪師《轉正法輪》'},
-  {m:'有位在森林寺院修行十七年的瑞典僧人說，他學到最珍貴的一件事是：不再相信自己的每一個念頭。大腦本來就像熱鬧的馬戲團，不停冒出各種想法，這很正常，每個人都一樣。我們不能選擇哪些念頭會出現，但可以選擇要不要相信它。注意力每次溜走，發現了就好，不用責備自己，平靜地把它帶回來。用一點幽默看待自己的念頭，會讓人更容易做自己。下次腦中又開始演戲時，可以對自己笑一笑：「馬戲團又開演了。」',s:'比約恩．納提科《我可能錯了》第 3、5、6 章'}],
+  {m:'有位在森林寺院修行十七年的瑞典僧人說，他學到最珍貴的一件事是：不再相信自己的每一個念頭。大腦本來就像熱鬧的馬戲團，不停冒出各種想法，這很正常，每個人都一樣。我們不能選擇哪些念頭會出現，但可以選擇要不要相信它。注意力每次溜走，發現了就好，不用責備自己，平靜地把它帶回來。用一點幽默看待自己的念頭，會讓人更容易做自己。下次腦中又開始演戲時，可以對自己笑一笑：「馬戲團又開演了。」',s:'比約恩．納提科《我可能錯了》第 3、5、6 章'},
+  {m:'古代禪師把練心比作牧牛。馬祖道一問一位在廚房燒火的僧人在做什麼，他說：「牧牛。」「怎麼牧？」「牠一跑進草叢，我就把牠的鼻子拉回路上。」好的牧牛人從不生氣，不懊惱剛才，也不擔心等一下，只是發現心跑開了，就溫和地把它帶回來。其實，知道心跑掉的那一刻，就已經回來了；那個「知道」本身，就是在練習。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 201–203'}],
  body:[
   {m:'痛、麻、痠、癢都是打坐常見的反應：腿痛、腰痛多屬正常；腿麻站起來甩一甩、走幾步就會恢復；關節或腰部痠，下坐後按摩幾下即可；坐時用毛巾蓋住雙腿，可以避免受寒痠痛。輕微的痛不必理會，甚至能讓心念更集中；但如果痛到已無法安心，就不需要忍：背痛就彎一彎腰，腿痛就把腿放開。另外，打坐時的痛常與緊張有關，接受它、不對抗它，反而容易緩解。下次開始前先暖身，坐的時間也可以循序漸進。',s:'聖嚴法師《聖嚴法師教禪坐》頁 102；《聖嚴法師教默照禪》頁 83'},
-  {m:'身體出現痠、痛、麻、癢時，可以把注意力放在那裡，心裡輕輕標記：「痛、痛」或「痠、痠」，看它怎麼變化。有時它會慢慢減弱，有時會變強。如果真的忍不住想換姿勢，先知道「想換了」，再慢慢地、清楚地移動，每個動作都看著。換好之後，再回到呼吸。這樣，換姿勢本身也成了練習。如果觀察一陣子仍很難受，就照顧身體、換個姿勢，不必硬撐。下次可以先選一個能久坐又舒服的姿勢，坐椅子也很好。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 27–30'}],
+  {m:'身體出現痠、痛、麻、癢時，可以把注意力放在那裡，心裡輕輕標記：「痛、痛」或「痠、痠」，看它怎麼變化。有時它會慢慢減弱，有時會變強。如果真的忍不住想換姿勢，先知道「想換了」，再慢慢地、清楚地移動，每個動作都看著。換好之後，再回到呼吸。這樣，換姿勢本身也成了練習。如果觀察一陣子仍很難受，就照顧身體、換個姿勢，不必硬撐。下次可以先選一個能久坐又舒服的姿勢，坐椅子也很好。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 27–30'},
+  {m:'腿痛、腿緊是很多人一開始的功課。可以一步一步來：先坐短一點，再慢慢加長，腿的柔軟度和心一樣，會隨著練習打開。坐墊高度很重要：太低，身體會累、會往前垮；太高，又坐不穩，試出適合自己的厚度，只坐在坐墊的前半部。腿上蓋條毛巾，避免受涼。坐完腿痠，起身快步走一走，可以舒緩痠痛，也讓身心重新協調。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 37、40'}],
  sound:[
   {m:'不論在做什麼，只要知道正在發生什麼，並恰如其分地處理，不加上「我好討厭」「這真麻煩」的評論，就不會被外境帶著走。面對聲音也是如此：聲音出現，清楚知道；聲音離開，也清楚知道，不迎接、不抗拒。這樣練習，聲音反而能成為讓心安定的對象，像潮水一樣來來去去。也就是說，讓我們煩的常常不是聲音，而是心裡那句「希望它停下來」。下次聽到聲音時，試著只聽，不加評論，看看心有什麼不同。',s:'聖嚴法師《聖嚴法師教默照禪》頁 22–23'},
   {m:'聽到明顯的聲音時，可以在心裡標記「聽到、聽到」兩三次，然後回到呼吸。不用去分辨那是什麼聲音、好不好聽。容易被聲音嚇一跳或煩躁，常是因為我們不自覺地替聲音加上了意思。練習久了，心安定下來，聲音就只是聲音，不再拉走你。環境太吵時，換個時段或地點，也是照顧練習的方式。下次被聲音拉走時，不用懊惱，知道「聽到了」，就是這次練習的一部分。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 44–45；帕奧禪師《轉正法輪》'}],
@@ -4053,26 +4104,33 @@ const MZ_M={
   {m:'有位禪師說，每一種情緒都有它的家。怒氣來了，不必討論「該不該生氣」，只是清清楚楚地看著它來，看它在身體和心裡的樣子，然後讓它慢慢回到自己的家。不執著，也不逃避。這需要一點安靜和耐心，但每一次你只是看著而沒有被帶走，心就多了一分自由。這種單純的觀察需要練習，一開始可能只撐得了幾秒鐘，沒關係。下次情緒來時，試著在心裡說：「我看見你了」，然後陪它待一會兒，等它自己回家。',s:'《阿姜查的禪修世界（二）》'}],
  worry:[
   {m:'「好事不強求，壞事不拒絕。一切現象的發生必有其原因，要平心靜氣地接受它、處理它、完成它，這就容易放鬆了。」擔心，多半是心跑到了還沒發生的未來。感到恐懼、緊張時，呼吸會變得急促，這時不一定適合勉強打坐，可以先躺下或坐著休息，等呼吸平順了再開始。靜心不是要讓擔心消失，而是在擔心旁邊，多留一點空間給自己。下次擔心浮現時，可以先問自己：「此刻，我是安全的嗎？」',s:'聖嚴法師《禪的體驗‧禪的開示》頁 36、253'},
-  {m:'當心情很糟時，所有念頭好像都通過一層灰暗的濾鏡，最後都變成不安和焦慮。試圖硬壓下這些念頭往往沒用，換成正面思考也覺得很假。這時可以做一件很簡單的事：把注意力放回呼吸，這次吸氣從哪裡開始、在哪裡結束，停頓一下。只是十幾分鐘，胸口的緊悶也可能稍微鬆開，念頭之間的空隙會變長。這不是要你想通什麼，只是讓自己從念頭的漩渦裡短暫地喘口氣。下次心裡很亂時，先試著陪呼吸十次就好。',s:'比約恩．納提科《我可能錯了》第 2–3 章'}],
+  {m:'當心情很糟時，所有念頭好像都通過一層灰暗的濾鏡，最後都變成不安和焦慮。試圖硬壓下這些念頭往往沒用，換成正面思考也覺得很假。這時可以做一件很簡單的事：把注意力放回呼吸，這次吸氣從哪裡開始、在哪裡結束，停頓一下。只是十幾分鐘，胸口的緊悶也可能稍微鬆開，念頭之間的空隙會變長。這不是要你想通什麼，只是讓自己從念頭的漩渦裡短暫地喘口氣。下次心裡很亂時，先試著陪呼吸十次就好。',s:'比約恩．納提科《我可能錯了》第 2–3 章'},
+  {m:'日常生活裡有一個簡單的原則：專心在手上正在做的事，全身全心都在；不想過去，也不想未來，只做眼前需要做的，用慢而準確的動作完成它。擔心，多半是心跑到了還沒發生的明天。試著把注意力帶回此刻正在做的這一件事：倒一杯水、走一段路、洗一個碗，做完再做下一件。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 41'}],
  sad:[
   {m:'靜心不是要讓情緒消失，而是在情緒裡也能有一點空間。情緒低落、身心疲累時，不適合硬撐著坐，先讓身體休息、讓呼吸平順下來，再回來練習。也可以用很簡單的方式陪伴自己：慢慢走一段路，或只是感覺三次呼吸，告訴自己「現在是這樣，沒關係」。如果難過一直持續，請和信任的人或專業人員聊聊。難過時，也可以把練習改成慈心：在心裡對自己說「願我平安，願我好好照顧自己」，就像安慰一位朋友那樣。',s:'參考聖嚴法師《禪的體驗‧禪的開示》頁 36'},
-  {m:'有位曾經歷憂鬱的老師說，很難熬的夜裡，他的老師只是微笑地說：「好好睡吧，也許明天早上你就會感覺很不一樣。」事情也真的如此。沒有什麼是永遠不變的，最艱難的時候也一樣。練習不能保證我們永遠順利，但能讓我們身處難受之中，心不完全被它帶走。所以今天就先好好休息、照顧自己，不需要逼自己馬上好起來。如果低落持續很多天，記得找信任的人聊聊，或尋求專業協助。',s:'比約恩．納提科《我可能錯了》第 6 章；《阿姜查的禪修世界（二）》'}],
+  {m:'有位曾經歷憂鬱的老師說，很難熬的夜裡，他的老師只是微笑地說：「好好睡吧，也許明天早上你就會感覺很不一樣。」事情也真的如此。沒有什麼是永遠不變的，最艱難的時候也一樣。練習不能保證我們永遠順利，但能讓我們身處難受之中，心不完全被它帶走。所以今天就先好好休息、照顧自己，不需要逼自己馬上好起來。如果低落持續很多天，記得找信任的人聊聊，或尋求專業協助。',s:'比約恩．納提科《我可能錯了》第 6 章；《阿姜查的禪修世界（二）》'},
+  {m:'呼吸有幾種樣子，其中一種是緊張、不安或身體不舒服時那種卡住、不順的呼吸。在這種狀態下，不適合硬撐著練習；身心很疲憊或壓力很大時，先躺下來休息一會兒，等力氣恢復一點、呼吸平順了，再回來坐。難過的時候也是如此，照顧自己不是偷懶，休息本身就是讓心回穩的一步。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 42'}],
  expect:[
   {m:'納提科第一次在寺院靜坐時，心裡嘀咕：「怎麼這麼無聊？不是應該發生什麼事嗎？」他說，很多人剛開始都犯同樣的錯，以為腦袋會靜下來；其實只要活著，念頭就會不斷冒出來，這再正常不過。練習不是等待特別的體驗，而是看見念頭來了，輕輕對自己說：「嘿，那個念頭又來了，那就放掉它吧。」帶著一點幽默，別把每個念頭都看得太認真。',s:'比約恩．納提科《我可能錯了》第5章〈初探寺院〉'},
   {m:'有學生坐出一次很好的狀態，之後一直想再回去，他的老師說：「我沒辦法使你每一次打坐，都能得到輕靈明淨；我只能告訴你，每次打坐，不求效果，不怕壞境界，也不求好境界現前。」他也用破繭來比喻：蝴蝶若急著鑽出繭殼，反而可能提前死在繭中。練習需要時間，急不來。練習比較像種花：每天澆水，花什麼時候開，不用一直去看。下次坐下時，試著把目標從「要坐得好」換成「要清楚知道」，不管狀態如何，知道就是做對了。',s:'聖嚴法師《禪的生活》頁 108–109、203–204'},
-  {m:'試著不期待好的經驗，也不排斥壞的經驗，因為每一種經驗，都能幫我們更了解自己。希望練習更順利、想要特別的體驗時，可以在心裡知道「期待、期待」，然後回到呼吸。有些人只想付出一點、得到很多，但練習比較像種地：先整地、拔草，種子才會慢慢長出來。只要持續整地、澆水，土壤準備好了，該長的自然會長出來。下次坐下前，可以對自己說一句：「今天怎麼樣都好，我只是來看看。」',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 46；《Ⅱ》；焦諦卡禪師《禪修之旅》第一講'}],
+  {m:'試著不期待好的經驗，也不排斥壞的經驗，因為每一種經驗，都能幫我們更了解自己。希望練習更順利、想要特別的體驗時，可以在心裡知道「期待、期待」，然後回到呼吸。有些人只想付出一點、得到很多，但練習比較像種地：先整地、拔草，種子才會慢慢長出來。只要持續整地、澆水，土壤準備好了，該長的自然會長出來。下次坐下前，可以對自己說一句：「今天怎麼樣都好，我只是來看看。」',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 46；《Ⅱ》；焦諦卡禪師《禪修之旅》第一講'},
+  {m:'了解練習會經過哪些階段是有幫助的，但如果因此替自己設下不切實際的期待，急著達到某種境界，這些知識反而成了障礙。有些人練了一陣子沒看到效果，就想換一個「更好」的方法；有些人收集各種技巧，新鮮感過了又換下一個。其實每一種方法都是最好的方法，差別在於練習的人有沒有耐心。先把一個方法好好用一段時間，再談換不換。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 44、177'}],
  judge:[
   {m:'有學生在禪修時覺得自己脫胎換骨，回到生活不久又退回原狀，懊喪得不好意思再回來。他的老師說：「其實不要害怕，不必害羞，這是正常的現象……有進，才知道修行有用；有退，才知道還需要用功。」對自己嚴格的聲音，也只是一個念頭，看見它就好，不必相信它。試著用對好朋友說話的語氣對自己說：「沒關係，我們再回來就好。」坐下來、發現走神、再回來，每一步都算數，明天再坐就好。',s:'聖嚴法師《禪的生活》頁 42–43'},
-  {m:'很多人心裡都有一個挑剔的聲音，做得好時默不作聲，一出錯就變得特別大聲。一位前僧人說，他剛學靜坐時，面對的正是自己源源不絕的批評和質疑，四天就逃離了寺院。後來他和自己約定：要學著成為和自己更自在相處的人，有一天甚至成為自己的好朋友。不用一次做到，每天一點就好。下次那個聲音又出現時，可以只是知道「批評的聲音來了」，不和它爭辯，然後溫和地回到呼吸。每一次這樣做，都是在練習善待自己。',s:'比約恩．納提科《我可能錯了》第 6 章'}],
+  {m:'很多人心裡都有一個挑剔的聲音，做得好時默不作聲，一出錯就變得特別大聲。一位前僧人說，他剛學靜坐時，面對的正是自己源源不絕的批評和質疑，四天就逃離了寺院。後來他和自己約定：要學著成為和自己更自在相處的人，有一天甚至成為自己的好朋友。不用一次做到，每天一點就好。下次那個聲音又出現時，可以只是知道「批評的聲音來了」，不和它爭辯，然後溫和地回到呼吸。每一次這樣做，都是在練習善待自己。',s:'比約恩．納提科《我可能錯了》第 6 章'},
+  {m:'練習要像調好的琴弦，不太緊，也不太鬆。太鬆，容易給自己找藉口；太緊，出於好強或對自己的不滿硬逼自己，最後只會累垮、頭痛，乾脆放棄好一陣子。說好不動卻還是換了腿，不用因此放棄，可以對自己說：「這次沒做到，下次我再發同樣的願，做得更好一點。」每次坐下都這樣，信心和力氣會一點一點長出來。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 181–183'}],
  doubt:[
   {m:'要相信自己有練習的能力，不要小看自己，也不要懷疑自己；若對自己和方法起疑，遇到困難時就很容易放棄。今天這樣、明天那樣，又擔心得不到效果，這些盤算本身就成了障礙。所以先選定一個方法，安心地用一段時間。有疑問時，請教有經驗的老師，比自己反覆猜測更有幫助。下次覺得「這樣有沒有用」時，可以先把問題寫下來，繼續練習一兩週，再回頭看看，很多疑問會在練習中自己有了答案。',s:'聖嚴法師《禪的體驗‧禪的開示》頁 288–289；《禪門修證指要》頁 176'},
-  {m:'一位著名的禪師坦白說，他剛開始練習時也沒有信心，練了一個月仍覺得一無所獲，後來才明白是把時間花在懷疑上，誤把懷疑當成了分析。練習沒有進展時，可以知道「懷疑、懷疑」，然後回到呼吸。持續地做，答案常常會在練習中自己出現。小小的改變常常不容易察覺：比較快發現自己走神、情緒來時多了一點空間、睡得比較好，這些都是進步。下次可以留意一下這些小變化，寫進筆記裡。',s:'馬哈希大師《向馬哈希大師學正念Ⅱ》頁 15–19；焦諦卡禪師《禪修之旅》第二講'}],
+  {m:'一位著名的禪師坦白說，他剛開始練習時也沒有信心，練了一個月仍覺得一無所獲，後來才明白是把時間花在懷疑上，誤把懷疑當成了分析。練習沒有進展時，可以知道「懷疑、懷疑」，然後回到呼吸。持續地做，答案常常會在練習中自己出現。小小的改變常常不容易察覺：比較快發現自己走神、情緒來時多了一點空間、睡得比較好，這些都是進步。下次可以留意一下這些小變化，寫進筆記裡。',s:'馬哈希大師《向馬哈希大師學正念Ⅱ》頁 15–19；焦諦卡禪師《禪修之旅》第二講'},
+  {m:'練習需要的「信」，不是盲目相信，而是有理解作基礎的信心：相信自己做得到，相信方法，也相信帶領你的人。對自己的信心從哪裡來？一部分來自了解方法背後的道理，另一部分來自實際去練：心慢慢安定，身心開始有一些小小的好轉，你會自然想：「原來我也可以。」如果覺得自己不是那塊料，練習就容易半途而廢，所以先給自己一點信任，再讓經驗來證明。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 176–177'}],
  strange:[
   {m:'心比較集中時，偶爾會出現特別的反應，例如看到光、身體晃動或輕飄飄的感覺。這些通常只是專注帶來的現象，像夢境一樣，不需要高興，也不需要害怕。好奇、害怕或執著它，它反而會停留更久；只是知道「看到了」，回到呼吸，它會慢慢淡去。若感覺讓你不安，或常常出現，請先暫停，並請教有經驗的老師或醫師。這些感覺本身沒有好壞，也不代表練習的程度高低，平常心看待就好。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 30–33、57–59、66–70'},
-  {m:'練習中若突然被驚醒、身體一震，常是因為心習慣緊抓著「我要知道發生什麼事」，一放鬆就本能地想保護自己。找一個讓你覺得安全的地方練習，坐前先對自己和身邊的人祝福一下，也可以告訴自己：「如果有任何狀況，我會醒來處理。」不用控制，只要像坐在路邊看車來車往的人一樣，知道就好。對初學者來說，這是很常見的反應，隨著練習越來越安心，它會慢慢減少。也可以和信任的人一起練習，會更有安全感。',s:'焦諦卡禪師《禪修之旅》第三講'}],
+  {m:'練習中若突然被驚醒、身體一震，常是因為心習慣緊抓著「我要知道發生什麼事」，一放鬆就本能地想保護自己。找一個讓你覺得安全的地方練習，坐前先對自己和身邊的人祝福一下，也可以告訴自己：「如果有任何狀況，我會醒來處理。」不用控制，只要像坐在路邊看車來車往的人一樣，知道就好。對初學者來說，這是很常見的反應，隨著練習越來越安心，它會慢慢減少。也可以和信任的人一起練習，會更有安全感。',s:'焦諦卡禪師《禪修之旅》第三講'},
+  {m:'練習中出現光、身體變輕、特別自在的感覺，可能是心比平常明亮開闊的好現象，也會加深你練習的心意；但它們多半只是身心對姿勢和呼吸的自然反應，過一陣子，平常的煩惱又會回來。不必把它當成了不起的成就，也不用害怕；知道它出現，讓它來去，回到原本的方法就好。真的有疑慮，找有經驗的老師談談。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 208–209'}],
  good:[
   {m:'坐得好的時候，反而要提醒自己：不期待、不企求，保持平穩的心情。一旦抓住好的感覺，下一次坐下就會想追回它，心反而緊了。這次的安定，是放鬆自然帶來的結果。可以把這次的條件記在筆記裡，例如時段、睡得好不好、坐前有沒有暖身，之後再創造類似的條件。也要記得，下一次不一樣是很自然的事，平靜的時候知道平靜，散亂的時候知道散亂，兩種都有價值。用新的心情坐下來就好。',s:'聖嚴法師《禪的生活》頁 203–204'},
-  {m:'當心比較安定，可能會覺得身心輕快、很舒服，甚至想把這份感覺告訴別人。這很好，但不必花時間享受或回味它，只是知道「舒服、平靜」，再回到呼吸。有人說，靜心像一個寬敞、空無一物、欣然接納的房間，念頭、情緒、身體的感覺，一切都可以順其自然地在裡面來去。下次坐下時，不必想重現今天的感覺，只要帶著同樣放鬆、好奇的心開始就好。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 66–68；比約恩．納提科《我可能錯了》第 1 章'}]};
+  {m:'當心比較安定，可能會覺得身心輕快、很舒服，甚至想把這份感覺告訴別人。這很好，但不必花時間享受或回味它，只是知道「舒服、平靜」，再回到呼吸。有人說，靜心像一個寬敞、空無一物、欣然接納的房間，念頭、情緒、身體的感覺，一切都可以順其自然地在裡面來去。下次坐下時，不必想重現今天的感覺，只要帶著同樣放鬆、好奇的心開始就好。',s:'馬哈希大師《向馬哈希大師學正念Ⅰ》頁 66–68；比約恩．納提科《我可能錯了》第 1 章'},
+  {m:'像在下大雨、伸手不見五指的夜裡走路，忽然一道閃電照亮四周，你看清了方向，但只照亮一小段。坐得特別好的那一刻也像這樣，值得珍惜，它讓你嘗到心安定的滋味，往後不會忘記。只是閃電過後，路還是要一步一步走。剛破殼的小雞知道張嘴吃東西，羽毛還沒長出來，不急著飛；繼續平常的練習，就是最安全的窩。',s:'聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 209–210'}]};
 // Time-of-day nuance: one extra sentence when the practice time makes it more personal.
 function mzPeriod(t){const m=/^(\d{1,2}):/.exec(t||'');if(!m)return null;const h=+m[1];return h<4?'late':h<7?'dawn':h<11?'morning':h<14?'noon':h<17?'afternoon':h<21?'evening':'night'}
 const MZ_TOD={
@@ -4308,7 +4366,7 @@ Object.assign(A,{
   prDist:el=>{const v=el.dataset.v;editDay(el.dataset.k,d=>{const x=(d.j.practice||[]).find(y=>y.id===el.dataset.id);if(!x)return;x.dist=x.dist||[];if(v==='幾乎沒有')x.dist=x.dist.includes(v)?[]:[v];else{x.dist=x.dist.filter(y=>y!=='幾乎沒有');x.dist=x.dist.includes(v)?x.dist.filter(y=>y!==v):x.dist.concat([v])}});render()},
   prAdd2:()=>{const m=+$('#prMin').value,k=$('#prDate').value||today();if(!m)return;editDay(k,d=>{d.j.practice=d.j.practice||[];d.j.practice.push({id:rid(),min:m,method:$('#prM').value,q:null,note:''})});toast('已補登');render()}
 });
-Object.assign(C,{mkCauseOwn:el=>{const sub=MKF.sub;if(!sub)return;editCfg(c=>{const m=Object.assign({},c.mkCauses||{});if(el.checked)m[sub]=mkCauseList(sub).slice();else delete m[sub];c.mkCauses=m});render()},qnRem:el=>{qnRemind=el.value;const t=$('#qnRemT');if(t){t.hidden=el.value!=='t';if(!t.hidden)t.focus()}},flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
+Object.assign(C,{mkCap:el=>{editCfg(c=>{c.mkDailyCap=+el.value});render()},mkFSub:el=>{mkFSub=el.value;render()},mkFCause:el=>{mkFCause=el.value;render()},mkCauseOwn:el=>{const sub=MKF.sub;if(!sub)return;editCfg(c=>{const m=Object.assign({},c.mkCauses||{});if(el.checked)m[sub]=mkCauseList(sub).slice();else delete m[sub];c.mkCauses=m});render()},qnRem:el=>{qnRemind=el.value;const t=$('#qnRemT');if(t){t.hidden=el.value!=='t';if(!t.hidden)t.focus()}},flexSet:el=>{editProj(p=>{p.flex=el.checked});render()},splashSet:el=>{lsSet('sd-splash',el.checked?'on':'off')},noiseSet:el=>{lsSet('sd-noise-on',el.checked);nzWarm();if(el.checked)unlockAudio();syncNoise();render()},xwarnSet:el=>{lsSet('sd-xwarn',el.checked);syncSched();render()},bgSet:el=>{lsSet('sd-bg',el.checked);if(!el.checked)keepAlive(false);toast(el.checked?'已開啟背景響鈴':'已關閉背景響鈴')},wakeSet:el=>{lsSet('sd-wake',el.checked);syncSched()},nxWho:el=>{const ct=(proj(curProj).contacts||{})[el.value];const e=$('#nxE');if(e&&ct!==undefined)e.value=ct},zoomSet:el=>{lsSet('sd-zoom',+el.value);applyScale();render()},mMethod:el=>{if(el.value==='__add'){medAdding=true;render();setTimeout(()=>{const i=$('#mMethodNew');i&&i.focus()},30);return}MT.method=el.value;savMT()}});
 Object.assign(A,{
   emoEditT:()=>{emoEdit=!emoEdit;render()},
   emoDel:el=>{const k=el.dataset.e;editCfg(c=>{c.emoList=emoList().filter(x=>x.k!==k)});render()},
@@ -4930,16 +4988,16 @@ Object.assign(IN,{cdCalc:()=>{const d=+$('#cdD').value,m=+$('#cdM').value,p=$('#
    claude.ai 版用 AI 小助手回信；網站版依信裡的主題，從書庫觀點組成回信。提到自傷時立刻給求助資訊。 */
 const LT_THEMES=[
  {k:'calm',re:/焦慮|擔心|想太多|睡不著|失眠|緊張|壓力|不安|害怕|恐懼|煩/,a:['讀得出來，你最近心裡一直繃著。','謝謝你把這些煩惱寫下來，光是寫下來，就已經鬆開了一點。'],
-  p:[["How to Calm Your Mind", "克里斯．貝利發現，讓人焦躁的常常不是事情本身，而是一整天不停的刺激：訊息、新聞、滑不完的畫面。刺激越多，心越靜不下來。他建議試試「刺激斷食」：暫時減少這些輸入，多待在不插電的實體世界，心會慢慢沉澱。", "Ch.5〈Heights of Stimulation〉、Ch.6〈Stimulation Fasting〉"], ["我可能錯了", "納提科說，在生活中幫助他最大的一句話是：「不要相信你的每個念頭。」當腦中反覆上演最壞的情況時，可以帶著一點懷疑和幽默看待它們。那些擔心只是念頭，不一定是事實，不必被它一路拖著走。", "第6章〈不要相信你的每個念頭〉"], ["炎夏飄雪", "焦諦卡禪師在給學生的信裡說：不要把情緒和煩躁看得太認真，也不必急著替它辯護。遇到麻煩時，就觀察它，不抱怨、不責備自己或別人，也不逃避。能這樣看著它而不排斥，就比較容易度過。", "第一章〈心、正念和禪修〉，頁 19"]],
+  p:[["牛的印跡", "聖嚴法師說，一般人的心像鐘擺：精神好的時候念頭翻騰、靜不下來，累了又昏沉提不起勁。他教人先回到呼吸，只數吐氣，從一數到十；數亂了就從一重來，不責怪自己。紛亂會被一次一次收攏，心慢慢有了落腳的地方。", "第 2 章〈禪修與調身調心〉"], ["How to Calm Your Mind", "克里斯．貝利發現，讓人焦躁的常常不是事情本身，而是一整天不停的刺激：訊息、新聞、滑不完的畫面。刺激越多，心越靜不下來。他建議試試「刺激斷食」：暫時減少這些輸入，多待在不插電的實體世界，心會慢慢沉澱。", "Ch.5〈Heights of Stimulation〉、Ch.6〈Stimulation Fasting〉"], ["我可能錯了", "納提科說，在生活中幫助他最大的一句話是：「不要相信你的每個念頭。」當腦中反覆上演最壞的情況時，可以帶著一點懷疑和幽默看待它們。那些擔心只是念頭，不一定是事實，不必被它一路拖著走。", "第6章〈不要相信你的每個念頭〉"], ["炎夏飄雪", "焦諦卡禪師在給學生的信裡說：不要把情緒和煩躁看得太認真，也不必急著替它辯護。遇到麻煩時，就觀察它，不抱怨、不責備自己或別人，也不逃避。能這樣看著它而不排斥，就比較容易度過。", "第一章〈心、正念和禪修〉，頁 19"]],
   act:['今天找十分鐘，把手機放到另一個房間，只做一件慢慢的事：喝杯茶、散個步，或在日課靜心三分鐘。','睡前把擔心的事寫在紙上，寫完對自己說：「明天再處理。」把它交給明天。']},
  {k:'habit',re:/拖延|拖著|習慣|做不到|堅持|懶|三分鐘熱度|動不起來|沒辦法開始|自律/,a:['你說很難開始，這種卡住的感覺，其實很多人都有。','看得出來你對自己有期待，所以才會這麼在意。'],
-  p:[["原子習慣", "詹姆斯．克利爾的「兩分鐘法則」：開始一個新習慣時，讓它兩分鐘內就能完成，例如「每晚讀書」變成「讀一頁」，「準備考試」變成「打開筆記」。重點不是那兩分鐘做了多少，而是先養成「出現」的習慣；習慣要先建立，才能再改進。", "第13章〈如何運用「兩分鐘法則」停止拖延〉"], ["最有生產力的一年", "克里斯．貝利的「三重點法則」：每天一開始、正式工作之前，先決定今天結束前要完成的三件事；每週一開始也這樣做。事情少了，反而比較做得完。", "第3章〈每日必做的三件事〉"], ["Intentional", "克里斯．貝利發現，我們一再拖延的事，通常帶著幾個讓人抗拒的特徵：無聊、不舒服、讓人挫折、沒有頭緒、找不到意義。先看看這件事卡在哪一個，再針對它改一點：太無聊就限時挑戰，太模糊就先寫下第一步。", "Ch.4〈Ugly Goals: Lowering Aversion〉"], ["如何成為一流職場菁英？", "書中介紹心理學家海佛森的研究：事先決定「遇到這種狀況，就這樣做」，例如「早上洗完臉就讀十頁書」「想打電動時，先出去走五分鐘」。不給自己猶豫的時間，比單純下決心有效得多。", "〈從心理學觀點分析「持之以恆的人」、「表現傑出的人」有何共通點〉"]],
+  p:[["牛的印跡", "聖嚴法師說，練習像逆水划船，不划就會往後退；又像煮飯，要一直煮到熟，煮一會兒關火、過一陣子再開火，飯就不會好吃。不必拚到累倒，但要持續、不間斷。很多人說「我太忙了，沒有時間」，他說問題往往不在環境，而在先後順序。", "第 9 章〈禪修的先決條件〉"], ["原子習慣", "詹姆斯．克利爾的「兩分鐘法則」：開始一個新習慣時，讓它兩分鐘內就能完成，例如「每晚讀書」變成「讀一頁」，「準備考試」變成「打開筆記」。重點不是那兩分鐘做了多少，而是先養成「出現」的習慣；習慣要先建立，才能再改進。", "第13章〈如何運用「兩分鐘法則」停止拖延〉"], ["最有生產力的一年", "克里斯．貝利的「三重點法則」：每天一開始、正式工作之前，先決定今天結束前要完成的三件事；每週一開始也這樣做。事情少了，反而比較做得完。", "第3章〈每日必做的三件事〉"], ["Intentional", "克里斯．貝利發現，我們一再拖延的事，通常帶著幾個讓人抗拒的特徵：無聊、不舒服、讓人挫折、沒有頭緒、找不到意義。先看看這件事卡在哪一個，再針對它改一點：太無聊就限時挑戰，太模糊就先寫下第一步。", "Ch.4〈Ugly Goals: Lowering Aversion〉"], ["如何成為一流職場菁英？", "書中介紹心理學家海佛森的研究：事先決定「遇到這種狀況，就這樣做」，例如「早上洗完臉就讀十頁書」「想打電動時，先出去走五分鐘」。不給自己猶豫的時間，比單純下決心有效得多。", "〈從心理學觀點分析「持之以恆的人」、「表現傑出的人」有何共通點〉"]],
   act:['明天把最想做的那件事，縮小成兩分鐘的版本，寫進日課「今天最重要的三件事」的第一格。','下次想拖的時候，只答應自己做一個番茄鐘，時間到了就可以停。']},
  {k:'study',re:/考試|讀書|唸書|念書|學不會|記不住|成績|複習|功課|報告寫不出/,a:['準備考試的日子，真的很辛苦。','你這麼努力，卻還是覺得不夠，這份焦急我懂。'],
-  p:[["大腦喜歡這樣學", "芭芭拉．歐克莉說，大腦有兩種模式：專注模式在用力解題；放鬆、散步、洗澡、睡覺時，發散模式會在背後默默整理。卡住時起身走一走並不是偷懶，而是讓另一種模式接手，很多答案是休息之後才浮現的。", "第2章〈大腦的兩種學習模式〉、第3章〈學習是一種創造〉"], ["大腦喜歡這樣學", "歐克莉也提醒「能力的錯覺」：反覆看筆記，會讓人以為自己懂了。比較有效的是闔上書，試著回想重點；而且分成幾天、間隔著複習，比一個晚上練二十次記得更牢。", "第3章、第4章〈記憶組塊與能力的錯覺〉"], ["超速學習", "史考特．楊的法則之一是「提取記憶：用測驗來學習」：與其反覆看，不如闔上書，自己寫出來或做題目。另一條是「直截了當」：想學會什麼，就直接去做那件事；被動學習帶來知識，主動練習才帶來技能。", "第6章〈法則3 直截了當〉、第8章〈法則5 提取記憶〉"]],
+  p:[["牛的印跡", "聖嚴法師說，很多人學了一陣子沒看到效果，就想換一個「更好」的方法，或像收集珠寶一樣收集技巧，新鮮感一過又換下一個。其實沒有哪個方法本身好或不好，差別在於有沒有耐心；花足時間和力氣，方法才會顯出效果。", "第 9 章〈禪修的先決條件〉"], ["大腦喜歡這樣學", "芭芭拉．歐克莉說，大腦有兩種模式：專注模式在用力解題；放鬆、散步、洗澡、睡覺時，發散模式會在背後默默整理。卡住時起身走一走並不是偷懶，而是讓另一種模式接手，很多答案是休息之後才浮現的。", "第2章〈大腦的兩種學習模式〉、第3章〈學習是一種創造〉"], ["大腦喜歡這樣學", "歐克莉也提醒「能力的錯覺」：反覆看筆記，會讓人以為自己懂了。比較有效的是闔上書，試著回想重點；而且分成幾天、間隔著複習，比一個晚上練二十次記得更牢。", "第3章、第4章〈記憶組塊與能力的錯覺〉"], ["超速學習", "史考特．楊的法則之一是「提取記憶：用測驗來學習」：與其反覆看，不如闔上書，自己寫出來或做題目。另一條是「直截了當」：想學會什麼，就直接去做那件事；被動學習帶來知識，主動練習才帶來技能。", "第6章〈法則3 直截了當〉、第8章〈法則5 提取記憶〉"]],
   act:['明天讀完一段，先闔上書，用一分鐘寫下記得的重點，再打開對照。','每讀 25 分鐘，就起來走五分鐘，讓頭腦在背後整理。']},
  {k:'work',re:/分心|效率|忙|工作|專注不了|手機|加班|做不完|事情太多|主管|同事/,a:['事情一件接一件，連喘口氣的時間都沒有，真的很累。','你一直在撐著，這份辛苦值得被看見。'],
-  p:[["Hyperfocus", "克里斯．貝利把注意力比喻成一個小小的空間，一次只放得下少數幾件事。手機、通知、同時開著的工作，都在搶這個空間。刻意一次只放一件重要的事進去，每一件都會做得比較好。", "Ch.2〈The Limits of Your Attention〉"], ["Hyperfocus", "他也說，人的精力大約以九十分鐘為一個週期起伏。發現專注力開始下滑，或做完一件大事時，就真正休息一下，讓心思自由漫遊，回來時會更有力氣。", "Ch.7〈Recharging Your Attention〉"], ["故道白雲", "書裡，佛陀教孩子們專心吃橘子：剝皮時知道自己在剝皮，放進嘴裡時知道自己在吃。他說，一天的二十四小時就像一顆橘子的一片片果肉，把每一個小時都活在專注之中，就不會糊里糊塗地過日子。", "第19章〈對橘子的專注〉"]],
+  p:[["牛的印跡", "有人問聖嚴法師，能不能一邊工作一邊念佛或打坐。他說可以試，但很難兩頭都顧好；工作時最好就全心做手上的事，讓工作本身成為練習；工作做完，再全心做你的練習。這樣就能不想過去、不想未來，在做事當中培養專一的心。", "第 9 章〈禪修的先決條件〉"], ["Hyperfocus", "克里斯．貝利把注意力比喻成一個小小的空間，一次只放得下少數幾件事。手機、通知、同時開著的工作，都在搶這個空間。刻意一次只放一件重要的事進去，每一件都會做得比較好。", "Ch.2〈The Limits of Your Attention〉"], ["Hyperfocus", "他也說，人的精力大約以九十分鐘為一個週期起伏。發現專注力開始下滑，或做完一件大事時，就真正休息一下，讓心思自由漫遊，回來時會更有力氣。", "Ch.7〈Recharging Your Attention〉"], ["故道白雲", "書裡，佛陀教孩子們專心吃橘子：剝皮時知道自己在剝皮，放進嘴裡時知道自己在吃。他說，一天的二十四小時就像一顆橘子的一片片果肉，把每一個小時都活在專注之中，就不會糊里糊塗地過日子。", "第19章〈對橘子的專注〉"]],
   act:['明天第一個番茄鐘開始前，把手機調成勿擾，只開一個視窗。','今天下班前，花兩分鐘寫下明天的三件事，讓腦袋可以下班。']},
  {k:'voice',re:/表達|說不清|開會|簡報|被否定|溝通|講話|說服|提案|被罵/,a:['想說的話說不出來，或說了沒被聽懂，那種挫折很真實。','你在意別人怎麼看，也代表你很認真看待這件事。'],
   p:[["精準表達", "高田貴久提醒，要讓對方接受，先理解談話的目的、抓住對方真正在意的論點，再準備答案。對方很忙、想先聽結論，就先講結論；對方還不了解狀況，就先把背景說清楚。說得清楚，不靠口才，而是先想清楚對方要什麼。", "第3章第1節〈理解目的〉、第4章第2節〈決定著陸形式〉"], ["我可能錯了", "這本書的書名來自一句箴言。很多爭執，是因為每個人都堅持自己是對的。被否定的時候，可以先在心裡默念幾次「我可能錯了」，不急著辯解，先好奇對方在意的是什麼。", "第13章〈有魔法的箴言〉"], ["如何成為一流職場菁英？", "書中介紹阿德勒的「課題的分離」：把事情認真做好，是自己的課題；別人怎麼看，是別人的課題。把心力放在自己能控制的部分，不必為了別人的認同耿耿於懷。", "〈透過「課題的分離」讓自己從認同需求中解脫〉"], ["Working Backwards", "亞馬遜的高階會議不用投影片，改成先寫一份完整的文字說明。作者引用塔夫特的話：條列式的投影片容易讓粗糙的想法過關。把想法寫成完整的段落，才看得出哪裡還沒想清楚。", "Ch.4〈Communicating〉"]],
@@ -4954,10 +5012,10 @@ const LT_THEMES=[
   p:[["True Love", "一行禪師說，愛一個人最好的禮物，是你真正的「在場」。他教了一句話：「親愛的，我在這裡陪你。」先安靜地呼吸，讓身心回到一起，再走到對方身邊說這句話。", "第一句真言"], ["True Love", "他也教了一句很難說出口的話：「親愛的，我很痛苦，請幫幫我。」愛一個人，有時要放下驕傲，主動走向對方。", "第四句真言"], ["炎夏飄雪", "焦諦卡禪師在信中引用榮格的話：孤獨並不是身邊沒有人，而是無法和別人溝通，自己的想法不被接受。而孤單的人，往往對友誼特別敏感。", "前言，頁 10"]],
   act:['今天找一個時間，放下手機，好好聽一個人說十分鐘的話。','如果還不想開口，先在日記裡寫下你想對他說的話。']},
  {k:'doubt',re:/自卑|不夠好|比較|失敗|沒用|自責|怪自己|差勁|配不上|丟臉/,a:['你對自己好嚴格。如果是朋友這樣說自己，你會怎麼回應他？','讀得出來，你很努力了，卻還是覺得不夠。'],
-  p:[["原子習慣", "詹姆斯．克利爾算過：每天進步百分之一，一年後會接近三十七倍；每天退步百分之一，則會趨近於零。重點不在今天的成績，而在你走的方向。你願意寫這封信，就是在往前走。", "第1章〈原子習慣的驚人力量〉"], ["我可能錯了", "納提科說，帶著一點懷疑和幽默看待自己的念頭，人會更容易做自己。腦中那個嚴厲的聲音，不必每一句都相信。", "第6章〈不要相信你的每個念頭〉"], ["炎夏飄雪", "焦諦卡禪師寫道：如果你做錯了，就從中學習吧。觀察它，不抱怨、不責備自己或別人，也不必急著替自己辯護。", "第一章〈心、正念和禪修〉，頁 19"], ["如何成為一流職場菁英？", "書中介紹海佛森的研究：能持之以恆的人，看重的是「有所成長」，而不是做到完美。今天比昨天多懂一點，就值得肯定。", "〈從心理學觀點分析「持之以恆的人」、「表現傑出的人」有何共通點〉"]],
+  p:[["牛的印跡", "聖嚴法師說，要相信自己做得到，不是因為你已經很好，而是每個人本來都有這份能力。許下的願沒做到，也不必因此放棄，可以對自己說：「這次沒做到，下次我再發同樣的願，做得更好一點。」每一次重新發願，力氣就會多一點。", "第 9 章〈禪修的先決條件〉"], ["原子習慣", "詹姆斯．克利爾算過：每天進步百分之一，一年後會接近三十七倍；每天退步百分之一，則會趨近於零。重點不在今天的成績，而在你走的方向。你願意寫這封信，就是在往前走。", "第1章〈原子習慣的驚人力量〉"], ["我可能錯了", "納提科說，帶著一點懷疑和幽默看待自己的念頭，人會更容易做自己。腦中那個嚴厲的聲音，不必每一句都相信。", "第6章〈不要相信你的每個念頭〉"], ["炎夏飄雪", "焦諦卡禪師寫道：如果你做錯了，就從中學習吧。觀察它，不抱怨、不責備自己或別人，也不必急著替自己辯護。", "第一章〈心、正念和禪修〉，頁 19"], ["如何成為一流職場菁英？", "書中介紹海佛森的研究：能持之以恆的人，看重的是「有所成長」，而不是做到完美。今天比昨天多懂一點，就值得肯定。", "〈從心理學觀點分析「持之以恆的人」、「表現傑出的人」有何共通點〉"]],
   act:['今天睡前，在日記「今天做到的事」寫下三件，再小都算。','下次腦中又冒出「我不夠好」時，試著把它改寫成「我正在學」。']},
  {k:'lost',re:/迷惘|方向|不知道|選擇|未來|人生|該不該|猶豫|要不要/,a:['站在路口不知道往哪走，真的會很不安。','願意好好想清楚，就是對自己負責。'],
-  p:[["我可能錯了", "納提科決定去泰國森林當僧人時，只花了大約五秒鐘，他說那是一種「出於直覺的平靜篤定」；十七年後，他又選擇回到瑞典。人生的轉彎不一定要先想得周全，靜下來聽聽心裡的篤定，也允許自己之後改變主意。", "第7章〈媽媽，我要去森林當僧人〉"], ["Working Backwards", "亞馬遜做新產品前，會先寫一份新聞稿，假裝產品已經完成要上市，再附上一份回答困難問題的問答，從使用者的感受往回推該做什麼。迷惘時也可以試試：先寫下一年後希望自己的樣子，再往回推這週的一小步。", "Ch.5〈Working Backwards〉"], ["Intentional", "克里斯．貝利建議定期「編輯」目標：有些目標值得堅持，有些可以修改，有些可以放下。目標推不動，常常是因為你其實沒那麼在乎它；找出它和你重視的價值哪裡相連，或乾脆換一個。", "Ch.3〈Goal Editing〉"]],
+  p:[["牛的印跡", "十牛圖的第一張，牧牛人站在荒野裡，拿著韁繩四處張望，不知道該往哪裡走。聖嚴法師說，那份焦急和迷惘很真實，是開始找路必經的心情。第二張，他看見了牛的腳印，有的往東、有的往西，還是不確定，但已經知道牛確實在那裡。持續走下去，就會在經驗裡慢慢分辨出路。", "第 11 章〈十牛圖〉"], ["我可能錯了", "納提科決定去泰國森林當僧人時，只花了大約五秒鐘，他說那是一種「出於直覺的平靜篤定」；十七年後，他又選擇回到瑞典。人生的轉彎不一定要先想得周全，靜下來聽聽心裡的篤定，也允許自己之後改變主意。", "第7章〈媽媽，我要去森林當僧人〉"], ["Working Backwards", "亞馬遜做新產品前，會先寫一份新聞稿，假裝產品已經完成要上市，再附上一份回答困難問題的問答，從使用者的感受往回推該做什麼。迷惘時也可以試試：先寫下一年後希望自己的樣子，再往回推這週的一小步。", "Ch.5〈Working Backwards〉"], ["Intentional", "克里斯．貝利建議定期「編輯」目標：有些目標值得堅持，有些可以修改，有些可以放下。目標推不動，常常是因為你其實沒那麼在乎它；找出它和你重視的價值哪裡相連，或乾脆換一個。", "Ch.3〈Goal Editing〉"]],
   act:['在紙上寫下兩個選項，各寫三個「如果選它，一年後的我會……」。','用日課的「計畫地圖」，把其中一個方向拆成這週就能做的一小步。']},
 ];
 const LT_GEN={a:['謝謝你寫信來。讀著讀著，好像也看見了你最近的日子。','收到你的信了，謝謝你願意說這些。'],
@@ -4981,7 +5039,7 @@ async function ltDeliver(){if(LT_BUSY)return;const due=lettersAll().filter(x=>!x
       if(sample){try{const res=await sample(`你是「雁書」，一位溫和、真誠的筆友。以下是一封使用者在前一天寫來的信。請用繁體中文寫一封回信：
 - 250–400 字，書信語氣，不用條列、不用標題。
 - 第一段：引用信中的一兩個詞，讓對方感覺被讀到，先同理。
-- 第二段：從一本好書的觀點換個角度（可參考：原子習慣、最有生產力的一年、Intentional、心流、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、我可能錯了、金剛經白話講座、True Love、故道白雲、炎夏飄雪、精準表達、Working Backwards、如何成為一流職場菁英？；只寫你確定書中有的觀點，不要杜撰引文），用白話說，不說教。
+- 第二段：從一本好書的觀點換個角度（可參考：原子習慣、牛的印跡（聖嚴法師）、最有生產力的一年、Intentional、心流、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、我可能錯了、金剛經白話講座、True Love、故道白雲、炎夏飄雪、精準表達、Working Backwards、如何成為一流職場菁英？；只寫你確定書中有的觀點，不要杜撰引文），用白話說，不說教。
 - 第三段：一個今天就做得到的小行動。
 - 最後一句溫暖的結語，署名「雁書」。
 - 不做診斷、不給醫療建議。若信中有自傷或想死的念頭，溫和地鼓勵對方聯絡信任的人，並附上台灣安心專線 1925、生命線 1995（24 小時）。
@@ -5170,7 +5228,7 @@ Object.assign(IN,{blkF:el=>{editPage(el.dataset.p,p=>{blk(p,el.dataset.b)[el.dat
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.tagName==='A'&&el.getAttribute('href')&&el.getAttribute('href').startsWith('#')&&el.dataset.act!=='goReview'&&el.dataset.act!=='toJournal'){e.preventDefault()}f(el,e)});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ch]');if(el&&C[el.dataset.ch])C[el.dataset.ch](el,e)});
-document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.in==='mkf'){MKF[e.target.dataset.k]=e.target.value;return}const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
+document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.in==='mkf'){MKF[e.target.dataset.k]=e.target.value;return}if(e.target&&e.target.id==='mkQ'){mkQ=e.target.value;const l=$('#mkList');if(l)l.innerHTML=mkListHTML();return}const el=e.target.closest('[data-in]');if(el&&IN[el.dataset.in])IN[el.dataset.in](el,e)});
 document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('others'))stagesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='parkIn'&&!e.isComposing){e.preventDefault();A.parkAdd();return}

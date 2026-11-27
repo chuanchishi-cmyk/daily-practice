@@ -13,7 +13,7 @@ const open=async()=>{await pg.$$eval('.prcard',els=>els.forEach(e=>e.closest('de
 await open();await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();
 ok(!(await pg.isVisible('.mzt .opts')),'平常看不到老師選項（收在「看更多說明」裡）');
 await pg.$eval('.mzmore',d=>d.open=true);await pg.$eval('.mzt',d=>d.open=true);await pg.waitForTimeout(100);
-ok(await pg.isVisible('.mzt [data-v="比約恩．納提科"]')&&!(await pg.$('.mzt [data-v="阿姜查"]')),'展開後可以選老師（只列能回應 6 種以上狀況的老師）');
+ok(await pg.isVisible('.mzt [data-v="比約恩．納提科"]')&&!(await pg.$('.mzt [data-v="虛雲老和尚"]')),'展開後可以選老師（只列能回應 6 種以上狀況的老師）');
 await pg.$eval('.mzt [data-v="比約恩．納提科"]',e=>e.click());await pg.waitForTimeout(400);await open();
 let src=await pg.$eval('.mzsrc',e=>e.textContent);ok(/比約恩．納提科/.test(src),'選比約恩．納提科：這一筆的說明改由比約恩．納提科回應（'+src.trim().slice(0,24)+'）');
 await pg.$eval('[data-act=prFb][data-id=p1]',e=>e.click());await pg.waitForTimeout(300);await open();

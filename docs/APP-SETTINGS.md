@@ -43,7 +43,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js、habit-card.js、fest-drive.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js、habit-card.js、fest-drive.js、quiz-scenario.js）
 ```
 
 ---
@@ -676,6 +676,11 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 語料都是事先依原書整理好的（不是即時生成）；只有 claude.ai 版雁書的 AI 回信是即時生成。
 - 葛印卡《念處經》開示上傳檔編碼損壞，尚未使用。
 - 測試：`tools/tests/mz-adaptive.js` 第 7、8 段。
+
+## 36o. 最佳狀態：生活情境改成複選（2026-11-28）
+- 原本每題要挑「最像我」和「最不像我」，常常很難選。改成：點出「可能會這樣做」的選項，可複選（最多 3 個），也可選「都不太像我」（`?`，選它會清掉其他選項）。答案存在 `sc<i>`（陣列）。
+- 計分（`valScores`）：選 1 個每個 +2、選 2 個每個 +1.5、選 3 個每個 +1，除以 2×出現次數；選得越少，每個選項越有份量。舊報告（`sb`/`sw`）照舊算法。
+- 測試：`tools/tests/quiz-scenario.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

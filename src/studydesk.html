@@ -1374,7 +1374,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.28.2'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.28.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1998,6 +1998,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-28',lv:'minor',t:'「我的最佳狀態」的生活情境題改成複選：點出你可能會這樣做的選項（最多 3 個），也可以選「都不太像我」，不用再勉強挑最像和最不像'},
  {d:'2026-11-28',lv:'minor',t:'靜心方法選單重新整理：只列有教學可回應的方法，用日常說法：感受呼吸、數呼吸、身體放鬆掃描、慈心祝福、走路靜心、默念標記、看著自己的心、靜靜坐著（開放覺察）；舊的方法名稱照樣對應'},
  {d:'2026-11-28',lv:'minor',t:'靜心回饋加入達賴喇嘛《The Heart of Meditation》與《The Book of Joy》的練習，達賴喇嘛、帕奧禪師現在也能在「指定回應的老師」裡選；老師選單附上每位老師的風格簡介'},
  {d:'2026-11-28',lv:'fix',t:'靜心回饋語料擴充：聲音、悲傷、身體緊繃、坐不住、懷疑、批判自己等狀況多了不同老師的說法，同一種問題每次的回答更多元'},
@@ -3427,8 +3428,10 @@ function step2Ids(){return BL.map(b=>'al_'+b.k).concat(['pkExam','focusBest','pk
 function valScores(a){
   const A={},S={},cnt={};DK.forEach(k=>{A[k]=0;S[k]=0;cnt[k]=0});
   DK.forEach(k=>{const v=[0,1].map(i=>+a['va'+k+i]||0).filter(Boolean);A[k]=v.length?((v.reduce((x,y)=>x+y,0)/v.length)-1)/5:0});
-  SCEN.forEach((s,i)=>{s.o.forEach(([k])=>cnt[k]++);const b=a['sb'+i],w=a['sw'+i];if(b)S[b]+=2;if(w)S[w]-=1});
-  DK.forEach(k=>{const n=cnt[k]||1;S[k]=(S[k]+n)/(3*n)});
+  // 生活情境：新版是「我可能會這樣做」複選（sc），選得越少、每個越有份量；舊版「最像／最不像」（sb/sw）照舊計分
+  const scNew=SCEN.some((_,i)=>a['sc'+i]!==undefined);
+  SCEN.forEach((s,i)=>{s.o.forEach(([k])=>cnt[k]++);if(scNew){const p=asArr(a['sc'+i]).filter(x=>x!=='?');const w=p.length?[0,2,1.5,1][Math.min(p.length,3)]:0;p.forEach(k=>{if(S[k]!==undefined)S[k]+=w})}else{const b=a['sb'+i],w=a['sw'+i];if(b)S[b]+=2;if(w)S[w]-=1}});
+  DK.forEach(k=>{const n=cnt[k]||1;S[k]=scNew?S[k]/(2*n):(S[k]+n)/(3*n)});
   const C={};DK.forEach(k=>C[k]=(A[k]+S[k])/2);
   const rank=o=>{const r={};DK.slice().sort((x,y)=>o[y]-o[x]).forEach((k,i)=>r[k]=i+1);return r};
   return {A,S,C,rA:rank(A),rS:rank(S)};
@@ -3560,9 +3563,8 @@ function quizScreen(){
     body=(i===0?`<h2>你的方向</h2>`+ORIENT.map(o=>qBlock(++n,o.id,o.q,o.o)).join(''):'')+`<h2>價值 <span class="muted">第 ${i+1} / 2 頁</span></h2><p class="muted">每一句描述有多像你？1 = 完全不像我，6 = 非常像我。沒有對錯，照直覺選。</p>`+
       DK.map((k,j)=>{const id='va'+k+i;return `<div class="qq" id="q_${id}"><div class="qt"><span class="num muted">${i*12+j+1}</span> ${esc(DRV[k].items[qzItems()[k][i]])}</div>${lik(id)}</div>`}).join('');
   }else if(st===5){
-    body=`<h2>生活情境</h2><p class="muted">每一題選出「最像我」和「最不像我」的做法。不必完全一樣，選最接近的。</p>`+SCEN.map((sc,i)=>{
-      const pick=(pre,lab)=>`<div class="spick"><span class="muted">${lab}</span><div class="opts">${sc.o.map(([k,t])=>`<button class="opt" data-act="qa" data-q="${pre}${i}" data-v="${k}" aria-pressed="${QZ.a[pre+i]===k}"${(pre==='sb'?QZ.a['sw'+i]:QZ.a['sb'+i])===k?' disabled':''}>${esc(t)}</button>`).join('')}</div></div>`;
-      return `<div class="qq" id="q_sb${i}"><div class="qt"><span class="num muted">${i+1}</span> ${esc(sc.q)}</div>${pick('sb','最像我')}<div id="q_sw${i}">${pick('sw','最不像我')}</div></div>`}).join('');
+    body=`<h2>生活情境</h2><p class="muted">每一題，點出你可能會這樣做的選項，可以複選（最多 3 個）；都不像就選「都不太像我」。不用比較哪個最像、哪個最不像，照直覺點就好。</p>`+SCEN.map((sc,i)=>
+      `<div class="qq" id="q_sc${i}"><div class="qt"><span class="num muted">${i+1}</span> ${esc(sc.q)}</div>${optBtns('sc'+i,sc.o.map(([k,t])=>[t,k]).concat([['都不太像我','?']]),3)}</div>`).join('');
   }else if(st===6){
     const fu=QZ.pairs||[];const v=valScores(QZ.a);let n=0;
     body=`<h2>追問</h2>`+(fu.length?`<p class="muted">你前面的回答裡，有 ${fu.length} 個價值的答案前後不太一致。這很常見：我們心裡想的和實際做的，常常不完全一樣。請直接選出最接近你的說法。</p>`+fu.map(k=>{const hiA=v.rA[k]<v.rS[k];
@@ -3583,7 +3585,7 @@ function missing(){
   if(st===2)ids=step2Ids();
   if(st===3)ids=ORIENT.map(o=>o.id).concat(DK.map(k=>'va'+k+'0'));
   if(st===4)ids=DK.map(k=>'va'+k+'1');
-  if(st===5)ids=SCEN.flatMap((_,i)=>['sb'+i,'sw'+i]);
+  if(st===5)ids=SCEN.map((_,i)=>'sc'+i);
   if(st===6)ids=(QZ.pairs||[]).map(k=>'fu_'+k);
   const miss=ids.filter(id=>QZ.a[id]===undefined||QZ.a[id]===''||(Array.isArray(QZ.a[id])&&!QZ.a[id].length));
   return miss;

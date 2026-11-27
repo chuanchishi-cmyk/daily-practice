@@ -1,0 +1,23 @@
+// 我的最佳狀態：生活情境改成複選「我可能會這樣做」（最多 3 個，可選「都不太像我」），計分照常
+const {chromium}=require('playwright');const fs=require('fs');const SP=require('os').tmpdir()+'/';const SRC=require('path').join(__dirname,'../../src/studydesk.html');
+(async()=>{const b=await chromium.launch();const errs=[];let fail=0;
+fs.writeFileSync(SP+'tqzs.html','<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>'+fs.readFileSync(SRC,'utf8'));
+const ok=(c,m)=>{console.log((c?'ok   ':'FAIL ')+m);if(!c)fail++};
+const c=await b.newContext({viewport:{width:390,height:844}});
+await c.addInitScript(()=>{if(sessionStorage.getItem('x'))return;sessionStorage.setItem('x','1');sessionStorage.setItem('sd-splash-seen','1');localStorage.setItem('sd-welcome','true');localStorage.setItem('sd-quiz',JSON.stringify({v:3,step:5,a:{},pairs:null}))});
+const pg=await c.newPage();pg.on('pageerror',e=>errs.push(e.message));await pg.goto('file://'+SP+'tqzs.html#quiz');await pg.waitForTimeout(700);
+const Q=()=>pg.evaluate(()=>JSON.parse(localStorage.getItem('sd-quiz')));
+ok(await pg.isVisible('text=可能會這樣做'),'說明改成「可能會這樣做」');
+ok(!(await pg.$('text=最不像我')),'不再有「最不像我」');
+const q0='[data-q=sc0]';ok((await pg.$$(q0)).length===5,'每題四個做法＋「都不太像我」');
+for(const v of ['SD','ST','HE'])await pg.click(`${q0}[data-v=${v}]`);
+await pg.click(`${q0}[data-v=BE]`);await pg.waitForTimeout(200);
+let a=(await Q()).a.sc0;ok(a.length===3&&!a.includes('BE'),'最多選 3 個（'+a+'）');
+await pg.click(`${q0}[data-v="?"]`);a=(await Q()).a.sc0;ok(a.length===1&&a[0]==='?','選「都不太像我」會清掉其他選項');
+await pg.click('[data-act=qzNext]');await pg.waitForTimeout(300);
+ok((await Q()).step===5,'還有題目沒答：停在本頁');
+const n=await pg.$$eval('[data-q^=sc]',bs=>[...new Set(bs.map(x=>x.dataset.q))].length);
+for(let i=1;i<n;i++)await pg.click(`[data-q=sc${i}]`);
+await pg.click('[data-act=qzNext]');await pg.waitForTimeout(400);
+ok((await Q()).step===6,'全部答完可以進到下一步');
+console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

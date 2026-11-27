@@ -29,4 +29,11 @@ for(const [d,want] of [['2027-02-03',''],['2027-02-04','小年夜'],['2027-02-05
  const a2=await get();const it2=await pg.evaluate(()=>JSON.parse(localStorage.getItem('sd-qzit')||'null'));
  const same=Object.keys(it1).filter(k=>it1[k].some(i=>it2[k].includes(i))).length;ok(same===0,'重新測驗：每個價值都換成沒用過的句子');
  await c.close()}
+
+// 語氣：平常書寫內斂的人，不出現情感濃的說法
+{const W=/謝謝願意坐下來|比自己以為的還要努力|辛苦了，今天的你|身體會謝謝你|對自己溫柔一點/;const seen=[];
+ const days={};for(let i=0;i<10;i++){const d=new Date(Date.UTC(2026,10,18+i)).toISOString().slice(0,10);days[d]={date:d,j:{good:'完成第二章初稿',adjust:'早上可以早點開始',practice:[{id:'p'+i,t:d+'T07:00:00+08:00',min:10,note:'念頭多，後半段比較安定'}]}}}
+ for(const d of ['2026-11-27','2026-11-28','2026-11-29','2026-11-30'])for(const h of ['08','11','14','17','20']){const [c,pg]=await open(d+'T'+h+':20:00+08:00',{meta:{main:{hidden:[]}},days,mocks:{},mistakes:{},projects:{},reviews:{},quiz:{},quotes:{},pnotes:{},pages:{}});
+   seen.push(await pg.evaluate(()=>{const e=[...document.querySelectorAll('.todaynotes .tn')].find(x=>/今日小語/.test(x.textContent));return e?e.querySelector('.tnt').textContent:''}));await c.close()}
+ ok(seen.filter(Boolean).length>=10&&!seen.some(t=>W.test(t)),'內斂的書寫者：20 個時段都沒有情感濃的說法（出現 '+seen.filter(Boolean).length+' 則）')}
 console.log('errors',errs);await b.close();process.exit(fail||errs.length?1:0)})();

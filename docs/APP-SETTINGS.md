@@ -43,7 +43,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js、habit-card.js）
 ```
 
 ---
@@ -259,13 +259,14 @@ node tools/tests/work-notes.js
 node tools/tests/sync-renew.js
 node tools/tests/mistakes-v2.js
 node tools/tests/mz-adaptive.js
+node tools/tests/habit-card.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
 git add -A && git commit -m "說明這次改了什麼" && git push origin main
 ```
 
-6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上四個 mp3（summer-night、stream、ocean、campfire） 與 `art/jieqi/*.webp`（24 張）。
+6. claude.ai 版：用 Artifact 工具發佈 `src/studydesk.html`，並帶 `url: https://claude.ai/artifact/CtM7ggrWV9W7UAzbftZpbe`（沿用同一網址），`files` 加上四個 mp3（summer-night、stream、ocean、campfire）、`art/holidays/*.webp`（8 張） 與 `art/jieqi/*.webp`（24 張）。
 7. 提醒使用者：手機把 App 完全關掉再開，就會換到新版。
 
 注意：如果 push 被拒（遠端有別的 session 推過），先 `git pull --rebase`。若衝突在 `index.html`，把遠端的改動合回 `src/studydesk.html` 再重新 build，不要直接覆蓋。
@@ -615,6 +616,30 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - **反覆出現**（`mzRepeat/mzFollow`）：同一種困難在最近 21 天第 3 次起（不含「坐得好」），回饋多一段 `fu`：先說這很常見、能認出它就是覺照，再溫和地問一個問題（多久之後出現、出現前在想什麼、和上次哪裡不同）；第 6 次起提到可能卡很久也不奇怪，可以調作息、換時段或找老師談。不催促。
 - **智者大師《修習止觀坐禪法要》**（小止觀，CBETA T46 No.1915，使用者上傳全文）：13 種狀況各一則（昏沉：沈相繫鼻端、調食調睡；散亂：浮相繫臍、不沈不浮；緊繃：定心急病、調息四相；身體：出定次第；念頭：繫緣止與體真止、學射；懷疑：疑自勿自輕；自責：悔已莫復憂；生氣：瞋恚蓋、慈忍；特殊感受：八觸、不憂不怖不取不捨；坐得好：正禪發相、勿貪著；期待：隨便宜、久行、知取捨；聲音：聲如響；擔心：掉悔偈）。`MZ_TEACHERS` 加入「智者大師」，達 6 種以上，可指定。
 - 測試：`tools/tests/mz-adaptive.js`。
+
+## 36j. 2026-11-27：好習慣設計、節日插圖、回覆不制式
+
+**每日打卡升級（參考《原子習慣》：第 5 章執行意圖與習慣疊加、第 13 章兩分鐘法則、第 16 章別連續錯過兩次、第 2 章身分認同、第 6 章環境設計）**
+- 區塊新增選填欄位 `when`（什麼時候、在哪裡）、`after`（接在哪件事之後）、`mini`（兩分鐘版本）、`who`（想成為的人）、`env`（環境安排）；按「設定」展開（`HB_SET`）。顯示成一句「倒完咖啡之後，我會每天讀書。」＋「我是持續閱讀的人」＋「累的時候，只要：讀一頁」＋「環境：…」。
+- `days[k]` 可以是 `true` 或 `'mini'`（做了最小版，格子半格）。連續天數 `hbChain`：中間休一天不算斷，連續錯過兩天才重算。提示（`hbCoachText`）依今天做了沒、昨天、斷了幾天，各有 2–3 種說法輪替；斷兩天以上建議做兩分鐘版本。
+- 打卡時 toast「又為「＿＿」投了一票（本月第 N 次）」。
+- 今日頁小卡 `habits`（習慣打卡）：列出所有頁面裡的每日打卡，可直接打卡或記最小版；新增習慣區塊或用「習慣養成」範本時自動加到今日。
+- 環境設計：提示卡 `env`、`hbset`（打卡 3 次以上還沒寫執行意圖時，帶去設定）；番茄鐘休息提示每隔一次多一行環境小提示；設定欄的例子從 `ENV_TIPS` 輪替。
+
+**用在整個 App（不只自訂頁面）**
+- `chainDays(has)`：全 App 共用的連續天數，休一天不算斷、連續兩天沒做才重算，只數有做的日子。用在統計（日檢視「連續專注」，含練習計時）、靜心「連續 N 天」、計畫地圖「連續推進天數」。
+- 今日小卡 `resumeLine()`（標籤「接回來」，今天還沒專注、非安靜時段才出現）：昨天沒專注 → 提醒接回來、休一天不算中斷；隔 2–14 天 → 從兩分鐘開始。各三種說法，依日期輪替。
+- 三件事：上午還沒寫時提示「寫上什麼時候做」（執行意圖）；明天的三件事下方加一句「睡前把第一件事要用的東西擺好」（環境設計）。
+- 靜心只套用連續天數規則；雁書不套用好習慣設計。
+
+**節日插圖**（另一個「二十四節氣插畫」對話做的 `art/holidays`，2026-11-27 併入）：《清俗紀聞》（1799）木刻線描，8 張（元旦、除夕、春節、元宵、兒童節、端午、教師節、中秋），`HOL_IMG`；版面沿用節氣卡（`.jq.has-art.p-side`，插圖在右、深色模式為圓角小圖），其餘假日維持文字印章。新增除夕（春節前一天）；春節卡顯示初一到初三（標題「春節・初二」），除夕卡涵蓋之前；其他節日前兩天到當天，過了就不顯示。文字：先一句節日習俗（取自插圖對話的 holidays.json），再一句生活小語；國定假日以「國定假日，放假一天。」開頭。12/25 改為「行憲紀念日」（副標聖誕節）、10/25「光復節」。
+
+**回覆不制式**（靜心、雁書）
+- 靜心：每種狀況有兩種短指引（`b`/`b2`）輪流；「下次想試」的句子三種說法；兩本書的觀點用一句銜接語接在同一段（`br`，五種，避免連續相同），出處分列。
+- 反覆困難的追問（`mzFollow`）：上一次問過，這次就不問；一般 6 種、長期 4 種說法，避開最近用過的；長期那段至少隔 4 次才再說。
+- 雁書範本：開頭引用、兩本書之間的轉折、行動前的引導語各有幾種說法，避開上一封用過的（`sd-ltv`）。
+
+測試：`habit-card.js`；`jieqi-intro.js`、`mz-adaptive.js` 照常通過。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

@@ -1,0 +1,106 @@
+[
+ {
+  "key": "yuandan",
+  "name": "元旦",
+  "date": "solar:01-01",
+  "dateLabel": "國曆 1 月 1 日",
+  "image": "yuandan.webp",
+  "text": "一元復始，萬象更新。寫一張新禧帖，給新的一年。"
+ },
+ {
+  "key": "chuxi",
+  "name": "除夕",
+  "date": "lunar:12-last",
+  "dateLabel": "農曆十二月最後一日（含小年夜）",
+  "image": "chuxi.webp",
+  "text": "隔年飯插上春花，叫「萬年糧」，祈願年年有餘。"
+ },
+ {
+  "key": "chunjie",
+  "name": "春節",
+  "date": "lunar:01-01",
+  "dateLabel": "農曆正月初一",
+  "image": "chunjie.webp",
+  "text": "門上貼福，迎接新歲。"
+ },
+ {
+  "key": "yuanxiao",
+  "name": "元宵",
+  "date": "lunar:01-15",
+  "dateLabel": "農曆正月十五",
+  "image": "yuanxiao.webp",
+  "text": "提燈、賞燈、猜燈謎，年節在燈火裡收尾。"
+ },
+ {
+  "key": "heping",
+  "name": "和平紀念日",
+  "date": "solar:02-28",
+  "dateLabel": "2 月 28 日",
+  "image": null,
+  "text": "國定假日，放假一天。"
+ },
+ {
+  "key": "ertong",
+  "name": "兒童節",
+  "date": "solar:04-04",
+  "dateLabel": "4 月 4 日",
+  "image": "ertong.webp",
+  "text": "放一隻風箏，讓童心飛高一點。"
+ },
+ {
+  "key": "laodong",
+  "name": "勞動節",
+  "date": "solar:05-01",
+  "dateLabel": "5 月 1 日",
+  "image": null,
+  "text": "國定假日，放假一天。"
+ },
+ {
+  "key": "duanwu",
+  "name": "端午",
+  "date": "lunar:05-05",
+  "dateLabel": "農曆五月初五",
+  "image": "duanwu.webp",
+  "text": "包粽子、掛艾草、划龍舟。"
+ },
+ {
+  "key": "jiaoshi",
+  "name": "教師節",
+  "date": "solar:09-28",
+  "dateLabel": "9 月 28 日（孔子誕辰）",
+  "image": "jiaoshi.webp",
+  "text": "「上大人，孔乙己」——舊時學童的第一張描紅。謝謝老師。"
+ },
+ {
+  "key": "zhongqiu",
+  "name": "中秋",
+  "date": "lunar:08-15",
+  "dateLabel": "農曆八月十五",
+  "image": "zhongqiu.webp",
+  "text": "供月餅、擺果盤，等月亮升起，一家團圓。"
+ },
+ {
+  "key": "guoqing",
+  "name": "國慶日",
+  "date": "solar:10-10",
+  "dateLabel": "10 月 10 日",
+  "image": null,
+  "text": "國定假日，放假一天。"
+ },
+ {
+  "key": "guangfu",
+  "name": "光復節",
+  "date": "solar:10-25",
+  "dateLabel": "10 月 25 日",
+  "image": null,
+  "text": "國定假日，放假一天。"
+ },
+ {
+  "key": "xingxian",
+  "name": "行憲紀念日",
+  "date": "solar:12-25",
+  "dateLabel": "12 月 25 日",
+  "image": null,
+  "text": "國定假日，放假一天。"
+ }
+]

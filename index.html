@@ -979,6 +979,12 @@ button.pri{box-shadow:0 1px 2px rgba(120,60,30,.15)}
 .cfgrow input[type=number]{width:70px}
 .hcell{aspect-ratio:1;padding:0;border-radius:4px;background:var(--sunk);border:1px solid var(--line);min-width:0}
 .hcell.on{background:var(--focus);border-color:var(--focus)}
+.hcell.mini{background:linear-gradient(to top,var(--focus) 45%,var(--sunk) 45%);border-color:color-mix(in srgb,var(--focus) 60%,var(--line))}
+.hbintent{margin:0;padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:calc(13.5px * var(--fs,1))}.hbintent p{margin:0}.hbintent p+p{margin-top:3px}.hbintent .hbwho{font-weight:600}
+p.hbintent{background:none;padding:0 0 2px;font-size:calc(12.5px * var(--fs,1))}
+.hbset{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk)}.hbset .sec{justify-self:start}
+.brkenv{flex-basis:100%;margin:2px 0 0;font-size:calc(12px * var(--fs,1))}
+.hbli{align-items:flex-start}
 .logt th input{border:0;background:transparent;font-weight:700;font-size:calc(12px * var(--fs,1));color:var(--muted);padding:2px;width:100%;min-width:60px}
 .logt td{white-space:normal;vertical-align:top}
 .logt .addrow input{width:100%;min-width:80px}
@@ -1394,7 +1400,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.27.2'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.27.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1837,7 +1843,7 @@ function top3HTML(k){
   const t=(day(k).j.top3||[]),fut=k>today();
   const long=t.find(x=>x&&x.t&&!x.done&&(x.c||0)>=3);
   return [0,1,2].map(i=>{const it=t[i]||{};return `<div class="t3${it.done?' done':''}"><input type="checkbox" id="t3c${k}${i}" data-ch="top3done" data-k="${k}" data-i="${i}" ${it.done?'checked':''} aria-label="完成第 ${i+1} 件"><input type="text" id="t3t${k}${i}" data-in="top3" data-k="${k}" data-i="${i}" value="${esc(it.t)}" placeholder="${(fut?['明天最重要的一件事','第二件','第三件']:['最重要的一件事','第二件','第三件'])[i]}">${it.c&&it.t?`<span class="t3c" title="已順延 ${it.c} 次">↻${it.c}</span>`:''}</div>`}).join('')
-    +(long&&!fut?`<p class="t3hint">「${esc(long.t)}」已經延了 ${long.c} 天，要不要拆成更小的一步，或換個時間做？</p>`:'');
+    +(long&&!fut?`<p class="t3hint">「${esc(long.t)}」已經延了 ${long.c} 天，要不要拆成更小的一步，或換個時間做？</p>`:!fut&&!t.some(x=>x&&x.t)&&new Date().getHours()<14?`<p class="t3hint">寫上什麼時候做，例如「10:00 回覆報價」「午飯後 讀 10 頁」，會比只寫事情更容易做到。</p>`:'');
 }
 /* ---------- 二十四節氣：只在每個節氣開始的前 3 天出現，之後回到平常的樣子 ---------- */
 // [節氣, 代表植物, 意境, 作息小語]（順序從小寒開始；日期公式適用 2001–2099，誤差至多一天）
@@ -1881,13 +1887,16 @@ function jqNow(k){const y=+k.slice(0,4);for(const yy of [y,y-1])for(let i=23;i>=
 const JQ_POSE={梅花:'hang',杏花:'hang',桃花:'hang',柳枝:'hang',臘梅:'hang',桂花:'hang',石榴花:'hang',油菜花:'up',鳶尾:'up',麥穗:'up',向日葵:'up',菊花:'up',蘆葦:'up',水仙:'up',竹:'up'};
 function jqNext(k){const y=+k.slice(0,4);for(const yy of [y,y+1])for(let i=0;i<24;i++){const d=jqDate(yy,i);if(d>k)return {i,d,n:diffDays(k,d),j:JQ[i]}}return null}
 // 傳統節日（農曆，依天文算法以台灣時間 UTC+8 計算新月與中氣，2026–2040；2027 年已與 Google 日曆「台灣的節慶假日」逐日核對）
-const FEST={春節:['2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],元宵:['2026-03-03','2027-02-20','2028-02-09','2029-02-27','2030-02-17','2031-02-06','2032-02-25','2033-02-14','2034-03-05','2035-02-22','2036-02-11','2037-03-01','2038-02-18','2039-02-07','2040-02-26'],端午:['2026-06-19','2027-06-09','2028-05-28','2029-06-16','2030-06-05','2031-06-24','2032-06-12','2033-06-01','2034-06-20','2035-06-10','2036-05-30','2037-06-18','2038-06-07','2039-05-27','2040-06-14'],七夕:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],中秋:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20'],重陽:['2026-10-18','2027-10-08','2028-10-26','2029-10-16','2030-10-05','2031-10-24','2032-10-12','2033-10-01','2034-10-20','2035-10-09','2036-10-27','2037-10-17','2038-10-07','2039-10-26','2040-10-14']};
-const FEST_TXT={春節:['新春','新的一年開始了。寫下今年想慢慢培養的一個習慣，每天做一點就好。'],元宵:['燈節','月圓燈明。把這個月最想完成的一件事，當成一盞燈掛在心上。'],端午:['午日','端午正午陽氣最盛。把最需要力氣的事放在上午，午後記得休息、多喝水。'],七夕:['乞巧','古人在七夕乞求巧藝。今天適合練一項想學的技能，哪怕只有一個番茄鐘。'],中秋:['月圓','月圓的夜晚，放下手機，陪家人或自己，靜靜看一會兒月亮。'],重陽:['登高','重陽登高望遠。出去走走、爬段樓梯，也打個電話問候長輩。']};
+const FEST={除夕:['2026-02-16','2027-02-05','2028-01-25','2029-02-12','2030-02-02','2031-01-22','2032-02-10','2033-01-30','2034-02-18','2035-02-07','2036-01-27','2037-02-14','2038-02-03','2039-01-23','2040-02-11'],春節:['2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],元宵:['2026-03-03','2027-02-20','2028-02-09','2029-02-27','2030-02-17','2031-02-06','2032-02-25','2033-02-14','2034-03-05','2035-02-22','2036-02-11','2037-03-01','2038-02-18','2039-02-07','2040-02-26'],端午:['2026-06-19','2027-06-09','2028-05-28','2029-06-16','2030-06-05','2031-06-24','2032-06-12','2033-06-01','2034-06-20','2035-06-10','2036-05-30','2037-06-18','2038-06-07','2039-05-27','2040-06-14'],七夕:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],中秋:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20'],重陽:['2026-10-18','2027-10-08','2028-10-26','2029-10-16','2030-10-05','2031-10-24','2032-10-12','2033-10-01','2034-10-20','2035-10-09','2036-10-27','2037-10-17','2038-10-07','2039-10-26','2040-10-14']};
+const FEST_TXT={除夕:['團圓','隔年飯插上春花，叫「萬年糧」，祈願年年有餘。今晚放下工作，好好和家人吃頓飯。'],春節:['新春','門上貼福，迎接新歲。寫下今年想慢慢培養的一個習慣，每天做一點就好。'],元宵:['燈節','提燈、賞燈、猜燈謎，年節在燈火裡收尾。把這個月最想完成的一件事，當成一盞燈掛在心上。'],端午:['午日','包粽子、掛艾草、划龍舟。正午陽氣最盛，最需要力氣的事放在上午，午後多喝水。'],七夕:['乞巧','古人在七夕乞求巧藝。今天適合練一項想學的技能，哪怕只有一個番茄鐘。'],中秋:['月圓','供月餅、擺果盤，等月亮升起，一家團圓。今晚放下手機，靜靜看一會兒月亮。'],重陽:['登高','重陽登高望遠。出去走走、爬段樓梯，也打個電話問候長輩。']};
 // 台灣的國定假日與紀念日（國曆）：前兩天到當天，借用節氣卡的位置，只有文字
-const HOL={'01-01':['元旦','新的一年','新年第一天，不必急著立很多目標，先寫下一件想慢慢做的事。'],'02-28':['和平紀念日','紀念與反思','放慢腳步，給自己一段安靜的時間，想想珍惜的人與事。'],'03-08':['婦女節','','謝謝生命中照顧過你的女性，也記得好好照顧自己。'],'04-04':['兒童節','童心','找一件小時候喜歡的事做做看，玩也是一種休息。'],'05-01':['勞動節','辛苦了','辛苦了。今天記得把休息也排進行程。'],'08-08':['父親節','','打通電話或傳個訊息給爸爸，說聲謝謝。'],'09-28':['教師節','謝師','想起一位影響過你的老師，寫一句謝謝，或把學到的分享給別人。'],'10-10':['國慶日','','放假的日子，留一段時間給自己，也留一段給家人朋友。'],'10-25':['臺灣光復節','',  '留一點空白給自己，散步、看看天空。'],'12-25':['聖誕節','行憲紀念日','一年快到尾聲，寫下今年最想感謝的三件事。']};
+const HOL={'01-01':['元旦','一元復始','一元復始，萬象更新。替新的一年寫一張新禧帖：一件想慢慢做的事就好。'],'02-28':['和平紀念日','','國定假日，放假一天。放慢腳步，想想珍惜的人與事。'],'03-08':['婦女節','','謝謝生命中照顧過你的女性，也記得好好照顧自己。'],'04-04':['兒童節','童心','放一隻風箏，讓童心飛高一點。找一件小時候喜歡的事做做看。'],'05-01':['勞動節','','國定假日，放假一天。辛苦了，今天把休息也排進行程。'],'08-08':['父親節','','打通電話或傳個訊息給爸爸，說聲謝謝。'],'09-28':['教師節','謝師','「上大人，孔乙己」，舊時學童的第一張描紅。想起一位影響過你的老師，寫一句謝謝。'],'10-10':['國慶日','','國定假日，放假一天。留一段時間給自己，也留一段給家人朋友。'],'10-25':['光復節','','國定假日，放假一天。留一點空白給自己，散步、看看天空。'],'12-25':['行憲紀念日','聖誕節','國定假日，放假一天。一年快到尾聲，寫下今年最想感謝的三件事。']};
+// 節日插圖：《清俗紀聞》（1799，公有領域）木刻線描，出處見 art/holidays/CREDITS.md；其餘節日只有文字
+const HOL_IMG={元旦:'yuandan',除夕:'chuxi',春節:'chunjie',元宵:'yuanxiao',兒童節:'ertong',端午:'duanwu',教師節:'jiaoshi',中秋:'zhongqiu'};
+const holArt=(n,alt)=>HOL_IMG[n]?`<img class="jqart" src="art/holidays/${HOL_IMG[n]}.webp" alt="${esc(alt||n)}" loading="lazy">`:'';
 function holOn(d){const md=d.slice(5);if(HOL[md])return HOL[md];const t=parseD(d);if(md.slice(0,2)==='05'&&t.getDay()===0&&t.getDate()>7&&t.getDate()<=14)return ['母親節','','謝謝媽媽。今天傳個訊息或一起吃頓飯吧。'];return null}
 function holNow(k){for(let x=0;x>=-2;x--){const d=addDays(k,-x),h=holOn(d);if(h)return {n:h[0],sub:h[1],line:h[2],d,x}}return null}
-function festNow(k){for(const [n,ds] of Object.entries(FEST))for(const d of ds){const x=diffDays(d,k);if(x>=-2&&x<=0)return {n,d,x}}return null}
+function festNow(k){for(const [n,ds] of Object.entries(FEST))for(const d of ds){const x=diffDays(d,k);if(n==='春節'?(x>=0&&x<=2):(x>=-2&&x<=0))return {n,d,x}}return null}
 // 冬至數九：九九消寒圖每天畫一瓣，八十一天畫完。練習過的日子算畫了一瓣
 function shujiu(k){const y=+k.slice(0,4);for(const yy of [y,y-1]){const d=jqDate(yy,23),x=diffDays(d,k);if(x>=0&&x<81){let pet=0;for(let i=0;i<=x;i++){const dd=day(addDays(d,i));if((dd.sessions||[]).length||(dd.tests||[]).length||((dd.j||{}).practice||[]).length||(dd.sport||[]).length)pet++}return {x,nine:Math.floor(x/9)+1,dayIn:x%9+1,pet}}}return null}
 const NINE='一二三四五六七八九';
@@ -1898,8 +1907,8 @@ function jqHTML(){const k=today(),f0=festNow(k),h=holNow(k),q0=jqNow(k),nx0=jqNe
   const top=cand[0];cand.slice(1).forEach(c=>{if(c.x===top.x)also.push(c.n)});
   const alsoTxt=also.length?`<span class="jqalso">${top.x===0?'今天也是':'同一天也是'}${also.map(esc).join('、')}</span>`:'';
   const f=top&&top.t==='f'?f0:null;
-  if(top&&top.t==='h')return `<section class="jq fest hol" aria-label="節日：${esc(h.n)}"><span class="jqseal fseal" aria-hidden="true">${esc(h.n.replace(/節$|日$/,'').replace('紀念','').slice(0,2))}</span><div class="jqt"><p class="jqh"><b>${h.x<0?`${-h.x===1?'明天':'後天'}是${esc(h.n)}`:esc(h.n)}</b>${h.sub?`<span>${esc(h.sub)}</span>`:''}</p><p class="jql">${esc(h.line)}${alsoTxt}</p></div></section>`;
-  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${f.n==='中秋'?' moon':''}" aria-label="節日：${f.n}">${f.n==='中秋'?'<span class="jqmoon" aria-hidden="true"></span>':`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}${alsoTxt}</p></div></section>`}
+  if(top&&top.t==='h')return `<section class="jq fest hol${HOL_IMG[h.n]?' has-art p-side':''}" aria-label="節日：${esc(h.n)}">${HOL_IMG[h.n]?holArt(h.n):`<span class="jqseal fseal" aria-hidden="true">${esc(h.n.replace(/節$|日$/,'').replace('紀念','').slice(0,2))}</span>`}<div class="jqt"><p class="jqh"><b>${h.x<0?`${-h.x===1?'明天':'後天'}是${esc(h.n)}`:esc(h.n)}</b>${h.sub?`<span>${esc(h.sub)}</span>`:''}</p><p class="jql">${esc(h.line)}${alsoTxt}</p></div></section>`;
+  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${HOL_IMG[f.n]?' has-art p-side':''}" aria-label="節日：${f.n}">${HOL_IMG[f.n]?holArt(f.n):`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.x>0?`${f.n}・初${'一二三'[f.x]}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}${alsoTxt}</p></div></section>`}
   let q=q0,pre=null;const nx=nx0;if(nx&&nx.n<=2)pre=nx;if(!pre&&(!q||q.n>2))return '';const t=pre||q,[nm,pl,yi,line]=t.j,img=JQ_IMG[nm],pose=JQ_POSE[pl]||'side';
   const sj=nm==='冬至'&&!pre?shujiu(k):null;
   const head=pre?`再過 ${pre.n} 天是${nm}`:q.n===0?`今天${nm}`:nm;
@@ -1915,7 +1924,7 @@ function t3Open(k){return ((day(k).j||{}).top3||[]).map((x,i)=>({x,i})).filter(o
 function carryHTML(from,to,lead){const op=t3Open(from);if(!op.length)return '';const pl=isOn('plan')&&Object.keys(S.projects||{}).length;
   return `<div class="carry"><p>${lead.replace('N',op.length)}</p>${op.map(({x,i})=>`<div class="cr"><span class="grow">○ ${esc(x.t)}${x.c?` <span class="t3c">↻${x.c}</span>`:''}</span><span class="row"><button class="sm sec" data-act="t3mv" data-k="${from}" data-to="${to}" data-i="${i}" data-m="next">移到${to===today()?'今天':'明天'}</button><button class="ghost sm" data-act="t3mv" data-k="${from}" data-to="${to}" data-i="${i}" data-m="small">改小一點</button>${pl?`<button class="ghost sm" data-act="t3mv" data-k="${from}" data-i="${i}" data-m="plan">放進計畫地圖</button>`:''}<button class="ghost sm" data-act="t3mv" data-k="${from}" data-i="${i}" data-m="drop">放下</button></span></div>`).join('')}</div>`}
 function tomorrowHTML(){const k=today(),n=addDays(k,1);
-  return `${carryHTML(k,n,'今天還有 N 件沒完成，要怎麼安排？')}${top3HTML(n)}<p class="t3hint">明天打開日課，這三件會直接出現在「今天最重要的三件事」。</p>`}
+  return `${carryHTML(k,n,'今天還有 N 件沒完成，要怎麼安排？')}${top3HTML(n)}<p class="t3hint">明天打開日課，這三件會直接出現在「今天最重要的三件事」。睡前把第一件事要用的東西擺好，明天一坐下就能開始。</p>`}
 /* the app adjusts quietly; say so in plain words only the first day an adjustment takes effect (one line a day at most) */
 function adaptNote(clk){const R=myRhythm();if(!R)return '';const c=cfg(),t=today(),v=lsGet('sd-adapt',{})||{};
   const hmTxt=m=>{m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60;return (h<12?'早上 ':h<18?'下午 ':'晚上 ')+(h%12||12)+(mm?':'+pad(mm):' 點')};
@@ -1928,7 +1937,13 @@ function adaptNote(clk){const R=myRhythm();if(!R)return '';const c=cfg(),t=today
   return pick?pick[1]:''}
 /* 今日小卡：把提醒合成一張，依重要程度排序；預設顯示前兩則，其餘收在「還有 N 則」 */
 function remindLines(){return remindDue().map(x=>({k:'提醒',t:x.text,btn:`<span class="row" style="gap:4px"><button class="sm" data-act="remDone" data-k="${x.k}" data-id="${x.id}">處理好了</button><button class="ghost sm" data-act="remSnooze" data-k="${x.k}" data-id="${x.id}">晚點再提醒</button></span>`}))}
-function todayNotesHTML(clk){const L=remindLines(),lt=letterLine();if(lt)L.push(lt);meetDueLines().forEach(x=>L.push(x));
+// 今日：休一天，提醒接回來；隔好幾天，從兩分鐘開始（不責備、說法輪替）
+function resumeLine(){const k=today(),act=d=>{const x=day(d);return (x.sessions||[]).length>0||(x.tests||[]).length>0};if(act(k))return null;let g=0,d=addDays(k,-1);while(g<15&&!act(d)){g++;d=addDays(d,-1)}if(g===0||g>=15)return null;
+  const h=[...k].reduce((a,c)=>a+c.charCodeAt(0),0),P=a=>a[h%a.length];
+  const t=g===1?P(['昨天休息了，今天一顆番茄接回來就好，休一天不算中斷。','昨天停了一天很正常。別連續錯過兩天，今天做一點就接上了。','休息過了，今天從一件小事開始，節奏就回來了。'])
+    :P([`隔了 ${g} 天，不用一次補回來。先答應自己專注兩分鐘：打開書、寫下第一行，時間到想停就停。`,`好幾天沒開始了，沒關係。今天只要坐下來兩分鐘，剩下的交給開始之後。`,`停了 ${g} 天，重新開始本身就是一種能力。先挑三件事裡最小的那件，做兩分鐘。`]);
+  return {k:'接回來',t}}
+function todayNotesHTML(clk){const L=remindLines(),lt=letterLine();if(lt)L.push(lt);meetDueLines().forEach(x=>L.push(x));{const rs=!clk||!clk.quiet?resumeLine():null;if(rs)L.push(rs)}
   const co=todayCoach();if(co)L.push({k:'今日小語',t:co});const ex=examTodayHTML();if(ex)L.push({k:ex.k,t:ex.t,href:'#exam',num:true,hot:ex.mile});const sj=shujiuLine();if(sj)L.push(sj);const ad=adaptNote(clk);if(ad)L.push({k:'日課記得',t:ad,soft:true});
   if(!L.length)return '';const open=lsGet('sd-tn-open',false)===true,more=L.length-2;
   const li=x=>`<div class="tn${x.soft?' soft':''}${x.hot?' hot':''}"><span class="tnk${x.num?' num':''}">${esc(x.k)}</span><span class="tnt">${x.href?`<a href="${x.href}">${esc(x.t)} →</a>`:esc(x.t)}</span>${x.btn||''}</div>`;
@@ -1977,7 +1992,8 @@ const WIDGETS={
   next:{n:'計畫的下一步',d:'每個計畫現在能做的一步',need:'plan'},
   exams:{n:'目標倒數',d:'所有目標日和截止日',need:'exam'},
   mood:{n:'今日心境',d:'一鍵記下心境，與覺察日記同步',need:'journal'},
-  week:{n:'本週專注',d:'這週每天的專注分鐘'}};
+  week:{n:'本週專注',d:'這週每天的專注分鐘'},
+  habits:{n:'習慣打卡',d:'「我的頁面」裡的每日打卡，在今日就能打卡'}};
 const WIDGET_DEF=[];
 let todayEdit=false;
 function todayWidgets(){const c=cfg();return (Array.isArray(c.todayWidgets)?c.todayWidgets:WIDGET_DEF).filter(w=>WIDGETS[w]&&(!WIDGETS[w].need||isOn(WIDGETS[w].need)))}
@@ -1990,6 +2006,8 @@ function widgetBody(w,k){
   if(w==='due')return [`${esc(exL('due'))} ${XL(exPage(),'exam')}`,dueHTML()];
   if(w==='next')return [`計畫的下一步 ${XL('計畫地圖','plan')}`,nextStepsHTML()];
   if(w==='exams'){const ex=cfg().exams;return [`目標倒數 ${XL('調整日期','exam')}`,ex.length?`<div class="list">${ex.map(e=>{const n=e.date?diffDays(today(),e.date):null;return `<div class="li"><span class="grow">${esc(e.name)}</span><span class="num">${n==null?'<span class="muted">未設定</span>':n<0?'已結束':n+' 天'}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有設定日期。</p>'];}
+  if(w==='habits'){const L=[];Object.entries(S.pages||{}).forEach(([pid,p])=>(p.blocks||[]).forEach(b=>{if(b.type==='habit')L.push([pid,b])}));
+    return ['習慣打卡',L.length?`<div class="list">${L.map(([pid,b])=>{const d=hbDone(b,today()),it=hbIntent(b),A_=`data-p="${pid}" data-b="${b.id}"`;return `<div class="li hbli"><div class="grow"><b>${esc(b.title||'每日打卡')}</b>${it?`<div class="muted" style="font-size:calc(12px * var(--fs,1))">${esc(it)}</div>`:''}<div class="muted" style="font-size:calc(12px * var(--fs,1))">${esc(hbCoachText(b))}</div></div><span class="row" style="gap:4px;flex:none"><button class="sm ${d&&d!=='mini'?'sec':'pri'}" data-act="blkHabit" ${A_} data-k="${today()}" aria-label="今天做到了">${d&&d!=='mini'?'✓':'做到了'}</button>${b.mini?`<button class="sm ${d==='mini'?'sec':'ghost'}" data-act="hbMini" ${A_}>${d==='mini'?'最小版 ✓':'最小版'}</button>`:''}</span></div>`}).join('')}</div>`:'<p class="empty">還沒有每日打卡。到「＋ 新增頁面」選「習慣養成」，或在任何頁面加一個「每日打卡」區塊。</p>']}
   if(w==='mood'){const j=day(k).j||{};return [`今日心境 ${XL('覺察日記','journal')}`,`<div class="mood">${[1,2,3,4,5].map(n=>`<button data-act="jScore" data-k="${k}" data-f="mood" data-n="${n}" aria-pressed="${j.mood===n}">${n}</button>`).join('')}</div><p class="muted" style="margin:8px 0 0">1 低落，5 明亮。會同步到覺察日記。</p>`];}
   if(w==='week'){const s0=weekStart(k),ks=Array.from({length:7},(_,i)=>addDays(s0,i));const rows=ks.map(x=>({key:x,label:'週'+wdName(x),parts:[{c:0,v:(day(x).sessions||[]).reduce((a,y)=>a+(+y.min||0),0),n:fmtMD(x)}]}));return [`本週專注 ${XL('統計','stats','data-m="week"')}`,stackBars(rows,{h:150,marker:k})];}
   return ['',''];
@@ -2004,6 +2022,10 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-27',lv:'major',t:'每日打卡升級：寫一句「什麼時候、在哪裡做」或「接在哪件事之後」；設一個兩分鐘版本，累的時候做它也算數；休一天不算中斷，別連續錯過兩天就好；寫下想成為的人，每次打卡就是投一票。今日頁可以加「習慣打卡」小卡'},
+ {d:'2026-11-27',lv:'minor',t:'好習慣設計用在整個 App：連續天數改成休一天不算中斷（統計、靜心、計畫）；今日頁在休息一天後提醒接回來，隔好幾天就從兩分鐘開始；三件事建議寫上什麼時候做；睡前把明天要用的東西擺好；提示卡與番茄鐘休息時加入環境安排的小提示'},
+ {d:'2026-11-27',lv:'minor',t:'節日小卡：元旦、除夕、春節、元宵、兒童節、端午、教師節、中秋配上《清俗紀聞》（1799）的木刻插圖；春節卡從初一顯示到初三；光復節、行憲紀念日更新'},
+ {d:'2026-11-27',lv:'minor',t:'靜心回饋與雁書的說法不再每次一樣；兩本書的觀點自然接在一起；反覆遇到同樣困難時，不會每次都追問'},
  {d:'2026-11-27',lv:'minor',t:'靜心回饋：先挑最貼近你這次寫下內容的說明，老師輪流退到第二；另一本書也說到同一點時，附在「也可以這樣看」；同樣的困難最近反覆出現，會換個角度說，並溫和地多問一句'},
  {d:'2026-11-27',lv:'minor',t:'靜心回饋加入智者大師《修習止觀坐禪法要》（小止觀）：調身調息調心、不沈不浮、五蓋、出定的順序等，可以指定由智者大師回應'},
  {d:'2026-11-27',lv:'minor',t:'錯題本：每天複習有上限（預設 20 題，可調），放最久的先、近 7 天最常錯的錯因優先，其餘明天再來；可以依科目、錯因篩選，也能搜尋題目、規則、出處'},
@@ -2090,6 +2112,8 @@ function tipList(){const hid=cfg().hidden||[],ss7=Array.from({length:7},(_,i)=>(
    {id:'tomorrow',ok:dayClock().isEve&&recentDays(7,d=>(((d.j||{}).top3)||[]).some(x=>x&&x.t))>=2&&!((day(addDays(today(),1)).j||{}).top3||[]).some(x=>x&&x.t),t:'晚上可以先排好明天',b:'今日頁下方的「明天的三件事」，睡前寫好，明天一打開就能開始；今天沒做完的事，也可以在這裡決定移到明天或放下。',btn:'去看看',go:'tomorrow'},
    {id:'nzbreak',ok:firstUse()<'2026-11-19'&&allSs>=3,t:'休息時會播放潮汐聲',b:'番茄鐘休息時，預設會輕輕播放潮汐聲，幫頭腦放鬆。不需要的話，可以在設定裡關掉，也能改成專注時播放。',btn:'聲音設定',go:'sound'},
    {id:'scene',ok:isOn('exam')&&!cfg().exScene,t:'目標衝刺不只用在考試',b:'比賽、演出、發表也能用，選好情境後，用語、每日提醒和計時項目會一起換。',btn:'去選情境',go:'exam'},
+   {id:'env',ok:age>=3&&allSs>=3,t:'讓開始變得容易一點',b:'前一晚把明天要讀的書翻到那一頁、放在桌上；專注時把手機放到另一個房間。想做的事看得見，會分心的東西拿不到，開始就容易得多。',btn:'知道了'},
+   {id:'hbset',ok:Object.values(S.pages||{}).some(p=>(p.blocks||[]).some(b=>b.type==='habit'&&!b.when&&!b.after&&Object.keys(b.days||{}).length>=3)),t:'替習慣寫一句「什麼時候做」',b:'「刷完牙之後，我會讀一頁書」比「我要多讀書」更容易做到。也可以設一個兩分鐘版本，累的時候做它就算數。',btn:'去設定',go:'habit'},
    {id:'nav',ok:age>=7&&hid.length>0&&!(cfg().navOrder||[]).length,t:'選單可以照你的習慣調整',b:'在「設定 → 要顯示哪些頁面」打開其他頁面，或調整選單順序。',btn:'去設定',go:'pages'}].filter(x=>x.ok)}
 /* 回顧卡：第 7 天「日課開始認識你」、每月初「這個月的你」 */
 function focusStats(keys){let mins=0,n=0,days=0;const per={};keys.forEach(k=>{const ss=day(k).sessions||[];if(ss.length)days++;ss.forEach(x=>{mins+=+x.min||0;n++;const h=new Date(x.t).getHours();const p=h<5?'深夜':h<11?'上午':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';per[p]=(per[p]||0)+(+x.min||0)})});
@@ -2248,7 +2272,7 @@ function vStats(){
   const active=keys.filter(k=>(day(k).sessions||[]).length).length;
   const moods=keys.map(k=>day(k).j&&day(k).j.mood).filter(Boolean);
   const avgMood=moods.length?(moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1):'—';
-  let streak=0;{let k=today();if(!(day(k).sessions||[]).length)k=addDays(k,-1);while((day(k).sessions||[]).length){streak++;k=addDays(k,-1)}}
+  const streak=chainDays(k=>(day(k).sessions||[]).length>0||(day(k).tests||[]).length>0);
   const subs=statTags(keys).map(s=>({n:s.name,c:s.c,v:(A.bySub[s.id]||{m:0}).m,cnt:(A.bySub[s.id]||{n:0}).n})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const outList=Object.entries(A.outs).map(([k,v])=>{const [sid,u]=k.split('|');return `<span class="chip">${sdot(sid)}${esc(subj(sid).name)} <b>${fmtN(v)}</b> ${esc(u)}</span>`}).join('');
   let main='';
@@ -2275,7 +2299,7 @@ function vStats(){
   <div class="kpis">
     <div class="kpi"><div class="l">專注時間 <span class="muted">番茄鐘</span></div><div class="n">${fmtN(A.mins/60)}<small>小時</small></div>${(()=>{const t=testSum(keys).min;return t?`<div class="ksub">另有${esc(exL('timer'))} ${fmtN(t/60)} 小時・合計 ${fmtN((A.mins+t)/60)}</div>`:''})()}</div>
     <div class="kpi"><div class="l">番茄數</div><div class="n">${A.n}<small>個</small></div></div>
-    <div class="kpi"><div class="l">${stMode==='day'?'連續讀書':'有讀書的天數'}</div><div class="n">${stMode==='day'?streak:active}<small>${stMode==='day'?'天':'/ '+keys.length+' 天'}</small></div></div>
+    <div class="kpi"${stMode==='day'?' title="中間休一天不算中斷，連續兩天沒做才重新算"':''}><div class="l">${stMode==='day'?'連續專注':'有專注的天數'}</div><div class="n">${stMode==='day'?streak:active}<small>${stMode==='day'?'天':'/ '+keys.length+' 天'}</small></div></div>
     <div class="kpi"><div class="l">平均心境</div><div class="n">${avgMood}<small>/ 5</small></div></div>
   </div>${main}`;
 }
@@ -2657,7 +2681,9 @@ let nsSkip={};
 function stepCands(pid){const p=proj(pid);if(!p)return [];const cur=curStageOf(pid),i=Math.max(0,p.stages.indexOf(cur));const order=[...p.stages.slice(i),...p.stages.slice(0,i)];return order.flatMap(st=>st.steps.filter(x=>!x.done).map(s=>({st,s})))}
 function unitFollow(pid,stId){const p=proj(pid);if(!isUnits(p))return;const st=p.stages.find(s=>s.id===stId);if(!st)return;if(stageDone(st)){if(curStageMap[pid]===stId){delete curStageMap[pid];lsSet('sd-curstage',curStageMap)}}else{curStageMap[pid]=stId;lsSet('sd-curstage',curStageMap)}}
 function planWin(){const w=lsGet('sd-planwin',null);return w&&w.d===today()?w:null}
-function planStreak(p){const has=k=>p.stages.some(s=>s.steps.some(x=>x.doneAt===k))||(p.wins||[]).some(w=>w.d===k);let n=0,k=today();if(!has(k))k=addDays(k,-1);while(has(k)&&n<400){n++;k=addDays(k,-1)}return n}
+// 連續天數（全 App 共用，《原子習慣》「別連續錯過兩次」）：中間休一天不算斷，連續兩天沒做才重新算
+function chainDays(has){let k=today();if(!has(k))k=addDays(k,-1);let n=0,miss=0;for(let i=0;i<500;i++){if(has(k)){n++;miss=0}else{miss++;if(miss>=2)break}k=addDays(k,-1)}return n}
+function planStreak(p){const has=k=>p.stages.some(s=>s.steps.some(x=>x.doneAt===k))||(p.wins||[]).some(w=>w.d===k);return chainDays(has)}
 function planWinHTML(p){const w=planWin();if(!w||w.proj!==curProj)return '';
   const wk=weekStart(today()),wkSteps=p.stages.reduce((a,s)=>a+s.steps.filter(x=>x.doneAt&&x.doneAt>=wk).length,0),todayN=p.stages.reduce((a,s)=>a+s.steps.filter(x=>x.doneAt===today()).length,0),st=p.stages.find(s=>s.id===w.st),sd=st?st.steps.filter(x=>x.done).length:0,sn=st?st.steps.length:0,streak=planStreak(p),ns=nextStep(curProj);
   return `<div class="winmode"><div class="wincheck" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
@@ -3082,6 +3108,7 @@ const A={
     if(c.page){if(!isOn(c.page))editCfg(cc=>{cc.hidden=(cc.hidden||[]).filter(r=>r!==c.page)});location.hash=c.page;return}
     const go=c.go;if(go==='exam'){location.hash='exam';return}
     if(go==='widgets'){todayEdit=true;render();return}
+    if(go==='habit'){for(const [pid,p] of Object.entries(S.pages||{})){const b=(p.blocks||[]).find(x=>x.type==='habit'&&!x.when&&!x.after);if(b){HB_SET.add(b.id);location.hash='page-'+pid;return}}render();return}
     if(go==='tomorrow'){render();setTimeout(()=>{const h=[...document.querySelectorAll('.card h2')].find(x=>x.textContent.includes('明天最重要'));if(h)h.scrollIntoView({behavior:'smooth',block:'center'})},120);return}
     if(go==='remind'||go==='sound'||go==='pages'){FOLD_OPEN.add(go);lsSet('sd-fold',[...FOLD_OPEN].filter(x=>!x.startsWith('j:')));location.hash='prefs';setTimeout(()=>{const d=document.querySelector(`details[data-fold="${go}"]`);if(d)d.scrollIntoView({behavior:'smooth',block:'start'})},250);return}
     render()},
@@ -4034,71 +4061,85 @@ function tallyHTML(){const t=methodTally();if(!t.length)return '';return `<div c
 const MZ_FB=[
  {k:'dull',chip:'昏沈',re:/睏|想睡|昏沉|昏沈|打瞌睡|恍惚|迷糊|沒精神|好累|疲倦|點頭/,
   a:['坐著坐著就想睡，這是很多人都會遇到的。','有昏沉的時候，常常是身體在提醒你：它累了。'],
+  b2:'想睡不一定要硬撐。先把背坐直、眼睛微微張開，看著前方地面的一點；還是很睏，就起來慢慢走幾圈，或乾脆小睡一下，醒來再坐。也想想今天睡得夠不夠、是不是剛吃飽。',
   b:'先看看自己是不是太用力了，緊繃久了，人就容易疲倦。輕微想睡時，把眼睛睜開一點、背挺直，注意力輕輕提到眉心附近。真的很睏，就先小睡一下，醒來再坐也很好。',
   m:'昏沉和散亂，是靜坐時最常見的兩種狀態。聖嚴法師提醒，用功時若太緊張，神經一繃緊就容易累，累了自然想睡，所以第一步其實是放鬆，而不是更用力。輕微的昏沉，可以睜大眼睛、把注意力集中在眉心，通常就能清醒；昏沉很重時，最好的方法反而是乾脆閉上眼睛睡一會兒。也可以留意練習的時段：飯後或熬夜後最容易昏沉，換到精神好的時候坐，會輕鬆很多。',
   s:'聖嚴法師《禪的體驗‧禪的開示》頁 41–43；《禪的生活》頁 59–60'},
  {k:'tense',re:/緊張|用力|僵硬|繃|好硬|很緊|呼吸困難|胸悶|頭痛/,
   a:['你注意到身體在用力，這個發現本身就很重要。','越想坐好，身體有時反而越緊，這很常見。'],
+  b2:'緊繃時，先什麼都不做，只是把吐氣放長一點，讓肩膀跟著吐氣往下沉。坐姿不必完美，讓骨架撐住身體，肌肉就能休息。鬆下來了，心自然會安定。',
   b:'下次開始前，從眼睛、臉、肩膀、手臂一路往下放鬆，最後摸摸小腹是不是也鬆了。呼吸讓它自然進出，不用去控制。先求放鬆，安定會自己跟上來。',
   m:'聖嚴法師把靜坐的目的說得很簡單：學會放鬆身心，以及隨時能安定身心，兩者是一體的兩面，能放鬆就能安定。放鬆的方法就是「不用力」：眼球不用力、臉部不用力、兩肩兩臂不用力，再檢查小腹；小腹一直緊著，久了會呼吸不順。坐姿只要腰背自然挺直，盤腿或坐椅子都可以。如果數呼吸時頭會痛，通常是在用頭腦「想」呼吸，把注意力放回身體和坐墊接觸的地方，頭就會輕鬆。',
   s:'聖嚴法師《禪的體驗‧禪的開示》頁 226、253；《聖嚴法師教默照禪》頁 31'},
  {k:'restless',chip:'掉舉',re:/浮躁|坐不住|靜不下|焦躁|心急|毛躁|很躁|好亂/,
   a:['心靜不下來的時候，坐著確實不容易。','今天心比較躁，你還是坐下來了。'],
+  b2:'心浮動時，不必逼它安靜，先讓注意力有個落腳的地方：吐氣時默數一個數，或感覺腳底和坐墊的接觸。也可以先起來快走幾分鐘，身體動過了，心比較好坐下來。',
   b:'試著數呼吸：每次吐氣數一個數，從一數到十再重來，數亂了就回到一。不用急著讓心安靜，越急越躁。先讓身體穩下來，心會慢慢跟上。',
   m:'聖嚴法師說，多數調心的方法，都是用來對治散亂心的，最基本的就是數呼吸：只數吐氣，從一到十，周而復始。數數本身也是一個念頭，但它用一個單純的念頭，代替紛亂的念頭，心就有了落腳處。調心最要緊的是不可心急：心若老是焦急地期待什麼、憂慮什麼，就像拉車的牛一邊想吃草、一邊想少走路，只會更疲憊。心太躁時，也可以先活動幾分鐘或慢慢走路，再坐下來。',
   s:'聖嚴法師《禪的體驗‧禪的開示》頁 43；《禪的生活》頁 53、108–109'},
  {k:'thoughts',chip:'念頭',re:/念頭|想很多|胡思亂想|一直想|分心|走神|計畫|回憶|雜念|想東想西|飄走/,
   a:['念頭一直跑出來，是每個靜坐的人都熟悉的經驗。','你注意到心常常飄走，能注意到，就已經在練習了。'],
+  b2:'念頭來了，像看天上的雲經過：知道它來，不追，也不趕，再把心帶回呼吸。一次坐下裡回來幾十次也很正常，每一次「回來」，就是練習本身。',
   b:'不必怕念頭，也不用費力趕走它。看見它、不跟著它走，再輕輕回到呼吸就好。每一次「發現走神、再回來」，都是這次練習真正的收穫。',
   m:'虛雲老和尚說：「不要怕妄想，亦不要費力去降伏他，你只要認得妄想，不執著他，不隨逐他，也不要排遣他。只不相續，則妄想自離。」聖嚴法師用「貓捕鼠」比喻：貓守在洞口要放鬆，老鼠出來也好、不出來也好，出來就看見牠，跑了也不追。他曾讓學生做五分鐘「只數念頭」的練習，有人一數就是五十多個；練習久了，會發現察覺念頭時，它往往已經過去，不再一個接一個延伸下去。',
   s:'虛雲老和尚開示，收於聖嚴法師《禪門修證指要》頁 233；《禪的生活》頁 53、58'},
  {k:'body',chip:'身體不適',re:/痛|痠|酸|麻|癢|不舒服|腿|背|膝|腰|肩|脖子/,
   a:['身體不舒服還坐完，辛苦了。','腿痛、痠麻是靜坐時很常見的狀況。'],
+  b2:'身體不舒服時，先分辨一下：是可以陪著的痠痛，還是需要調整的疼痛？前者可以帶著好奇看它怎麼變化；後者就換個姿勢、墊高坐墊，或改用椅子坐。照顧好身體，練習才走得遠。',
   b:'輕微的痛可以讓它痛、不抵抗，有時反而幫助專心；痛得厲害就不用忍，放開腿、調整姿勢都可以。腿麻時起身甩甩腿、慢慢走幾步就好。下次開始前先暖身，會舒服很多。',
   m:'聖嚴法師把痛、麻、痠、癢列為打坐常見的反應：腿痛、腰痛多屬正常；腿麻站起來甩一甩、走幾步就會恢復；關節或腰部痠，下坐後按摩幾下即可；坐時用毛巾蓋住雙腿，也能避免受寒痠痛。他提醒，輕微的痛不必理會，甚至能讓心念更集中；但如果痛到已無法安心，就不需要忍：背痛就彎一彎腰，腿痛就把腿放開。打坐時的痛也常和緊張有關，接受它、不對抗它，反而容易緩解。',
   s:'聖嚴法師《聖嚴法師教禪坐》頁 102；《聖嚴法師教默照禪》頁 83；《禪的生活》頁 179'},
  {k:'sound',chip:'聲音',re:/吵|聲音|噪音|車聲|講話|施工|音樂/,
   a:['環境有聲音，靜坐時確實容易被拉走。','外面的聲音讓你分心了，這很自然。'],
+  b2:'聲音來了，就當作練習的一部分：清楚聽見，不加評論，讓它來、讓它走。如果發現自己在心裡抱怨，也只是知道「我在抱怨」，再回到呼吸。',
   b:'聽到了，就知道「有聲音」，不去分好聽或吵，再回到呼吸。讓人煩的常常不是聲音，而是「希望它停下來」的那個念頭。真的太干擾時，換個時段或戴上耳塞也很好。',
   m:'聖嚴法師在默照禪的指導中提到：不論在做什麼，只要知道正在發生什麼，並恰如其分地處理，不加上「我好討厭」「這真麻煩」的分別，就不會被外境帶著走。面對聲音也是如此：聲音出現，清楚知道；聲音離開，也清楚知道，不迎接、不抗拒。這樣練習，聲音反而能成為讓心安定的對象，像潮水一樣來來去去。當然，靜坐不是比耐力，環境真的太吵時，選擇安靜的時段或地點，也是照顧練習的方式。',
   s:'聖嚴法師《聖嚴法師教默照禪》頁 22–23、31'},
  {k:'anger',re:/生氣|憤怒|不爽|氣死|火大|討厭|很煩|煩躁|不耐/,
   a:['今天心裡有些火氣，能在靜坐時看見它，很不容易。','聽起來有件事讓你很不舒服。'],
+  b2:'怒氣還在的時候，不急著靜下來。先感覺它在身體哪裡：發熱、發緊或心跳快，陪它幾個長長的吐氣。等它小一點了，再想要怎麼處理那件事。',
   b:'先不急著處理那件事，給自己幾個長長的吐氣。感覺一下怒氣在身體的哪裡，看著它，接受它此刻在這裡。等心平靜一些，再決定要怎麼回應。',
   m:'聖嚴法師常說，面對困境要「面對它、接受它、處理它、放下它」。生氣時先面對：知道「我正在生氣」，看清它在身體裡的樣子，胸口緊、臉發熱或拳頭握著；再接受：不責怪自己怎麼又生氣了；然後處理：等心平靜時，再想該怎麼回應那件事；最後放下：事情處理了，就不再反覆咀嚼。他也提醒，情緒性的反應，多半是「我」在作怪，看見這一點，情緒就鬆了一半。',
   s:'聖嚴法師《聖嚴法師教默照禪》頁 22–23、68'},
  {k:'worry',re:/焦慮|擔心|不安|恐懼|壓力|害怕/,
   a:['心裡掛著擔心的事，坐下來時特別容易冒出來。','感覺得到你最近有些壓力。'],
+  b2:'擔心的時候，先回到最近的一件事：這一口吸氣、這一口吐氣。坐完之後，給擔心一個時間和地方，寫在紙上，把「現在能做的」圈起來，其他的先放著。',
   b:'把注意力帶回此刻：腳底的觸感、這一次的吸氣和吐氣。練習後可以把擔心寫下來，分成「現在能做的」和「現在做不了的」。好事不強求，壞事不拒絕，心會鬆一些。',
   m:'聖嚴法師談放鬆時說：「好事不強求，壞事不拒絕。一切現象的發生必有其原因，要平心靜氣地接受它、處理它、完成它，這就容易放鬆了。」擔心，多半是心跑到了還沒發生的未來。他也提醒，感到恐懼、緊張時，呼吸會變得急促，這時不一定適合勉強打坐，可以先躺下或坐著休息，等呼吸平順了再開始。靜心不是要讓擔心消失，而是在擔心旁邊，多留一點空間給自己。',
   s:'聖嚴法師《禪的體驗‧禪的開示》頁 36、253'},
  {k:'sad',re:/難過|傷心|失落|沮喪|低落|想哭|孤單|寂寞|委屈/,
   a:['今天心裡有些沉，謝謝你願意寫下來。','難過的時候還願意坐下來陪自己，這份溫柔很珍貴。'],
+  b2:'難過的時候，練習可以短一點、溫柔一點。陪著自己呼吸幾次，允許這份感受在這裡。今天能坐下來，就已經在照顧自己了；需要的話，也找個信任的人說說。',
   b:'不需要把情緒推開，可以把手輕輕放在胸口，感覺手的溫度。今天練習短一點也沒關係，照顧好自己最重要。如果低落持續很多天，記得找信任的人聊聊。',
   m:'靜心不是要讓情緒消失，而是在情緒裡也能有一點空間。聖嚴法師提醒，情緒低落、身心疲累時，不適合硬撐著坐，先讓身體休息、讓呼吸平順下來，再回來練習。也可以用很簡單的方式陪伴自己：慢慢走一段路，或只是感覺三次呼吸，告訴自己「現在是這樣，沒關係」。如果難過一直持續，影響到睡眠或生活，請和信任的人或專業人員聊聊，這也是照顧自己的一部分。',
   s:'參考聖嚴法師《禪的體驗‧禪的開示》頁 36'},
  {k:'expect',re:/期待|想要|追求|應該要|一定要|效果|進步|達到|成果|做到|上次那樣|上次那種/,
   a:['想坐得更好、想再有上次的感覺，這份用心很真誠。','看得出來你很在意練習有沒有進步。'],
+  b2:'坐下來時，可以先對自己說一句：「這一次，就看看會發生什麼。」不設目標，好的、不好的都只是經過。比起坐得好不好，願意一再回來，才是真正的進步。',
   b:'每次坐下，不求效果，不怕不好的狀態，也不追求好的狀態，保持平穩就好。平靜時知道平靜，散亂時知道散亂，兩種都有價值。只管用方法，進步會自己來。',
   m:'有學生坐出一次很好的狀態，之後一直想再回去，聖嚴法師回答他：「我沒辦法使你每一次打坐，都能得到輕靈明淨；我只能告訴你，每次打坐，不求效果，不怕壞境界，也不求好境界現前……不期待、不企求，保持平穩的心情。唯有如此，才會進步。」他也用破繭來比喻：蝴蝶若急著鑽出繭殼，反而可能提前死在繭中。練習需要時間，急不來。',
   s:'聖嚴法師《禪的生活》頁 108–109、203–204'},
  {k:'judge',re:/做不好|很差|失敗|沒用|自責|不夠好|好爛|笨|退步|比以前差|沒進步/,
   a:['覺得自己沒做好，心裡一定有點沮喪。','你對自己的要求很高。'],
+  b2:'對自己不滿意時，試著換成對朋友說話的語氣：「今天比較散，沒關係，你還是坐下來了。」練習不是比賽，有進有退本來就是過程的一部分。',
   b:'練習本來就有進有退：有進，知道方法有用；有退，知道還需要練習。不用懊惱，也不必不好意思。坐下來、發現走神、再回來，每一步都算數。',
   m:'有年輕學生在禪修時覺得自己脫胎換骨，回到生活不久又退回原狀，懊喪得不好意思再回來。聖嚴法師說：「其實不要害怕，不必害羞，這是正常的現象……有進，才知道修行有用；有退，才知道你是凡夫；既知道尚是凡夫，你才更要好好地用功。」對自己嚴格的聲音，也只是一個念頭，看見它就好，不必相信它。試著用對好朋友說話的語氣對自己說：「沒關係，我們再回來就好。」',
   s:'聖嚴法師《禪的生活》頁 42–43'},
  {k:'doubt',re:/懷疑|有沒有用|做得對嗎|不知道怎麼|不確定|迷惘|方法對嗎/,
   a:['不確定自己做得對不對，是練習一陣子後常有的疑問。','你在認真想這個方法適不適合自己。'],
+  b2:'懷疑的時候，不急著找答案，先把一個簡單的方法用滿兩週，再回頭看看有沒有一點點不同。很多變化很小，要記下來才看得見；寫筆記，就是在替自己收集證據。',
   b:'先相信自己有能力練習，選一個簡單的方法，例如數呼吸，持續一兩週再看看。不要今天換這個、明天換那個。比較快發現自己走神，就已經是進步。',
   m:'聖嚴法師在禪修開示中提醒：要相信自己有練習的能力，不要小看自己，也不要懷疑自己；若對自己和方法起疑，遇到困難時就很容易放棄。明代憨山大師也把「不可自生疑慮」列為用功的原則：今天這樣、明天那樣，又擔心得不到效果，這些盤算本身就成了障礙。所以先選定一個方法，安心地用一段時間。有疑問時，請教有經驗的老師，會比自己反覆猜測更有幫助。',
   s:'聖嚴法師《禪的體驗‧禪的開示》頁 288–289；《禪門修證指要》頁 176'},
  {k:'strange',re:/看到光|看見光|影像|身體自己動|自己晃|飄起來|奇怪的感覺|特別的感覺|好像離開身體/,
   a:['靜坐時出現了特別的感覺，有點新奇，也可能有點不安。'],
+  b2:'特別的身心感受出現時，知道它、不追它，也不害怕它，回到原本的方法。它們會來也會走，不代表坐得特別好或特別差。真的讓你不安，就先停下來，找有經驗的人談談。',
   b:'不管是舒服的還是奇怪的感覺，都不用管它：不害怕，也不追求，回到呼吸就好。如果這些感覺讓你不安，或常常出現，先暫停練習，並請教有經驗的老師或醫師。',
   m:'心比較集中時，身心偶爾會出現特別的反應，例如看到光、身體晃動或輕飄飄的感覺。虛雲老和尚說：「雖遇著或見著什麼惡境界，也不要管它，不要害怕；就是看見什麼好境界，也不要管它，不要生歡喜。」也就是俗話說的「見怪不怪，其怪自敗」。聖嚴法師也提醒，若把這些感覺當真，每次坐下就害怕它再來、或期待它再來，心就無法放在方法上。感覺持續或讓你不安時，請暫停並尋求專業協助。',
   s:'虛雲老和尚開示，收於聖嚴法師《禪門修證指要》頁 235；《禪的體驗‧禪的開示》頁 118'},
  {k:'good',chip:'幾乎沒有',re:/平靜|安定|舒服|清楚|輕鬆|喜悅|放鬆|安靜|很好|順/,
   a:['這次坐得很安定，真替你高興。','今天的練習很順。'],
+  b2:'坐得安定的日子，好好記住這份感覺，也留意當天的作息和狀態。下一次不一樣也沒關係，安定不是要抓住的東西，而是一次次放鬆之後自然出現的。',
   b:'記住此刻身心的感覺，也留意是什麼幫助了你：時段、姿勢或當天的狀態。但不必抓住這份平靜，下次不一樣也很自然。每次都用新的心情坐下來就好。',
   m:'坐得好的時候，聖嚴法師反而提醒要「提高警覺」：在坐得舒服或平穩時，不期待、不企求，保持平穩的心情。因為一旦抓住好的感覺，下一次坐下就會想追回它，心反而緊了。放鬆和安定是一體的兩面，這次的安定，是放鬆自然帶來的結果。可以把這次的條件記在筆記裡，例如什麼時段、睡得好不好、坐前有沒有暖身，之後再創造類似的條件。',
   s:'聖嚴法師《禪的生活》頁 203–204；《禪的體驗‧禪的開示》'}];
@@ -4200,9 +4241,12 @@ function mzFeedback(x){
   const per=mzPeriod(x.t);
   if(!best)return {k:'general',a:x.q&&x.q<=2?'今天的心比較散，也沒關係。':'謝謝你今天花時間陪伴自己。',b:'靜心不是要達到某種狀態，而是一次又一次溫柔地回到當下。'+((per&&MZ_TOD.general[per])||'')+'下次坐完，可以多寫一句你注意到的事，例如念頭、身體或呼吸的變化，回饋會更貼近你。'};
   const h=[...String(x.id||'')].reduce((a,c)=>a+c.charCodeAt(0),0),nx=(x.next||'').trim();
-  let b=best.b;const tod=per&&(MZ_TOD[best.k]||{})[per];if(tod)b+=tod;if(nx)b+=`你想試的「${nx.slice(0,30)}」很好，下次開始前看一眼就能用上。`;
+  const BL=lsGet('sd-mzb',{})||{},useB2=best.b2&&BL[best.k]!=='b2'&&(BL[best.k]==='b'||h%2===1);BL[best.k]=useB2?'b2':'b';lsSet('sd-mzb',BL);
+  let b=useB2?best.b2:best.b;const tod=per&&(MZ_TOD[best.k]||{})[per];if(tod&&(h%3!==0||!useB2))b+=tod;
+  if(nx){const NX=[`你想試的「${nx.slice(0,30)}」很好，下次開始前看一眼就能用上。`,`下次想試試「${nx.slice(0,30)}」，很好的打算，坐下前先在心裡說一遍。`,`「${nx.slice(0,30)}」這個小調整，下次用用看，再回來看看有什麼不同。`];b+=NX[h%NX.length]}
   const vs=MZ_M[best.k]||[{m:best.m,s:best.s}],pv=mzPickVariant(vs,txt,best.k),v=pv.pick,rep=mzRepeat(best.k,x.id),fu=mzFollow(best.k,rep);
-  return Object.assign({k:best.k,a:mzPickAck(best),b,m:v.m,s:v.s},pv.also?{m2:pv.also.m,s2:pv.also.s}:{},fu?{fu}:{});
+  let br='';if(pv.also){const BR=['另一位老師也有相近的說法：','換個角度看，','這一點，在另一本書裡也說得很清楚：','可以和這段對照著看：','也有老師從另一面談到：'],lb=lsGet('sd-mzbr',-1);let i=h%BR.length;if(i===lb)i=(i+1)%BR.length;lsSet('sd-mzbr',i);br=BR[i]}
+  return Object.assign({k:best.k,a:mzPickAck(best),b,m:v.m,s:v.s},pv.also?{m2:pv.also.m,s2:pv.also.s,br}:{},fu?{fu}:{});
 }
 // 挑說明：先看哪一則最貼近這次寫下的內容（共同的關鍵詞組越多越貼近），最近給過的同一則往後排；分數一樣時才看老師輪流（最久沒出現的先）。
 // 指定老師：那位老師的說明只要不比最貼近的差太多（差一組以內）就用他的。另一位老師的說明也貼近這次的內容時，附在「也可以這樣看」。
@@ -4225,10 +4269,21 @@ function mzPickVariant(vs,txt,k){txt=txt||'';const pref=mzPickable().includes(cf
 // 同樣的困難反覆出現：最近三週第三次起，換個角度說，並溫和地多問一句（不催促；能一再認出它，就是覺照）
 const MZ_KN={dull:'昏沉',tense:'緊繃',restless:'心浮動',thoughts:'念頭多',body:'身體不舒服',sound:'聲音干擾',anger:'生氣',worry:'擔心',sad:'心情低落',expect:'期待',judge:'對自己不滿意',doubt:'懷疑',strange:'特別的身心感受'};
 function mzRepeat(k,id){if(!MZ_KN[k])return 0;let n=0;for(let i=0;i<21;i++){((day(addDays(today(),-i)).j||{}).practice||[]).forEach(p=>{if(p.id!==id&&p.fb&&p.fb.k===k)n++})}return n}
-function mzFollow(k,n){const w=MZ_KN[k];if(!w||n<2)return '';
-  const L=n>=5?[`「${w}」已經陪你好一段時間了。卡在同一個地方很久，在修行裡並不少見，有人一卡就是好幾年；能一次又一次認出它，有覺照，就很好了。如果願意，也可以換個時段、把時間縮短一點，或找有經驗的老師聊聊。`,`這陣子常寫到「${w}」。不必急著打破它，先照顧好睡眠、飲食和作息，練習的底子穩了，困難常會自己鬆開一點。你最近的生活，是不是也比較忙、比較累？`]
-    :[`這三週裡，「${w}」出現了好幾次，這很平常，很多人會在同一個地方停很久。想問問你：它通常是坐下多久之後出現的？下次可以在筆記裡多寫一句，不用急著改變它。`,`「${w}」又來了。能再一次認出它，本身就是覺照。如果願意，下次留意一下：它出現之前，你在想什麼、身體有什麼感覺？`,`「${w}」這陣子反覆出現，可以比較看看：這次和上次，有沒有哪裡稍微不一樣？哪怕只有一點點，也值得記下來。`];
-  return L[n%L.length]}
+function mzFollow(k,n){const w=MZ_KN[k];if(!w||n<2)return '';const R=lsGet('sd-mzfu',{})||{},r=R[k]||{n:-9,i:[],long:-9};
+  if(n-r.n<2)return ''; // 上一次才問過，這次先不問
+  const long=n>=5&&n-r.long>=4;
+  const L=long?[`「${w}」已經陪你好一段時間了。在同一個地方停很久，在修行裡並不少見，有人一停就是好幾年；能一次又一次認出它，有覺照，就很好了。`,
+      `最近常寫到「${w}」。不急著打破它，先照顧好睡眠、飲食和作息，底子穩了，困難常會自己鬆開一點。你最近的日子，是不是也比較忙、比較累？`,
+      `「${w}」還在，你也還在坐，這兩件事都是真的。有些功課要很久，也許換個時段、把時間縮短一點，或找有經驗的老師聊聊，會有新的看見。`,
+      `同一個困難反覆出現，常讓人懷疑自己。其實能一次次看見它，就已經不是被它帶著走了。慢慢來，不用跟誰比快。`]
+    :[`這三週裡，「${w}」出現了好幾次，很多人都會在同一個地方停一陣子。想問問你：它通常是坐下多久之後出現的？`,
+      `「${w}」又來了。能再一次認出它，本身就是覺照。下次願意的話，留意一下它出現之前，你在想什麼、身體有什麼感覺。`,
+      `「${w}」這陣子反覆出現，可以比較看看：這次和上次，有沒有哪裡稍微不一樣？哪怕只有一點點。`,
+      `最近幾次都寫到「${w}」。它比較常在一天的哪個時段出現？也許換個時間坐，會不太一樣。`,
+      `「${w}」好像是這陣子的老朋友。如果用一句話形容它今天的樣子，你會怎麼說？寫下來就好，不用改變它。`,
+      `又遇到「${w}」了，謝謝你還是誠實地記下來。最近有沒有什麼事，讓它比較容易出現？`];
+  const used=long?[r.li]:r.i;let c=L.map((_,i)=>i).filter(i=>!used.includes(i));if(!c.length)c=L.map((_,i)=>i);const i=c[(n*7+String(k).length)%c.length];
+  R[k]=long?Object.assign(r,{n,long:n,li:i}):Object.assign(r,{n,i:(r.i||[]).concat(i).slice(-3)});lsSet('sd-mzfu',R);return L[i]}
 // 第一句：該狀況自己的承接語＋幾句溫和的通用開頭，避免和上一次一樣
 const MZ_OPEN=['謝謝你願意坐下來，也願意把感受寫下來。','能把練習中的狀況寫下來，就已經是一種覺察。','每一次坐下來，都很值得。','你注意到的這些，都是練習的一部分。','願意誠實地看見自己的狀態，就很好。'];
 function mzPickAck(best){const pool=best.a.concat(MZ_OPEN.map(x=>x)),last=lsGet('sd-mza','');const own=best.a.filter(x=>x!==last);
@@ -4236,7 +4291,7 @@ function mzPickAck(best){const pool=best.a.concat(MZ_OPEN.map(x=>x)),last=lsGet(
 function mzCardHTML(f){const care=f.k==='crisis'||f.k==='distress';
   return `<div class="mzfb${care?' care':''}"><b>${f.k==='crisis'?'請先照顧自己':'給你的回饋'}</b>
     <p>${f.a?`<span class="mzack">${esc(f.a)}</span>`:''}${esc(f.b||f.t||'')}</p>${f.fu?`<p class="mzfu">${esc(f.fu)}</p>`:''}
-    ${f.m?`<details class="mzmore"><summary><span class="c">看更多說明…</span><span class="o">收起 ▴</span></summary><p>${esc(f.m)}</p><span class="mzsrc">出處：${esc(f.s||'')}</span>${f.m2?`<div class="mzalso"><b>也可以這樣看</b><p>${esc(f.m2)}</p><span class="mzsrc">出處：${esc(f.s2||'')}</span></div>`:''}${mzTeacherPick(f)}</details>`:''}</div>`}
+    ${f.m?`<details class="mzmore"><summary><span class="c">看更多說明…</span><span class="o">收起 ▴</span></summary><p>${esc(f.m)}</p><span class="mzsrc">出處：${esc(f.s||'')}</span>${f.m2?`<p class="mzalso">${esc(f.br||'也可以這樣看：')}${esc(f.m2)}</p><span class="mzsrc">出處：${esc(f.s2||'')}</span>`:''}${mzTeacherPick(f)}</details>`:''}</div>`}
 function mzTeacherPick(f){const pref=mzPickable().includes(cfg().mzTeacher)?cfg().mzTeacher:'',miss=pref&&f.s&&mzTeacher({s:f.s})!==pref;
   return `<details class="mzt"><summary>${pref?`回應的老師：${esc(pref)}`:'想指定回應的老師？'}</summary>
     <p class="muted" style="margin:6px 0 0;font-size:calc(12px * var(--fs,1))">選好之後，之後的說明會優先引用這位老師的教導；這位老師沒談到的狀況，會由其他老師回應${miss?'（這一次就是這樣）':''}。</p>
@@ -4267,7 +4322,7 @@ function vMind(){
   const mins=d=>((day(d).j||{}).practice||[]).reduce((a,x)=>a+(+x.min||0),0);
   const wk=weekStart(k),wkMin=Array.from({length:7},(_,i)=>addDays(wk,i)).reduce((a,d)=>a+mins(d),0);
   const moMin=Object.keys(S.days).filter(d=>d.slice(0,7)===k.slice(0,7)).reduce((a,d)=>a+mins(d),0);
-  let streak=0,d0=k;if(!mins(d0))d0=addDays(d0,-1);while(mins(d0)){streak++;d0=addDays(d0,-1)}
+  const streak=chainDays(d=>mins(d)>0);
   return `<header class="ph"><div><p class="eyebrow">靜心</p><h1>安住當下</h1></div><div class="chips"><span class="chip">連續 <b>${streak}</b> 天</span><span class="chip">本週 <b>${wkMin}</b> 分</span><span class="chip">本月 <b>${moMin}</b> 分</span></div></header>
   <div class="grid2">
     <section class="card">${mindTimerHTML()}</section>
@@ -4617,7 +4672,7 @@ function careAdd(kind){editDay(today(),d=>{const c=d.j.care=Object.assign({eye:0
 function careTick(){if(!CARE_T)return;const left=Math.ceil((CARE_T.end-Date.now())/1000),el=$('#careT');if(left<=0){CARE_T=null;careAdd('eye');try{unlockAudio();flTone('go')}catch{}toast('眼睛休息好了');render();return}if(el)el.textContent=left}
 function sitMin(){const k=today(),at=Math.max(+(((day(k).j||{}).careAt||{}).walk)||0,+(((day(k).j||{}).careAt||{}).stretch)||0);return (day(k).sessions||[]).filter(x=>+new Date(x.t)>at).reduce((a,x)=>a+(+x.min||0),0)+(P.running&&P.mode==='work'&&P.startedAt&&+new Date(P.startedAt)>at?Math.round((Date.now()-new Date(P.startedAt))/60000):0)}
 function breakTipHTML(){if(P.mode==='work')return '';const long=P.mode==='long',pick=long?['stretch','walk']:[['eye','water','walk'][(P.cycles||0)%3]];
-  return `<div class="brktip"><span class="muted">休息時</span>${pick.map(k=>{const x=CARE.find(c=>c[0]===k);return `<button class="sm brkbtn" data-act="care" data-k="${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${x[3]}</svg>${x[1]}・${x[2]}</button>`}).join('')}${long&&isOn('mind')?'<a class="xlink" href="#mind">或靜心 3 分鐘 →</a>':''}</div>`}
+  return `<div class="brktip"><span class="muted">休息時</span>${pick.map(k=>{const x=CARE.find(c=>c[0]===k);return `<button class="sm brkbtn" data-act="care" data-k="${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${x[3]}</svg>${x[1]}・${x[2]}</button>`}).join('')}${long&&isOn('mind')?'<a class="xlink" href="#mind">或靜心 3 分鐘 →</a>':''}${(P.cycles||0)%2?`<p class="brkenv muted">${esc(['趁休息，把下一顆番茄要用的東西擺到手邊。','開始下一顆前，把手機放遠一點。','桌上只留下一件要做的事，其他的先收起來。','把水杯放在看得見的地方。'][Math.floor((P.cycles||0)/2)%4])}</p>`:''}</div>`}
 function careHTML(){const c=careOf(today()),goal=+cfg().waterGoal||8,sit=sitMin();
   return `<section class="card"><h2>照顧身體 <span class="muted">休息時做一件就好</span></h2>
     ${sit>=50?`<p class="banner" style="margin:0 0 10px">已經坐著專注了 ${sit} 分鐘，起來走走吧。</p>`:''}
@@ -4667,10 +4722,12 @@ const PAGE_TPL={
 };
 let pgAdding=false;
 function mkBlock(type,title){return Object.assign({id:rid(),type,title:title||BLOCKS[type].n},BLOCKS[type].mk(),type==='log'&&title==='書單'?{cols:['書名','作者','狀態','心得']}:{})}
+function hbWidget(){const c=cfg(),cur=Array.isArray(c.todayWidgets)?c.todayWidgets:WIDGET_DEF;if(!cur.includes('habits'))editCfg(cc=>{cc.todayWidgets=cur.concat(['habits'])})}
 function newPage(tpl){
   const t=PAGE_TPL[tpl]||PAGE_TPL.blank,id=rid();
   const name=(($('#pgName')||{}).value||'').trim()||(tpl==='blank'?'我的頁面':t.n);
   save('pages',id,{name,at:new Date().toISOString(),blocks:t.blocks.map(([ty,ti])=>mkBlock(ty,ti))});
+  if(t.blocks.some(([ty])=>ty==='habit'))hbWidget();
   closeModal();location.hash='page-'+id;
 }
 function openNewPage(){
@@ -4726,9 +4783,35 @@ function jFeedback(k){const j=day(k).j||{},R=myRhythm(),h=new Date().getHours(),
   out.push(T[per]);const d=drvPick(R,1);if(d)out.push(per==='morning'?DRV_DAY[d]:DRV_EVE[d]);
   return out.slice(0,6).join('')}
 // one-line feedback under page blocks
+/* ---------- 每日打卡（習慣卡）：一句執行意圖、兩分鐘版本、別連續錯過兩次、身分投票、環境安排（參考《原子習慣》）---------- */
+const ENV_TIPS=['前一晚把明天要讀的書翻到那一頁，放在桌上。','水壺放在電腦旁邊，看得見就會喝。','專注時把手機放到另一個房間。','跑鞋放在門口，出門前一眼就看到。','只在書桌做這件事，書桌就會變成「開始」的提示。','把會分心的 App 移出手機主畫面。','瑜珈墊鋪著不收，看到就躺上去伸展一下。','睡前把明天要用的東西放進包包。'];
+function hbDone(b,k){return b.days&&b.days[k]?b.days[k]:''}
+// 連續：中間只休一天不算斷；連續錯過兩天才重新算
+function hbChain(b){let k=today();if(!hbDone(b,k))k=addDays(k,-1);let n=0,miss=0;for(let i=0;i<400;i++){if(hbDone(b,k)){n++;miss=0}else{miss++;if(miss>=2)break}k=addDays(k,-1)}return n}
+function hbGap(b){let g=0,k=addDays(today(),-1);while(g<60&&!hbDone(b,k)){g++;k=addDays(k,-1)}return g}
+function hbVotes(b){const m=today().slice(0,7);return Object.keys(b.days||{}).filter(k=>k.startsWith(m)).length}
+function hbIntent(b){const t=(b.title||'').trim()||'做這件事';return b.after?`${b.after.trim()}之後，我會${t}。`:b.when?`${b.when.trim()}，我會${t}。`:''}
+function hbIntentHTML(b,pid){const it=hbIntent(b);if(!it&&!b.who&&!b.mini)return `<p class="hbintent muted">寫下什麼時候、在哪裡做，或接在哪件事之後，比只說「我要做」更容易做到。<button class="linkbtn" data-act="hbSetT" data-p="${pid}" data-b="${b.id}">寫一句</button></p>`;
+  return `<div class="hbintent">${b.who?`<p class="hbwho">我是${esc(b.who.trim())}</p>`:''}${it?`<p>${esc(it)}</p>`:''}${b.mini?`<p class="muted">累的時候，只要：${esc(b.mini)}</p>`:''}${b.env?`<p class="muted">環境：${esc(b.env)}</p>`:''}</div>`}
+let HB_SET=new Set();
+function hbSetHTML(pid,b){const A_=`data-p="${pid}" data-b="${b.id}"`,ex=ENV_TIPS[(b.id||'').length%ENV_TIPS.length];
+  return `<div class="hbset"><label class="f">什麼時候、在哪裡<input type="text" data-ch="blkTxt" ${A_} data-f="when" value="${esc(b.when||'')}" placeholder="例：每天早上 7:30，在書桌前"></label>
+    <label class="f">接在哪件事之後（選填，比時間更好記）<input type="text" data-ch="blkTxt" ${A_} data-f="after" value="${esc(b.after||'')}" placeholder="例：倒完咖啡、刷完牙"></label>
+    <label class="f">兩分鐘版本（累的時候做這個就算數）<input type="text" data-ch="blkTxt" ${A_} data-f="mini" value="${esc(b.mini||'')}" placeholder="例：讀一頁、穿上跑鞋、坐下來一分鐘"></label>
+    <label class="f">想成為什麼樣的人（選填）<input type="text" data-ch="blkTxt" ${A_} data-f="who" value="${esc(b.who||'')}" placeholder="例：持續閱讀的人、照顧身體的人"></label>
+    <label class="f">環境怎麼安排（選填）<input type="text" data-ch="blkTxt" ${A_} data-f="env" value="${esc(b.env||'')}" placeholder="例：${esc(ex.replace(/。$/,''))}"></label>
+    <p class="muted" style="margin:0;font-size:calc(12px * var(--fs,1))">讓想做的事看得見、容易開始；讓會分心的東西不方便拿到。每打一次卡，就是為想成為的自己投一票。</p>
+    <button class="sm sec" data-act="hbSetT" ${A_}>完成</button></div>`}
+function hbHash(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return Math.abs(h)}
+function hbCoachText(b){const k=today(),td=hbDone(b,k),ch=hbChain(b),g=hbGap(b),hs=hbHash(k+b.id),pick=a=>a[hs%a.length],mini=b.mini?`：${b.mini}`:'';
+  if(td==='mini')return pick(['做了最小版，也算數。習慣靠的是不中斷，不是每次都做滿。','今天用兩分鐘版本接上了，這比完美更重要。','小小的一步也是一票，明天有力氣再做多一點。']);
+  if(td)return ch>=21?pick([`已經 ${ch} 天了，這慢慢成了你的一部分。`,`${ch} 天，不知不覺走了好遠。`]):ch>=7?pick([`連續 ${ch} 天，習慣正在成形。`,`${ch} 天了，節奏穩下來了。`]):ch>=3?pick([`連續 ${ch} 天，好的開始。`,`第 ${ch} 天，繼續保持這個步調。`]):pick(['今天完成了，明天再接上。','做到了。明天同一個時間，再來一次。']);
+  if(!ch&&!g)return pick([`今天做一點點也算，先完成最小的一步${mini}。`,`第一次最難，先做兩分鐘版本就好${mini}。`]);
+  if(g===0)return pick([`連續 ${ch} 天，今天也接上吧。`,`已經 ${ch} 天，今天的這一票還沒投。`]);
+  if(g===1)return pick([`昨天休息了，今天接回來就好，休一天不算中斷。`,`錯過一天很正常，別連續錯過兩天就好。今天做最小版也可以${mini}。`]);
+  return pick([`已經 ${g} 天沒做了，沒關係，今天做最小版就好${mini}。`,`好幾天沒做，不必一次補回來。今天只要做兩分鐘${mini}。`,`隔了 ${g} 天，重新開始也是一種能力。先做最小的一步${mini}。`])}
 function blkCoach(b){const R=myRhythm(),d=drvPick(R,2),tail=d?DRV_SHORT[d]:'';let t='';
-  if(b.type==='habit'){let st=0,k=today();if(!b.days[k])k=addDays(k,-1);while(b.days[k]){st++;k=addDays(k,-1)}const td=!!b.days[today()];
-    t=!td&&!st?'今天做一點點也算，先完成最小的一步。':!td?`已經連續 ${st} 天，今天也接上吧。`:st>=21?`連續 ${st} 天，這已經是你的一部分了。`:st>=7?`連續 ${st} 天，習慣正在成形。`:st>=3?`連續 ${st} 天，好的開始。`:'今天完成了，明天再接上。'}
+  if(b.type==='habit'){t=hbCoachText(b);return `<p class="blkcoach">${esc(t)}</p>`}
   else if(b.type==='progress'){const p=b.target?b.cur/b.target*100:0;t=p>=100?'完成了！停下來好好肯定自己。':p>=75?'只差最後一段，穩穩收尾。':p>=50?'已經過半了，保持現在的節奏。':p>0?'有開始就有進度，一點一點往前。':'先推進第一步，進度條就會動起來。'}
   else if(b.type==='counter'){if(!b.goal)return '';t=b.value>=b.goal?'今天的目標達成了。':b.value>0?`再 ${b.goal-b.value} 就達標了。`:''}
   else if(b.type==='countdown'){const n=b.date?diffDays(today(),b.date):null;if(n==null)return '';t=n<0?'日子過了，回頭看看這段路，你做了哪些？':n===0?'就是今天，放輕鬆，照你準備的來。':n<=7?'最後一週，維持節奏，不必臨時大改。':n<=30?'剩不到一個月，把重點排進每週的行程。':'時間還夠，先把大目標拆成每週的小步驟。'}
@@ -4741,8 +4824,10 @@ function blockBody(pid,b){
   if(b.type==='counter'){const pct=b.goal?Math.min(100,b.value/b.goal*100):0;return `<div class="row sb"><span class="bignum num">${b.value}<small> ${esc(b.unit)}${b.goal?' / '+b.goal:''}</small></span><div class="row"><button data-act="blkCnt" ${A_} data-d="-1" aria-label="減少">−</button><button class="sec" data-act="blkCnt" ${A_} data-d="1">＋${b.step}</button></div></div>${b.goal?`<div class="bar" style="margin-top:8px"><i style="width:${pct}%"></i></div>`:''}<div class="row cfgrow"><label class="f">目標<input type="number" min="0" data-ch="blkNum" ${A_} data-f="goal" value="${b.goal}"></label><label class="f">每次<input type="number" min="1" data-ch="blkNum" ${A_} data-f="step" value="${b.step}"></label><label class="f">單位<input type="text" data-ch="blkTxt" ${A_} data-f="unit" value="${esc(b.unit)}" style="width:70px"></label><button class="ghost sm" data-act="blkReset" ${A_}>歸零</button></div>`}
   if(b.type==='progress'){const pct=b.target?Math.min(100,b.cur/b.target*100):0;return `<div class="row sb"><span class="bignum num">${Math.round(pct)}<small>%</small></span><span class="muted num">${b.cur} / ${b.target} ${esc(b.unit)}</span></div><div class="bar big"><i style="width:${pct}%"></i></div><div class="row cfgrow"><label class="f">目前<input type="number" min="0" data-ch="blkNum" ${A_} data-f="cur" value="${b.cur}"></label><label class="f">目標<input type="number" min="1" data-ch="blkNum" ${A_} data-f="target" value="${b.target}"></label><label class="f">單位<input type="text" data-ch="blkTxt" ${A_} data-f="unit" value="${esc(b.unit)}" style="width:70px" placeholder="頁、章"></label></div>`}
   if(b.type==='countdown'){const n=b.date?diffDays(today(),b.date):null;return `<div class="bignum num">${n==null?'—':n<0?'已過 '+(-n):n}<small> 天</small></div><label class="f" style="margin-top:8px">日期<input type="date" data-ch="blkTxt" ${A_} data-f="date" value="${esc(b.date)}"></label>`}
-  if(b.type==='habit'){const ds=Array.from({length:35},(_,i)=>addDays(today(),i-34)),done=ds.filter(k=>b.days[k]).length;let streak=0,k=today();if(!b.days[k])k=addDays(k,-1);while(b.days[k]){streak++;k=addDays(k,-1)}
-    return `<div class="row sb"><button class="${b.days[today()]?'sec':'pri'}" data-act="blkHabit" ${A_} data-k="${today()}">${b.days[today()]?'今天完成了 ✓':'今天做到了'}</button><span class="muted">連續 ${streak} 天・近五週 ${done} 天</span></div><div class="wall" style="margin-top:10px">${ds.map(k=>`<button class="hcell${b.days[k]?' on':''}" data-act="blkHabit" ${A_} data-k="${k}" title="${fmtMD(k)}" aria-label="${fmtMD(k)}${b.days[k]?' 已完成':''}"></button>`).join('')}</div>`}
+  if(b.type==='habit'){const ds=Array.from({length:35},(_,i)=>addDays(today(),i-34)),done=ds.filter(k=>hbDone(b,k)).length,td=hbDone(b,today()),ch=hbChain(b),v=hbVotes(b);
+    return `${HB_SET.has(b.id)?hbSetHTML(pid,b):hbIntentHTML(b,pid)}<div class="row sb" style="flex-wrap:wrap;gap:6px;margin-top:8px"><span class="row" style="gap:6px"><button class="${td===true?'sec':'pri'}" data-act="blkHabit" ${A_} data-k="${today()}">${td&&td!=='mini'?'今天完成了 ✓':'今天做到了'}</button>${b.mini||td==='mini'?`<button class="${td==='mini'?'sec':'ghost'} sm" data-act="hbMini" ${A_}>${td==='mini'?'做了最小版 ✓':'做了最小版'}</button>`:''}</span><span class="muted">連續 ${ch} 天${v?`・本月 ${v} 次`:''}</span></div>
+    <div class="wall" style="margin-top:10px">${ds.map(k=>{const d=hbDone(b,k);return `<button class="hcell${d==='mini'?' mini':d?' on':''}" data-act="blkHabit" ${A_} data-k="${k}" title="${fmtMD(k)}" aria-label="${fmtMD(k)}${d==='mini'?' 做了最小版':d?' 已完成':''}"></button>`}).join('')}</div>
+    <div class="row sb" style="margin-top:6px"><span class="muted" style="font-size:calc(11.5px * var(--fs,1))">近五週 ${done} 天・休一天不算中斷</span>${HB_SET.has(b.id)?'':`<button class="linkbtn" data-act="hbSetT" ${A_}>設定</button>`}</div>`}
   if(b.type==='log')return `<div class="tablewrap"><table class="logt"><thead><tr>${b.cols.map((c,i)=>`<th><input type="text" data-ch="blkCol" ${A_} data-i="${i}" value="${esc(c)}" aria-label="欄位名稱"></th>`).join('')}<th><button class="ghost sm" data-act="blkColAdd" ${A_}>＋ 欄位</button></th></tr></thead>
     <tbody>${b.rows.map(r=>`<tr>${b.cols.map((_,i)=>`<td>${esc(r.c[i]||'')}</td>`).join('')}<td><button class="ghost sm" data-act="blkRowDel" ${A_} data-id="${r.id}" aria-label="刪除">×</button></td></tr>`).join('')}
     <tr class="addrow">${b.cols.map((c,i)=>`<td><input type="text" id="br${b.id}_${i}" placeholder="${esc(c)}"${i===0&&/日期/.test(c)?` value="${today()}"`:''}></td>`).join('')}<td><button class="sm sec" data-act="blkRowAdd" ${A_}>加入</button></td></tr></tbody></table></div>
@@ -5087,7 +5172,12 @@ function ltSeed(s){let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))|0;return 
 function ltQuote(text,re){const ss=text.split(/[。！？!?\n]/).map(x=>x.trim()).filter(Boolean);let s=(re&&ss.find(x=>re.test(x)))||ss[0]||'';s=s.replace(/^[，、\s]+/,'');return s.length>22?s.slice(0,22)+'…':s}
 function ltTemplate(text,seed){const th=LT_THEMES.filter(t=>t.re.test(text)).slice(0,2),t0=th[0]||LT_GEN,q=ltQuote(text,th[0]&&th[0].re);
   const p1=ltPick(t0.p,seed),p2=th[1]?ltPick(th[1].p,seed+1):null,ref=x=>`《${x[0]}》${x[2]||''}`,books=[...new Set([ref(p1)].concat(p2&&p2[0]!==p1[0]?[ref(p2)]:[]))];
-  const body=[(q?`你在信裡說：「${q}」`:'')+ltPick(t0.a,seed),p1[1]+(p2&&p2[0]!==p1[0]?'\n\n'+p2[1]:''),ltPick(t0.act,seed+2)+ltPick(LT_END,seed+3)].join('\n\n');
+  const V=lsGet('sd-ltv',{})||{},pick=(arr,key,sd)=>{let i=Math.abs(sd)%arr.length;if(i===V[key]&&arr.length>1)i=(i+1)%arr.length;V[key]=i;return arr[i]};
+  const OPEN=[q=>`你在信裡說：「${q}」`,q=>`讀到你寫「${q}」，我停下來想了一會兒。`,q=>`「${q}」，這句話我讀了兩遍。`,q=>`你提到「${q}」。`];
+  const BRG=['\n\n','\n\n另外，','\n\n也想和你分享另一個角度：','\n\n換個方向想，'];
+  const ACT=['','如果願意，','可以試試：','不用多，'];
+  const op=q?pick(OPEN,'o',seed):'',a1=ltPick(t0.a,seed);
+  const body=[(q?op(q):'')+a1,p1[1]+(p2&&p2[0]!==p1[0]?pick(BRG,'b',seed+5)+p2[1]:''),pick(ACT,'a',seed+7)+ltPick(t0.act,seed+2)+ltPick(LT_END,seed+3)].join('\n\n');lsSet('sd-ltv',V);
   return {reply:body,src:'tpl',books}}
 function ltDue(){const R=myRhythm(),w=R&&R.wake!=null?R.wake:450,n=new Date(),m=n.getHours()*60+n.getMinutes(),d=new Date(n);if(!(m<w&&m<300))d.setDate(d.getDate()+1);d.setHours(Math.floor(w/60),w%60,0,0);return d.toISOString()}
 function lettersAll(){const L=[];Object.keys(S.days).forEach(k=>(day(k).letters||[]).forEach(x=>L.push(Object.assign({k},x))));return L.sort((a,b)=>a.t<b.t?1:-1)}
@@ -5256,14 +5346,16 @@ Object.assign(A,{
   pgNew:el=>newPage(el.dataset.t),
   pgAddToggle:()=>{pgAdding=!pgAdding;render()},
   pgDel:el=>{if(!twoStep(el))return;remove('pages',el.dataset.p);location.hash='today'},
-  blkAdd:el=>{editPage(el.dataset.p,p=>{p.blocks.push(mkBlock(el.dataset.t))});pgAdding=false;render();setTimeout(()=>{const b=document.querySelectorAll('.blk');b.length&&b[b.length-1].scrollIntoView({block:'center'})},40)},
+  blkAdd:el=>{editPage(el.dataset.p,p=>{p.blocks.push(mkBlock(el.dataset.t))});if(el.dataset.t==='habit')hbWidget();pgAdding=false;render();setTimeout(()=>{const b=document.querySelectorAll('.blk');b.length&&b[b.length-1].scrollIntoView({block:'center'})},40)},
   blkDel:el=>{if(!twoStep(el))return;editPage(el.dataset.p,p=>{p.blocks=p.blocks.filter(b=>b.id!==el.dataset.b)});render()},
   blkMv:el=>{editPage(el.dataset.p,p=>{const i=p.blocks.findIndex(b=>b.id===el.dataset.b),j=i+(+el.dataset.d);if(j>=0&&j<p.blocks.length)[p.blocks[i],p.blocks[j]]=[p.blocks[j],p.blocks[i]]});render()},
   blkItemAdd:el=>{const i=$('#bi'+el.dataset.b),t=i.value.trim();if(!t)return;editPage(el.dataset.p,p=>{blk(p,el.dataset.b).items.push({id:rid(),t,done:false})});render();setTimeout(()=>{const n=$('#bi'+el.dataset.b);n&&n.focus()},30)},
   blkItemDel:el=>{editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);b.items=b.items.filter(x=>x.id!==el.dataset.id)});render()},
   blkCnt:el=>{editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);b.value=Math.max(0,(+b.value||0)+(+el.dataset.d)*(+b.step||1))});render()},
   blkReset:el=>{if(!twoStep(el))return;editPage(el.dataset.p,p=>{blk(p,el.dataset.b).value=0});render()},
-  blkHabit:el=>{const k=el.dataset.k;editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);if(b.days[k])delete b.days[k];else b.days[k]=true});render()},
+  blkHabit:el=>{const k=el.dataset.k;let on=false,b0=null;editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);b0=b;if(b.days[k]&&b.days[k]!=='mini')delete b.days[k];else{b.days[k]=true;on=true}});if(on&&k===today())toast(b0&&b0.who?`又為「${b0.who}」投了一票（本月第 ${hbVotes(b0)} 次）`:'記下了，今天的這一票投下了');render()},
+  hbMini:el=>{const k=today();let on=false,b0=null;editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);b0=b;if(b.days[k]==='mini')delete b.days[k];else{b.days[k]='mini';on=true}});if(on)toast(b0&&b0.who?`最小版也算一票：又為「${b0.who}」投了一票`:'做了最小版，也算數');render()},
+  hbSetT:el=>{const id=el.dataset.b;HB_SET.has(id)?HB_SET.delete(id):HB_SET.add(id);if(R!==('page-'+el.dataset.p)&&HB_SET.has(id)){location.hash='page-'+el.dataset.p;return}render()},
   blkColAdd:el=>{editPage(el.dataset.p,p=>{blk(p,el.dataset.b).cols.push('新欄位')});render()},
   blkColDel:el=>{if(!twoStep(el))return;const i=+el.dataset.i;editPage(el.dataset.p,p=>{const b=blk(p,el.dataset.b);b.cols.splice(i,1);b.rows.forEach(r=>r.c.splice(i,1))});render()},
   blkRowAdd:el=>{const b0=blk(S.pages[el.dataset.p],el.dataset.b);const c=b0.cols.map((_,i)=>($('#br'+el.dataset.b+'_'+i)||{}).value||'');if(!c.some(x=>x.trim()))return toast('至少填一欄');editPage(el.dataset.p,p=>{blk(p,el.dataset.b).rows.push({id:rid(),c})});render()},

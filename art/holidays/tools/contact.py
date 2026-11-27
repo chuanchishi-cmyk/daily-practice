@@ -4,7 +4,7 @@ d = sys.argv[1]; out = sys.argv[2]
 items = [l.split("|") for l in open(sys.argv[3], encoding="utf-8").read().strip().splitlines()]
 font = ImageFont.truetype(sys.argv[4], 20) if len(sys.argv) > 4 else ImageFont.load_default()
 cw, ch = 210, 250
-cols = 5; rows = (len(items) + cols - 1) // cols
+cols = 4; rows = (len(items) + cols - 1) // cols
 sheet = Image.new("RGB", (cw*cols+20, ch*rows+20), (255, 255, 255)); dr = ImageDraw.Draw(sheet)
 for i, (py, jq, pl) in enumerate(items):
     x, y = 10 + (i % cols)*cw, 10 + (i//cols)*ch

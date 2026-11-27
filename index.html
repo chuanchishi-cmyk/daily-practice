@@ -1401,7 +1401,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.27.5'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.27.6'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -2025,7 +2025,7 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
- {d:'2026-11-27',lv:'fix',t:'今日小語：驅動力的話每天換說法；起床後、午後、傍晚、睡前這幾個時間點先說作息提醒，其他時候以驅動力的話為主'},
+ {d:'2026-11-27',lv:'minor',t:'今日小語不再是固定公式：依你的狀況，從作息、鼓勵、目標與計畫、運動、進度、靜心的平靜提示、雁書的安心提示裡挑 1–3 句，組合和順序每段時間都不同；驅動力的話只在一天的幾個節點出現，也不一定每天有'},
  {d:'2026-11-27',lv:'minor',t:'春節卡：前兩天是小年夜、前一天是除夕，春節從初一顯示到初五'},
  {d:'2026-11-27',lv:'minor',t:'我的節奏：驅動力測驗的題庫變成三倍，每個價值都測兩句，「重新測驗」會換一批題目；作息的變化下方顯示下一次兩週比對與兩個月報告的時間'},
  {d:'2026-11-27',lv:'fix',t:'今日小語最多三句'},
@@ -4768,7 +4768,7 @@ const DRV_DAY2={SD:'照你自己的步調來，今天想先推進哪一件，就
 const DRV_EVE2={SD:'今天哪個決定是你自己做的？那份自主，明天也帶著。',ST:'今天有什麼小小的新鮮事？記下來，明天再找一個。',HE:'今晚留一段時間給讓你開心的事，這也是充電。',AC:'今天的進度記下來了嗎？一點一點，都算數。',PO:'今天你帶動了哪件事？明天想先掌握哪一件？',FA:'今天做得不夠好的地方，就當成私下的練習吧。',SE:'今天完成的事，都是明天的底氣。',TR:'今天的節奏穩嗎？穩下來，就是很好的一天。',CO:'今天守住了哪個約定？給自己一點肯定。',HU:'平凡地過完一天，也是一種踏實。',UN:'今天有沒有一個瞬間，你為別人想了一下？',BE:'今天有誰因為你而輕鬆一點？也謝謝願意付出的自己。'};
 const DRV_EVE={SD:'今天有哪一件事，是你照自己的方式完成的？那就是你的力量。',ST:'今天有沒有一點新鮮的發現？明天可以再試一個不一樣的做法。',HE:'今天有好好享受某個片刻嗎？記得，休息和樂趣也是照顧自己。',AC:'把今天做到的寫下來，明天回頭看，會更清楚自己走了多遠。',PO:'回頭看看，今天你主導了哪些選擇？明天想先掌握哪一件？',FA:'今天不完美也沒關係，你已經穩穩地做了不少。',SE:'今天有什麼讓你覺得踏實？明天可以從那裡再出發。',TR:'今天的作息有照著你的節奏走嗎？穩定本身就是成果。',CO:'今天照著計畫走了多少？做到的部分，就是對自己的承諾。',HU:'今天平平淡淡地做好份內的事，就很值得肯定。',UN:'今天做的事，有沒有一點點讓世界更好？哪怕很小也算。',BE:'今天你照顧了誰？也別忘了，好好照顧自己。'};
 const DRV_SHORT={SD:'用你自己的方式就好。',ST:'可以換個新做法試試。',HE:'達標時記得犒賞自己。',AC:'看得見的進度，最能推動你。',PO:'由你決定下一步。',FA:'穩穩累積就很好。',SE:'一步一步，很踏實。',TR:'固定的節奏是你的力量。',CO:'照著計畫走就好。',HU:'安靜地做好就很好。',UN:'記得它的意義。',BE:'也想想它能幫到誰。'};
-function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=today(),ss=(day(k).sessions||[]),mins=ss.reduce((a,s)=>a+(+s.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),done=tp.filter(x=>x.done).length;
+function coachRhythm(R){const b=blOfNow(),k=today(),ss=(day(k).sessions||[]),mins=ss.reduce((a,s)=>a+(+s.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),done=tp.filter(x=>x.done).length;
   const nowM=new Date().getHours()*60+new Date().getMinutes(),toSleep=R.sleep!=null?(((R.sleep-nowM)%1440)+1440)%1440:null,wind=toSleep!=null?(toSleep<=90||toSleep>1440-120):(new Date().getHours()>=21||new Date().getHours()<4);
   let a='';
   const past=toSleep!=null&&toSleep>1440-120,eve=!wind&&new Date().getHours()>=18;
@@ -4778,12 +4778,46 @@ function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=tod
   else if(b&&R.idea&&b===R.idea)a=`現在是你的靈感時段，適合發想、寫作，或想想卡住的問題。`;
   else if(R.peak){const pb=BL.find(x=>x.k===R.peak),h=new Date().getHours();a=pb&&h<pb.h?`你的高峰在${blName(R.peak)}，把最重要的事留給那段時間。`:(mins?`今天已經專注 ${fmtMin(mins)}，${tp.length&&done===tp.length?'三件事也都完成了，':''}節奏很好。`:'')}
   if(!a&&eve)a='晚上了，可以慢慢放慢步調，留點時間給自己。';
-  const d=drvPick(R),alt=Math.floor(Date.now()/864e5)%2,c=d?(wind||(eve&&b!==R.peak)?(alt?DRV_EVE2:DRV_EVE)[d]:(alt?DRV_DAY2:DRV_DAY)[d]):'';
-  // 一天中的幾個節點（起床後開始、午後低潮、傍晚、睡前）先說作息，再接驅動力；其他時候驅動力在前。最多三句
   const wk=R.wake!=null?R.wake:450,h=new Date().getHours(),node=wind||(nowM>=wk+60&&nowM<=wk+150)||(b&&b===R.low)||(h>=13&&h<15)||(h>=18&&h<20);
-  const aS=(a.match(/[^。！？!?]+[。！？!?]?/g)||[]),cS=(c.match(/[^。！？!?]+[。！？!?]?/g)||[]).slice(0,2);
-  const parts=node?aS.slice(0,Math.max(1,3-cS.length)).concat(cS):cS.concat(aS.slice(0,Math.max(0,3-cS.length)));
-  return capSent(parts.join('').trim(),3)}
+  return {a,wind,past,eve,b,node}}
+/* 今日小語：從適合你的幾類話裡挑 1–3 句，順序與組合每段時間不同，不是固定公式。
+   作息（有「我的節奏」）、鼓勵、驅動力（只在一天的節點：起床後、午後、傍晚、睡前，而且不一定出現）、目標與計畫、運動、進度（有專注或練習紀錄）、
+   平靜（最近有靜心）、安心（最近寫了雁書，依信裡的煩惱類型；不引用內容）。快到睡覺時間時，休息提醒一定放第一句。同一段時間內穩定，換時段才換；避開最近用過的句子。 */
+const TC_ENC=['慢慢來，今天能往前一點點就好。','不必等到準備好，開始了就會越來越順。','做不完的事，留一點給明天也沒關係。','你比自己以為的還要努力。','專心做好眼前這一件，就是今天最好的安排。','累了就停一下，休息也是前進的一部分。','今天也謝謝願意坐下來的自己。','不用每件事都做到滿分，做完比做好更重要。'];
+const TC_CALM=['忙的時候，三次慢慢的呼吸，也是一次小小的靜心。','心浮起來時，先感覺腳底踩著地面，再回到手上的事。','今天也可以留三分鐘，安靜地陪自己坐一下。','把注意力放回此刻正在做的這一件，心會慢慢定下來。','念頭跑掉了就溫和地帶回來，做事的時候也一樣。','肩膀鬆一點、吐氣長一點，再繼續。'];
+const TC_LT={calm:['擔心的事，先寫下來交給紙，現在只做眼前能做的一件。','不安的時候，呼吸放慢一點，事情一件一件來。'],habit:['今天只做兩分鐘的版本也算數，開始了就好。','卡住的時候，把事情縮到最小，先做一小步。'],study:['讀不進去時，起來走五分鐘再回來，大腦會在背後整理。','今天記不住的，隔幾天再複習，反而記得更牢。'],work:['事情很多時，一次只放一件在心上，做完再換下一件。','下班前寫下明天的三件事，讓腦袋也能下班。'],voice:['想說的話，先用一句寫下結論，開口會比較清楚。','被誤解的感覺很難受，先照顧好自己的心情，再想怎麼說。'],meaning:['提不起勁的日子，挑一件有點難、又做得到的小事。','今天有一點點投入的時刻，就值得記下來。'],loss:['想念的時候，允許自己難過一下，也記得吃飯、睡覺。','今天不必勉強自己好起來，慢慢來。'],love:['今天找個時間，放下手機，好好聽一個人說話。','關係卡住的時候，先照顧好自己，再慢慢靠近。'],doubt:['你已經很努力了，對自己溫柔一點，就像對朋友那樣。','把「我不夠好」換成「我正在學」，再試一次。'],lost:['不知道往哪走時，先做一件這週就能完成的小事。','方向不必一次想清楚，走一小段，路會慢慢浮現。']};
+function tcRand(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296}}
+function todayCoach(){const R=myRhythm(),k=today(),now=new Date(),h=now.getHours(),slot=k+'-'+Math.floor(h/3),rnd=tcRand([...slot].reduce((a,c)=>Math.imul(a^c.charCodeAt(0),2654435761)>>>0,2166136261)),pick=a=>a[Math.floor(rnd()*a.length)];
+  const ss=day(k).sessions||[],mins=ss.reduce((a,s)=>a+(+s.min||0),0)+testSum([k]).min,tp=((day(k).j||{}).top3||[]).filter(x=>x&&x.t),done=tp.filter(x=>x.done).length;
+  const C=[];const add=(cat,id,t,w)=>{if(t)C.push({cat,id,t,w:w||1})};
+  const rh=R?coachRhythm(R):null;
+  if(rh&&rh.a)add('rh','rh',capSent(rh.a,2),rh.wind?9:2);
+  if(R&&rh&&rh.node&&rnd()<.6){const d=drvPick(R,Math.floor(rnd()*5)),ev=rh.wind||rh.eve||h>=17,alt=rnd()<.5;if(d)add('drv','drv'+d+(ev?'e':'d')+(alt?2:1),(ev?(alt?DRV_EVE2:DRV_EVE):(alt?DRV_DAY2:DRV_DAY))[d],1.5)}
+  // 進度支持（有專注、練習或三件事時）
+  if(mins>=25&&!(rh&&rh.wind))add('prog','p1',pick([`今天已經專注 ${fmtMin(mins)}，節奏很好。`,`今天累積了 ${fmtMin(mins)}，再一顆番茄可以，停在這裡也很好。`,`${fmtMin(mins)}的專注，都是一步一步走出來的。`]),2);
+  if(tp.length&&done===tp.length)add('prog','p2','三件事都完成了，剩下的時間可以輕鬆一點。',2.5);else if(done&&tp.length)add('prog','p3',`三件事完成了 ${done} 件，下一件先挑最小的那一步。`,2);
+  {const ws=weekStart(k),n=diffDays(ws,k),cur=Array.from({length:n+1},(_,i)=>addDays(ws,i)),prev=cur.map(x=>addDays(x,-7)),fs=ks=>ks.reduce((a,x)=>a+(day(x).sessions||[]).reduce((b,s)=>b+(+s.min||0),0),0),a=fs(cur),b=fs(prev);if(a>=60&&a>b&&b>0)add('prog','p4',`這週到目前專注了 ${fmtMin(a)}，比上週同一時間多一些。`,1.5)}
+  // 目標與計畫
+  if(isOn('plan')){const ids=Object.keys(S.projects||{});if(ids.length){const pid=ids[Math.floor(rnd()*ids.length)],ns=nextStep(pid);if(ns&&ns.s&&ns.s.t)add('goal','g1',pick([`「${proj(pid).name}」的下一步：${ns.s.t.slice(0,24)}。`,`有空檔時，可以推進「${proj(pid).name}」的一小步：${ns.s.t.slice(0,24)}。`]),1.5)}}
+  if(isOn('exam')&&!examTodayHTML()){const ex=(cfg().exams||[]).filter(e=>e.date&&e.date>=k).sort((a,b)=>a.date<b.date?-1:1)[0];if(ex){const n=diffDays(k,ex.date);if(n<=180)add('goal','g2',pick([`離「${ex.name}」還有 ${n} 天，今天做一點，就近一點。`,`「${ex.name}」倒數 ${n} 天，把最重要的一件排進精神最好的時段。`]),1.5)}}
+  // 運動
+  {const sp=(day(k).sport||[]).length;if(sp)add('sport','s1',pick(['今天有動起來，身體會謝謝你。','運動過的日子，晚上會睡得比較好。']),1.2);
+   else if(mins>=90)add('sport','s2',pick(['已經專注很久了，起身走一走，讓身體也休息。','坐久了，轉轉肩頸、伸伸背，再回來。']),2.2);
+   else if(isOn('sport')&&h>=15&&h<21)add('sport','s3',pick(['今天還沒動一動，傍晚走個十分鐘也好。','找個空檔伸展五分鐘，身體鬆了，心也會鬆。']),1.5)}
+  // 平靜（最近一週有靜心）
+  if([...Array(7).keys()].some(i=>((day(addDays(k,-i)).j||{}).practice||[]).length))add('calm','c',pick(TC_CALM),1.3);
+  // 安心（最近一週寫了雁書：依煩惱類型，不引用內容）
+  {const L=(typeof lettersAll==='function'?lettersAll():[]).filter(x=>diffDays(x.k,k)<=7);if(L.length){const th=(typeof LT_THEMES!=='undefined'?LT_THEMES:[]).find(t=>t.re.test(L[0].text||''));const pool=th&&TC_LT[th.k]?TC_LT[th.k]:TC_LT.calm;add('lt','l'+(th?th.k:''),pick(pool),2)}}
+  add('enc','e',pick(TC_ENC),.8);
+  // 挑選：類別不重複、依權重隨機；避開最近幾個時段用過的句子
+  const st=lsGet('sd-tc',{})||{},used=st.slot===slot?(st.used||[]):(st.used||[]).concat(st.cur||[]).slice(-12),fresh=C.filter(x=>!used.includes(x.t));const pool=(fresh.length>=1?fresh:C).slice();
+  const n=Math.min(pool.length,rh&&rh.wind?2:(rnd()<.25?1:rnd()<.7?2:3)),out=[];
+  while(out.length<n&&pool.length){const avail=pool.filter(x=>!out.some(o=>o.cat===x.cat));if(!avail.length)break;const tot=avail.reduce((a,x)=>a+x.w,0);let r=rnd()*tot,ch=avail[0];for(const x of avail){r-=x.w;if(r<=0){ch=x;break}}out.push(ch);pool.splice(pool.indexOf(ch),1)}
+  // 順序：睡前提醒放第一；其他隨機
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[out[i],out[j]]=[out[j],out[i]]}
+  const wi=out.findIndex(x=>x.cat==='rh'&&rh&&rh.wind);if(wi>0)out.unshift(out.splice(wi,1)[0]);
+  if(st.slot!==slot||JSON.stringify(st.cur)!==JSON.stringify(out.map(x=>x.t)))lsSet('sd-tc',{slot,cur:out.map(x=>x.t),used});
+  return capSent(out.map(x=>x.t).join(''),3)}
 function capSent(t,n){const m=String(t||'').match(/[^。！？!?]+[。！？!?]?/g)||[];return m.slice(0,n).join('').trim()}
 // journal feedback (time-of-day + content + driver)
 function jFeedback(k){const j=day(k).j||{},R=myRhythm(),h=new Date().getHours(),per=h<4?'late':h<11?'morning':h<17?'day':h<21?'evening':'night';

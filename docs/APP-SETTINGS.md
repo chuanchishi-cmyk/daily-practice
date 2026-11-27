@@ -43,7 +43,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js、habit-card.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js、habit-card.js、fest-drive.js）
 ```
 
 ---
@@ -260,6 +260,7 @@ node tools/tests/sync-renew.js
 node tools/tests/mistakes-v2.js
 node tools/tests/mz-adaptive.js
 node tools/tests/habit-card.js
+node tools/tests/fest-drive.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
@@ -640,6 +641,14 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 - 雁書範本：開頭引用、兩本書之間的轉折、行動前的引導語各有幾種說法，避開上一封用過的（`sd-ltv`）。
 
 測試：`habit-card.js`；`jieqi-intro.js`、`mz-adaptive.js` 照常通過。
+
+## 36k. 2026-11-27：春節五天、今日小語三句、驅動力題庫、作息比對時間
+
+- **春節**（`festNow`）：春節前兩天是「小年夜」卡、前一天是「除夕」卡（兩張都用萬年糧插圖），春節卡從初一到初五（標題「春節・初三」）；不再顯示「明天／後天是春節」。其他節日照舊前兩天到當天。
+- **今日小語**：`todayCoach()` 經 `capSent(t,3)`，最多三句。
+- **驅動力題庫**：`DRV[k].items` 每個價值 6 句（原本 2 句＋兩組新題各 2 句，依 Schwartz 價值定義寫成生活化句子）。`qzItems()` 每次測驗替每個價值抽 2 句（第 1、2 頁各一句），優先抽上一次（`sd-qzit`）沒用過的，存在 `QZ.it`；計分的答案鍵仍是 `va{價值}{0|1}`，計分方式不變；做到一半的舊測驗沿用前兩句。「重新測驗」（`qzRestart`）清掉 `QZ.it` 就會重抽。
+- **作息比對的時間**（`rhNextHTML`，在「作息的變化」卡下方）：兩週比對（最近一次測驗或校正後 14 天起，近 14 天需記滿 8 晚）與兩個月報告（上次報告或測驗後 60 天起，近 60 天至少 30 晚）各顯示日期與已記晚數。表格每天依最新紀錄重算；驅動力對照固定看最近 30 天，每次打開都是最新的。兩週、兩個月的詢問在使用者按「先不要」後，下一個週期條件仍成立會再問。
+- 測試：`tools/tests/fest-drive.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

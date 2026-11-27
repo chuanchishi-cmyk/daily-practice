@@ -320,6 +320,7 @@ main .todaynotes .tnt a{color:var(--ink);text-decoration:none}
 .rhtbl{border-collapse:collapse;width:100%;font-size:calc(13px * var(--fs,1))}
 .rhtbl th{font-weight:500;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 .rhtbl td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rhnext{margin:8px 0 0;font-size:calc(12px * var(--fs,1))}
 .rhask{margin-top:10px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--focus) 7%,var(--surface));display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .drvd>summary{cursor:pointer;font-size:calc(13px * var(--fs,1))}
 .drvq{margin-top:8px}.drvq p{margin:4px 0}.drvq mark{background:color-mix(in srgb,var(--c1) 30%,transparent);color:inherit;border-radius:3px;padding:0 2px}
@@ -1400,7 +1401,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.27.3'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.27.4'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1888,15 +1889,17 @@ const JQ_POSE={梅花:'hang',杏花:'hang',桃花:'hang',柳枝:'hang',臘梅:'h
 function jqNext(k){const y=+k.slice(0,4);for(const yy of [y,y+1])for(let i=0;i<24;i++){const d=jqDate(yy,i);if(d>k)return {i,d,n:diffDays(k,d),j:JQ[i]}}return null}
 // 傳統節日（農曆，依天文算法以台灣時間 UTC+8 計算新月與中氣，2026–2040；2027 年已與 Google 日曆「台灣的節慶假日」逐日核對）
 const FEST={除夕:['2026-02-16','2027-02-05','2028-01-25','2029-02-12','2030-02-02','2031-01-22','2032-02-10','2033-01-30','2034-02-18','2035-02-07','2036-01-27','2037-02-14','2038-02-03','2039-01-23','2040-02-11'],春節:['2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],元宵:['2026-03-03','2027-02-20','2028-02-09','2029-02-27','2030-02-17','2031-02-06','2032-02-25','2033-02-14','2034-03-05','2035-02-22','2036-02-11','2037-03-01','2038-02-18','2039-02-07','2040-02-26'],端午:['2026-06-19','2027-06-09','2028-05-28','2029-06-16','2030-06-05','2031-06-24','2032-06-12','2033-06-01','2034-06-20','2035-06-10','2036-05-30','2037-06-18','2038-06-07','2039-05-27','2040-06-14'],七夕:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],中秋:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20'],重陽:['2026-10-18','2027-10-08','2028-10-26','2029-10-16','2030-10-05','2031-10-24','2032-10-12','2033-10-01','2034-10-20','2035-10-09','2036-10-27','2037-10-17','2038-10-07','2039-10-26','2040-10-14']};
-const FEST_TXT={除夕:['團圓','隔年飯插上春花，叫「萬年糧」，祈願年年有餘。今晚放下工作，好好和家人吃頓飯。'],春節:['新春','門上貼福，迎接新歲。寫下今年想慢慢培養的一個習慣，每天做一點就好。'],元宵:['燈節','提燈、賞燈、猜燈謎，年節在燈火裡收尾。把這個月最想完成的一件事，當成一盞燈掛在心上。'],端午:['午日','包粽子、掛艾草、划龍舟。正午陽氣最盛，最需要力氣的事放在上午，午後多喝水。'],七夕:['乞巧','古人在七夕乞求巧藝。今天適合練一項想學的技能，哪怕只有一個番茄鐘。'],中秋:['月圓','供月餅、擺果盤，等月亮升起，一家團圓。今晚放下手機，靜靜看一會兒月亮。'],重陽:['登高','重陽登高望遠。出去走走、爬段樓梯，也打個電話問候長輩。']};
+const FEST_TXT={小年夜:['年前','年前最後的忙碌，把該收尾的事收一收，留點力氣給明天的團圓。'],除夕:['團圓','隔年飯插上春花，叫「萬年糧」，祈願年年有餘。今晚放下工作，好好和家人吃頓飯。'],春節:['新春','門上貼福，迎接新歲。寫下今年想慢慢培養的一個習慣，每天做一點就好。'],元宵:['燈節','提燈、賞燈、猜燈謎，年節在燈火裡收尾。把這個月最想完成的一件事，當成一盞燈掛在心上。'],端午:['午日','包粽子、掛艾草、划龍舟。正午陽氣最盛，最需要力氣的事放在上午，午後多喝水。'],七夕:['乞巧','古人在七夕乞求巧藝。今天適合練一項想學的技能，哪怕只有一個番茄鐘。'],中秋:['月圓','供月餅、擺果盤，等月亮升起，一家團圓。今晚放下手機，靜靜看一會兒月亮。'],重陽:['登高','重陽登高望遠。出去走走、爬段樓梯，也打個電話問候長輩。']};
 // 台灣的國定假日與紀念日（國曆）：前兩天到當天，借用節氣卡的位置，只有文字
 const HOL={'01-01':['元旦','一元復始','一元復始，萬象更新。替新的一年寫一張新禧帖：一件想慢慢做的事就好。'],'02-28':['和平紀念日','','國定假日，放假一天。放慢腳步，想想珍惜的人與事。'],'03-08':['婦女節','','謝謝生命中照顧過你的女性，也記得好好照顧自己。'],'04-04':['兒童節','童心','放一隻風箏，讓童心飛高一點。找一件小時候喜歡的事做做看。'],'05-01':['勞動節','','國定假日，放假一天。辛苦了，今天把休息也排進行程。'],'08-08':['父親節','','打通電話或傳個訊息給爸爸，說聲謝謝。'],'09-28':['教師節','謝師','「上大人，孔乙己」，舊時學童的第一張描紅。想起一位影響過你的老師，寫一句謝謝。'],'10-10':['國慶日','','國定假日，放假一天。留一段時間給自己，也留一段給家人朋友。'],'10-25':['光復節','','國定假日，放假一天。留一點空白給自己，散步、看看天空。'],'12-25':['行憲紀念日','聖誕節','國定假日，放假一天。一年快到尾聲，寫下今年最想感謝的三件事。']};
 // 節日插圖：《清俗紀聞》（1799，公有領域）木刻線描，出處見 art/holidays/CREDITS.md；其餘節日只有文字
-const HOL_IMG={元旦:'yuandan',除夕:'chuxi',春節:'chunjie',元宵:'yuanxiao',兒童節:'ertong',端午:'duanwu',教師節:'jiaoshi',中秋:'zhongqiu'};
+const HOL_IMG={元旦:'yuandan',小年夜:'chuxi',除夕:'chuxi',春節:'chunjie',元宵:'yuanxiao',兒童節:'ertong',端午:'duanwu',教師節:'jiaoshi',中秋:'zhongqiu'};
 const holArt=(n,alt)=>HOL_IMG[n]?`<img class="jqart" src="art/holidays/${HOL_IMG[n]}.webp" alt="${esc(alt||n)}" loading="lazy">`:'';
 function holOn(d){const md=d.slice(5);if(HOL[md])return HOL[md];const t=parseD(d);if(md.slice(0,2)==='05'&&t.getDay()===0&&t.getDate()>7&&t.getDate()<=14)return ['母親節','','謝謝媽媽。今天傳個訊息或一起吃頓飯吧。'];return null}
 function holNow(k){for(let x=0;x>=-2;x--){const d=addDays(k,-x),h=holOn(d);if(h)return {n:h[0],sub:h[1],line:h[2],d,x}}return null}
-function festNow(k){for(const [n,ds] of Object.entries(FEST))for(const d of ds){const x=diffDays(d,k);if(n==='春節'?(x>=0&&x<=2):(x>=-2&&x<=0))return {n,d,x}}return null}
+// 春節：前兩天是小年夜、前一天是除夕（各自當天的卡），初一到初五都顯示；其他節日前兩天到當天
+function festNow(k){for(const d of FEST.春節){const x=diffDays(d,k);if(x>=-2&&x<=4)return x===-2?{n:'小年夜',d:k,x:0}:x===-1?{n:'除夕',d:k,x:0}:{n:'春節',d,x}}
+  for(const [n,ds] of Object.entries(FEST)){if(n==='春節'||n==='除夕')continue;for(const d of ds){const x=diffDays(d,k);if(x>=-2&&x<=0)return {n,d,x}}}return null}
 // 冬至數九：九九消寒圖每天畫一瓣，八十一天畫完。練習過的日子算畫了一瓣
 function shujiu(k){const y=+k.slice(0,4);for(const yy of [y,y-1]){const d=jqDate(yy,23),x=diffDays(d,k);if(x>=0&&x<81){let pet=0;for(let i=0;i<=x;i++){const dd=day(addDays(d,i));if((dd.sessions||[]).length||(dd.tests||[]).length||((dd.j||{}).practice||[]).length||(dd.sport||[]).length)pet++}return {x,nine:Math.floor(x/9)+1,dayIn:x%9+1,pet}}}return null}
 const NINE='一二三四五六七八九';
@@ -1908,7 +1911,7 @@ function jqHTML(){const k=today(),f0=festNow(k),h=holNow(k),q0=jqNow(k),nx0=jqNe
   const alsoTxt=also.length?`<span class="jqalso">${top.x===0?'今天也是':'同一天也是'}${also.map(esc).join('、')}</span>`:'';
   const f=top&&top.t==='f'?f0:null;
   if(top&&top.t==='h')return `<section class="jq fest hol${HOL_IMG[h.n]?' has-art p-side':''}" aria-label="節日：${esc(h.n)}">${HOL_IMG[h.n]?holArt(h.n):`<span class="jqseal fseal" aria-hidden="true">${esc(h.n.replace(/節$|日$/,'').replace('紀念','').slice(0,2))}</span>`}<div class="jqt"><p class="jqh"><b>${h.x<0?`${-h.x===1?'明天':'後天'}是${esc(h.n)}`:esc(h.n)}</b>${h.sub?`<span>${esc(h.sub)}</span>`:''}</p><p class="jql">${esc(h.line)}${alsoTxt}</p></div></section>`;
-  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${HOL_IMG[f.n]?' has-art p-side':''}" aria-label="節日：${f.n}">${HOL_IMG[f.n]?holArt(f.n):`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.x>0?`${f.n}・初${'一二三'[f.x]}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}${alsoTxt}</p></div></section>`}
+  if(f){const [sub,line]=FEST_TXT[f.n];return `<section class="jq fest${HOL_IMG[f.n]?' has-art p-side':''}" aria-label="節日：${f.n}">${HOL_IMG[f.n]?holArt(f.n):`<span class="jqseal fseal" aria-hidden="true">${f.n}</span>`}<div class="jqt"><p class="jqh"><b>${f.x<0?`${-f.x===1?'明天':'後天'}是${f.n}`:f.x>0?`${f.n}・初${'一二三四五'[f.x]}`:f.n}</b><span>${sub}</span></p><p class="jql">${esc(line)}${alsoTxt}</p></div></section>`}
   let q=q0,pre=null;const nx=nx0;if(nx&&nx.n<=2)pre=nx;if(!pre&&(!q||q.n>2))return '';const t=pre||q,[nm,pl,yi,line]=t.j,img=JQ_IMG[nm],pose=JQ_POSE[pl]||'side';
   const sj=nm==='冬至'&&!pre?shujiu(k):null;
   const head=pre?`再過 ${pre.n} 天是${nm}`:q.n===0?`今天${nm}`:nm;
@@ -2022,6 +2025,9 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-27',lv:'minor',t:'春節卡：前兩天是小年夜、前一天是除夕，春節從初一顯示到初五'},
+ {d:'2026-11-27',lv:'minor',t:'我的節奏：驅動力測驗的題庫變成三倍，每個價值都測兩句，「重新測驗」會換一批題目；作息的變化下方顯示下一次兩週比對與兩個月報告的時間'},
+ {d:'2026-11-27',lv:'fix',t:'今日小語最多三句'},
  {d:'2026-11-27',lv:'major',t:'每日打卡升級：寫一句「什麼時候、在哪裡做」或「接在哪件事之後」；設一個兩分鐘版本，累的時候做它也算數；休一天不算中斷，別連續錯過兩天就好；寫下想成為的人，每次打卡就是投一票。今日頁可以加「習慣打卡」小卡'},
  {d:'2026-11-27',lv:'minor',t:'好習慣設計用在整個 App：連續天數改成休一天不算中斷（統計、靜心、計畫）；今日頁在休息一天後提醒接回來，隔好幾天就從兩分鐘開始；三件事建議寫上什麼時候做；睡前把明天要用的東西擺好；提示卡與番茄鐘休息時加入環境安排的小提示'},
  {d:'2026-11-27',lv:'minor',t:'節日小卡：元旦、除夕、春節、元宵、兒童節、端午、教師節、中秋配上《清俗紀聞》（1799）的木刻插圖；春節卡從初一顯示到初三；光復節、行憲紀念日更新'},
@@ -3322,67 +3328,73 @@ const EQ2={
 };
 const DRV={
   SD:{n:'自主',en:'Self-direction',c:0,def:'選擇並培養自己的想法、觀點和行動',ax:'open',
-    items:['我喜歡用自己的方式思考和做事，自己決定目標和方法。','我需要自由，不喜歡別人安排好我的每一步。'],
+    items:['我喜歡用自己的方式思考和做事，自己決定目標和方法。','我需要自由，不喜歡別人安排好我的每一步。','遇到問題，我想先自己想辦法，而不是馬上照別人的做法。','能自己安排時間和進度，我會做得更好。','我喜歡發展自己的看法，即使和大家不同。','如果只能照指示做事，我會很快失去興趣。'],
     desc:'你需要「這是我自己選的」的感覺。目標清楚、方法自定時，你最有力氣；被規定得太死，就容易抗拒。',
     study:['先和老師或主管確認成果標準，方法自己決定','每週自己挑下週的素材和練習方式'],project:['在行事曆上保護不被打擾的時段','行政和瑣事集中在固定時段批次處理'],
     trap:'選擇太多會把時間花在規劃上。規劃最多 10 分鐘就開始。',ask:'有人把做法規定得太死嗎？',fix:'爭取在其中一部分用自己的方法'},
   ST:{n:'刺激',en:'Stimulation',c:6,def:'生活中有新鮮感、刺激與挑戰',ax:'open',
-    items:['我喜歡新鮮、刺激、有挑戰的生活，常想嘗試沒做過的事。','一成不變的日子會讓我覺得悶，我喜歡驚喜和變化。'],
+    items:['我喜歡新鮮、刺激、有挑戰的生活，常想嘗試沒做過的事。','一成不變的日子會讓我覺得悶，我喜歡驚喜和變化。','我會主動找新的地方、新的活動或新的人。','比起穩定，我更想要有變化、有點冒險的生活。','學一樣全新的東西，會讓我很興奮。','同樣的事做太久，我會想換個方式或換個挑戰。'],
     desc:'新鮮感是你的燃料。重複太久會讓你失去動力，適度的變化能讓你重新投入。',
     study:['同一個目標準備兩三種練法輪流用','換地點、換順序，或限時挑戰自己'],project:['大框架固定，框架裡保留變化','每段時間安排一個小探索，作為獎勵'],
     trap:'容易被新事物帶走而半途而廢。新點子先記下，完成手上的再開始。',ask:'這件事太單調、太重複嗎？',fix:'換個地點、換個做法，或給自己限時挑戰'},
   HE:{n:'享樂',en:'Pleasure',c:10,def:'享受生活中的樂趣，特別是感官上的愉悅',ax:'self',
-    items:['我很重視享受生活，例如美食、音樂和舒服的環境。','能好好放鬆、犒賞自己，對我來說很重要。'],
+    items:['我很重視享受生活，例如美食、音樂和舒服的環境。','能好好放鬆、犒賞自己，對我來說很重要。','吃一頓好吃的、睡個好覺，對我來說很有價值。','我會特地安排時間，做讓自己開心的事。','我覺得人生應該好好享受，不必一直苦撐。','工作或讀書告一段落，我一定會好好犒賞自己。'],
     desc:'享受是你恢復能量的方式。把享樂安排進計畫裡，而不是等到撐不下去才放縱。',
     study:['把讀書環境弄得舒服：好喝的飲料、喜歡的音樂','完成一段後給自己一個具體的小犒賞'],project:['每週安排一段「有意識的放縱」，當成必須遵守的行程','用愉快的儀式開始一天的工作'],
     trap:'放鬆沒有界線時容易變成拖延。先設好時間，時間到就收。',ask:'我是不是已經太久沒休息？',fix:'先安排一段有意識的放鬆，再回來'},
   AC:{n:'成就',en:'Achievement',c:1,def:'獲得成功，不論是用自己或別人的標準',ax:'self',
-    items:['我很想成功，希望自己的能力被證明。','看到自己做出成績、比以前更有能力，最能讓我振奮。'],
+    items:['我很想成功，希望自己的能力被證明。','看到自己做出成績、比以前更有能力，最能讓我振奮。','我會替自己設定高標準，並努力達到。','被肯定做得好，會讓我更有動力。','我喜歡看看自己比以前進步了多少。','完成一個困難的目標，是我最有成就感的時候。'],
     desc:'進度和成果是你最直接的動力。挑戰高於現有能力的目標，會讓你興奮。',
     study:['每次練習前設定一個具體的數字目標','用統計和趨勢圖讓進步被看見'],project:['每個目標寫成兩個版本：挑戰版和保底版','把大目標拆成每週能打勾的里程碑'],
     trap:'結果不如預期時容易否定自己。同時追蹤「投入」，不要只看成果。',ask:'這件事看不到進度或成果嗎？',fix:'把它拆成可以打勾的小目標'},
   PO:{n:'權力',en:'Power',c:11,def:'掌握物質、社會資源，或影響他人',ax:'self',
-    items:['我希望能掌握資源、做決定，或對別人有影響力。','在團體裡，我希望自己的意見有份量、能主導方向。'],
+    items:['我希望能掌握資源、做決定，或對別人有影響力。','在團體裡，我希望自己的意見有份量、能主導方向。','我喜歡當負責人，帶著大家往前走。','擁有足夠的資源或財力，讓我覺得比較有力量。','我希望別人照我的想法去做。','有決定權的位置，對我很有吸引力。'],
     desc:'有主導權時你最投入。能拍板、能影響結果，會讓你更願意負責。',
     study:['主動帶領讀書會或練習小組','替自己的學習計畫當「負責人」，定期檢討'],project:['爭取一個由你負責、能做決定的部分','把影響力用在整合資源，而不是控制人'],
     trap:'太想掌控容易和人起衝突。先確認哪些事真的需要你決定。',ask:'我在這件事上完全沒有主導權嗎？',fix:'找一個自己可以負責、拍板的部分'},
   FA:{n:'面子',en:'Face',c:8,def:'維護自己的形象，避免丟臉',ax:'self',
-    items:['我很在意自己的形象，不想在別人面前丟臉。','公開失敗或被批評，對我來說特別難受。'],
+    items:['我很在意自己的形象，不想在別人面前丟臉。','公開失敗或被批評，對我來說特別難受。','我會避免做可能讓自己難堪的事。','別人怎麼看我，會影響我做決定。','在大家面前，我希望表現得體、不出錯。','被當眾指出錯誤，會讓我很久都放不下。'],
     desc:'你很在意被怎麼看待。這讓你重視品質，但「怕做不好被看到」也可能讓你拖延。',
     study:['先在不公開的地方練習，熟了再拿出來','把錯誤當成私下的練習材料，而不是成績'],project:['先寫不公開的草稿，只給一兩位信任的人看','提早排一次「小範圍試講」，降低正式上場的壓力'],
     trap:'追求不出錯會拖住開始。先完成粗糙版本，再慢慢修。',ask:'我怕做不好被看到嗎？',fix:'先做不公開的草稿，只給一兩位信任的人看'},
   SE:{n:'安全',en:'Security',c:3,def:'在環境與社會中找到安全和穩定',ax:'keep',
-    items:['我很重視安全和穩定，喜歡生活可預期、有保障。','做決定前，我會先確認退路和保障。'],
+    items:['我很重視安全和穩定，喜歡生活可預期、有保障。','做決定前，我會先確認退路和保障。','先存好一筆錢或準備好備案，我才安心。','我希望生活的環境安全、有秩序。','比起冒險的機會，我更喜歡穩定的選擇。','健康和家人的平安，是我最先考慮的事。'],
     desc:'穩定和保障讓你安心前進。安全感夠，你就敢衝；不夠，你就會收手。',
     study:['提早開始，給自己留緩衝時間','先熟悉考試或任務的規則，降低不確定感'],project:['每個挑戰都同時準備保底方案','列出最壞情況和備案，寫下來就不會一直掛心'],
     trap:'只想求穩，可能錯過值得的挑戰。先補上安全網，而不是放棄。',ask:'這件事太陌生、太不確定嗎？',fix:'先設計保底版，或找一個有經驗的人問'},
   TR:{n:'傳統',en:'Tradition',c:7,def:'欣賞、保存並延續文化、家庭與宗教的習俗和儀式',ax:'keep',
-    items:['我重視並願意維持家庭、文化或宗教的習俗與儀式。','節日、家族聚會或固定的儀式，對我有特別的意義。'],
+    items:['我重視並願意維持家庭、文化或宗教的習俗與儀式。','節日、家族聚會或固定的儀式，對我有特別的意義。','我覺得延續家族或文化的傳統很重要。','有些事，我會照著長輩傳下來的方式做。','宗教或文化的信念，是我生活的一部分。','我不太喜歡隨意改變大家習慣的做法。'],
     desc:'傳承與歸屬給你力量。和你所屬的傳統、信念或師長連結的事，你特別願意投入。',
     study:['建立固定的學習儀式，例如每天同一時間、同一地點開始','向前輩或師長請教他們的做法'],project:['寫下這件事和你重視的傳承有什麼關係','把重要節點安排成有儀式感的時刻'],
     trap:'太依賴舊方法，遇到新情況會卡住。保留核心，調整做法。',ask:'這件事和我重視的傳承或信念脫節了嗎？',fix:'找出它和你所屬的傳統、師長或信念的連結'},
   CO:{n:'順從',en:'Conformity',c:9,def:'遵守規則、義務與期待，避免傷害或冒犯他人',ax:'keep',
-    items:['我會遵守規則和承諾，即使沒人監督也一樣。','我盡量不做讓別人不舒服或失望的事。'],
+    items:['我會遵守規則和承諾，即使沒人監督也一樣。','我盡量不做讓別人不舒服或失望的事。','即使不完全同意，我通常還是會照規定做。','對長輩、老師或主管有禮貌，對我來說很重要。','我會避免說出可能讓人不高興的話。','答應別人的事，我一定會做到。'],
     desc:'清楚的規則和承諾能讓你穩定前進。你也很在意不給別人添麻煩。',
     study:['照清楚的課表或規格練習','對別人做出承諾，例如和讀書夥伴約好進度'],project:['先確認標準、格式和期限，再開始','把截止日告訴相關的人，借承諾推自己一把'],
     trap:'太在意別人期待，會忘了自己要什麼。偶爾問自己：這是我想要的嗎？',ask:'我不確定別人期待我怎麼做嗎？',fix:'先確認標準和期限，照著清楚的規格做'},
   HU:{n:'謙遜',en:'Humility',c:5,def:'明白自己在大世界中的渺小，也覺得自己是更大整體的一部分',ax:'keep',
-    items:['我知道自己在大世界裡很渺小，也覺得自己是更大整體的一部分。','事情不如預期時，我能接受，不強求一定要照我的意思。'],
+    items:['我知道自己在大世界裡很渺小，也覺得自己是更大整體的一部分。','事情不如預期時，我能接受，不強求一定要照我的意思。','我不需要被特別注意，平凡就很好。','我覺得自己的成就，有很多是靠別人和運氣幫忙。','我不喜歡炫耀，也不想比別人特別。','面對大自然或很大的事物，我覺得自己很渺小，也很踏實。'],
     desc:'你能接受現況、看淡得失，這讓你在挫折中比較穩。',
     study:['把每次練習當成過程，不急著證明自己','向比你強的人請教，不怕顯得不懂'],project:['提醒自己：一次失敗只是長期過程的一小步','把成果放進更大的脈絡，想想它在整體中的位置'],
     trap:'太容易接受現況，可能錯過該爭取的機會。重要的事要說出口。',ask:'我把這件事看得太重、太在乎得失了嗎？',fix:'提醒自己這只是過程的一小步，先做完再說'},
   UN:{n:'普世',en:'Universalism',c:2,def:'理解、欣賞並保護所有人與自然的福祉',ax:'others',
-    items:['我關心所有人和大自然的福祉，重視公平與包容。','看到不公平的事或環境被破壞，我會很在意。'],
+    items:['我關心所有人和大自然的福祉，重視公平與包容。','看到不公平的事或環境被破壞，我會很在意。','我希望每個人都被公平對待，即使是我不認識的人。','我願意為了保護環境改變生活習慣。','我會試著理解和我想法很不一樣的人。','世界上其他地方的苦難，也會讓我放在心上。'],
     desc:'意義和公平感推動你。知道這件事對世界、對更多人有什麼價值，你就有力氣。',
     study:['挑選和你關心的議題相關的素材','想像學會之後可以用來幫助哪些人'],project:['寫下這份工作最終能幫到哪些人或議題','在力所能及的範圍內實踐，不必一次做到最好'],
     trap:'覺得沒意義的瑣事會一直被拖。把它們集中在低精力時段處理掉。',ask:'這件事看不出對世界有什麼意義嗎？',fix:'寫下它最終能幫到哪些人或哪個議題'},
   BE:{n:'仁慈',en:'Benevolence',c:4,def:'當一個可靠、忠誠的成員，照顧身邊的人',ax:'others',
-    items:['我想當一個可靠、值得信賴的人，照顧身邊重要的人。','朋友或家人需要我時，我會優先幫忙。'],
+    items:['我想當一個可靠、值得信賴的人，照顧身邊重要的人。','朋友或家人需要我時，我會優先幫忙。','我很在意身邊的人過得好不好。','朋友有困難時，我願意花時間陪他。','我希望自己是家人和朋友可以依靠的人。','能幫上身邊的人，讓我覺得很有意義。'],
     desc:'深層的關係是你的力量來源。為在乎的人而做，你比較不會放棄。',
     study:['找一兩位讀書夥伴互相打氣','把學到的東西教給在乎的人'],project:['想想完成後能幫到誰，寫在目標旁邊','和親近的人分享進度，不需要公開'],
     trap:'容易先顧別人、忽略自己的進度。把自己的時段也當成承諾。',ask:'這件事和我在乎的人無關嗎？',fix:'想想完成後能幫到誰，或約一位朋友一起做'}
 };
 const DK=Object.keys(DRV);
+// 每次測驗：每個價值從題庫抽 2 句（優先抽上一次沒用過的），兩頁各一句；做到一半的舊測驗沿用前兩句
+function qzItems(){if(QZ.it&&DK.every(k=>Array.isArray(QZ.it[k])))return QZ.it;
+  if(Object.keys(QZ.a||{}).some(x=>/^va[A-Z]{2}[01]$/.test(x))){QZ.it=Object.fromEntries(DK.map(k=>[k,[0,1]]));savQZ();return QZ.it}
+  const prev=lsGet('sd-qzit',{})||{},it={};DK.forEach(k=>{const n=DRV[k].items.length,all=[...Array(n).keys()],used=prev[k]||[],fresh=all.filter(i=>!used.includes(i)),pool=(fresh.length>=2?fresh:all).slice();
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}it[k]=pool.slice(0,2)});
+  QZ.it=it;lsSet('sd-qzit',it);savQZ();return it}
 const SCEN=[
   {q:'突然多出一個完全空白的週末，你最可能：',o:[['SD','做一件自己一直想研究的事'],['ST','去沒去過的地方走走'],['HE','好好睡覺、吃美食、追劇'],['BE','陪家人或好朋友']]},
   {q:'選工作或系所時，最打動你的是：',o:[['AC','能讓我成長、做出成績'],['SE','穩定、有保障'],['SD','能自己安排做事的方式'],['UN','對社會有意義']]},
@@ -3564,7 +3576,7 @@ function quizScreen(){
     const i=st-3;let n=0;
     const lik=id=>`<div class="likert v6">${[1,2,3,4,5,6].map(v=>`<button data-act="qa" data-q="${id}" data-v="${v}" aria-pressed="${+QZ.a[id]===v}">${v}</button>`).join('')}</div>`;
     body=(i===0?`<h2>你的方向</h2>`+ORIENT.map(o=>qBlock(++n,o.id,o.q,o.o)).join(''):'')+`<h2>價值 <span class="muted">第 ${i+1} / 2 頁</span></h2><p class="muted">每一句描述有多像你？1 = 完全不像我，6 = 非常像我。沒有對錯，照直覺選。</p>`+
-      DK.map((k,j)=>{const id='va'+k+i;return `<div class="qq" id="q_${id}"><div class="qt"><span class="num muted">${i*12+j+1}</span> ${esc(DRV[k].items[i])}</div>${lik(id)}</div>`}).join('');
+      DK.map((k,j)=>{const id='va'+k+i;return `<div class="qq" id="q_${id}"><div class="qt"><span class="num muted">${i*12+j+1}</span> ${esc(DRV[k].items[qzItems()[k][i]])}</div>${lik(id)}</div>`}).join('');
   }else if(st===5){
     body=`<h2>生活情境</h2><p class="muted">每一題選出「最像我」和「最不像我」的做法。不必完全一樣，選最接近的。</p>`+SCEN.map((sc,i)=>{
       const pick=(pre,lab)=>`<div class="spick"><span class="muted">${lab}</span><div class="opts">${sc.o.map(([k,t])=>`<button class="opt" data-act="qa" data-q="${pre}${i}" data-v="${k}" aria-pressed="${QZ.a[pre+i]===k}"${(pre==='sb'?QZ.a['sw'+i]:QZ.a['sb'+i])===k?' disabled':''}>${esc(t)}</button>`).join('')}</div></div>`;
@@ -4764,7 +4776,8 @@ function todayCoach(){const R=myRhythm();if(!R)return '';const b=blOfNow(),k=tod
   else if(R.peak){const pb=BL.find(x=>x.k===R.peak),h=new Date().getHours();a=pb&&h<pb.h?`你的高峰在${blName(R.peak)}，把最重要的事留給那段時間。`:(mins?`今天已經專注 ${fmtMin(mins)}，${tp.length&&done===tp.length?'三件事也都完成了，':''}節奏很好。`:'')}
   if(!a&&eve)a='晚上了，可以慢慢放慢步調，留點時間給自己。';
   const d=drvPick(R);const c=d?(wind||(eve&&b!==R.peak)?DRV_EVE[d]:DRV_DAY[d]):'';
-  return (a+c).trim()}
+  return capSent((a+c).trim(),3)}
+function capSent(t,n){const m=String(t||'').match(/[^。！？!?]+[。！？!?]?/g)||[];return m.slice(0,n).join('').trim()}
 // journal feedback (time-of-day + content + driver)
 function jFeedback(k){const j=day(k).j||{},R=myRhythm(),h=new Date().getHours(),per=h<4?'late':h<11?'morning':h<17?'day':h<21?'evening':'night';
   const emoHard=emoList().filter(e=>e.g==='hard'&&(+((j.emo||{})[e.k])||0)>=1).sort((a,b)=>(+j.emo[b.k])-(+j.emo[a.k])),emoEase=emoList().filter(e=>e.g==='ease'&&(+((j.emo||{})[e.k])||0)>=1);
@@ -5304,7 +5317,12 @@ function rhTrendHTML(){const t=today(),P=[0,1,2,3].map(i=>rhPeriod(addDays(t,-14
   return `<section class="card" style="margin-bottom:16px"><h2>作息的變化 <span class="muted">每兩週一格</span></h2>
     ${P.length?`<div class="tblwrap"><table class="rhtbl"><thead><tr><th>期間</th><th>晚數</th><th>平均入睡</th><th>起床</th><th>睡眠</th><th>品質</th><th>最專注</th></tr></thead><tbody>${P.map(p=>`<tr><td>${fmtMD(p.from)}–${fmtMD(p.to)}</td><td class="num">${p.n}</td><td class="num">${p.bed!=null?hm(p.bed):'—'}</td><td class="num">${p.wake!=null?hm(p.wake):'—'}</td><td class="num">${p.dur?fmtN(p.dur/60)+' 時':'—'}</td><td class="num">${p.q?fmtN(p.q):'—'}</td><td>${p.peak?esc((BL.find(b=>b.k===p.peak)||{}).n||''):'<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`:''}
     ${R?`<p class="muted" style="margin:8px 0 0">${R.adj?`「我的節奏」已在 ${fmtMD(R.adj.at)} 依實際紀錄校正（入睡 ${hm(R.sleep)}、起床 ${hm(R.wake)}${R.peak?`、最專注 ${esc(blName(R.peak))}`:''}）。<button class="linkbtn" data-act="rhReset">改回測驗結果</button>`:'「我的節奏」目前用測驗結果。記滿兩週睡眠後，跟測驗差很多時會先問你要不要更新，不會自己改掉。'}</p>
-    ${x?`<div class="rhask"><p style="margin:0">最近兩週：${esc(rhCalibText(x))}。</p><button class="sm sec" data-act="rhApply">照實際作息更新</button></div>`:''}`:''}</section>`}
+    ${x?`<div class="rhask"><p style="margin:0">最近兩週：${esc(rhCalibText(x))}。</p><button class="sm sec" data-act="rhApply">照實際作息更新</button></div>`:''}${rhNextHTML()}`:''}</section>`}
+// 下一次比對什麼時候：兩週校正（近 14 天記滿 8 晚）、兩個月報告（近 60 天至少 30 晚）
+function rhNextHTML(){const R=myRhythm(),t=today();if(!R)return '';const r0=Object.values(S.quiz||{}).filter(r=>r&&r.v===3).sort((a,b)=>(a.at||'')<(b.at||'')?1:-1)[0],adj=(S.meta.main||{}).rhAdj||{};
+  const c14=rhPeriod(t,14).n,c60=rhPeriod(t,60).n,b14=[r0&&r0.date,adj.at].filter(Boolean).sort().pop(),n14=b14?addDays(b14,14):t,b60=adj.repAt||(r0&&r0.date),n60=b60?addDays(b60,60):null;
+  const L=[`兩週比對：${n14>t?`${fmtMD(n14)} 起`:'現在'}，近 14 天已記 ${c14}／8 晚`];if(n60)L.push(`兩個月報告：${n60>t?`${fmtMD(n60)} 起`:'現在'}，近 60 天已記 ${c60}／30 晚`);
+  return `<p class="muted rhnext">${L.map(esc).join('<br>')}<br>表格每天依最新紀錄重算；到了時間、紀錄也夠，跟「我的節奏」有明顯不同時，會先問你要不要更新。</p>`}
 const DRV_KW={SD:['自己決定','自由','自己的方式','照自己','獨立','自主','不想被','我想要','選擇'],ST:['新鮮','挑戰','冒險','嘗試','第一次','刺激','無聊','一成不變','探索','新的'],HE:['好吃','美食','享受','放鬆','舒服','犒賞','好玩','咖啡','音樂','電影','甜點','開心'],
   AC:['完成','進度','成果','目標','考上','分數','成績','做到','達成','效率','進步','表現'],PO:['主導','掌控','領導','影響力','地位','決定權','帶領','說了算','爭取'],FA:['面子','丟臉','別人怎麼看','尷尬','被笑','形象','出糗','被批評','評價'],
   SE:['穩定','安全','擔心','保險','存錢','健康','安心','確定','風險','不安'],TR:['傳統','家族','宗教','修行','信仰','規矩','儀式','佛','祖先','節日'],CO:['應該','規定','責任','準時','交代','按照','要求','義務','不能讓'],

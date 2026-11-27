@@ -43,7 +43,7 @@ daily-practice/
 └─ tools/
    ├─ build.py               ← src → index.html
    ├─ i18n/                  ← 翻譯工具：en1–en8.tsv（對照表）、build-i18n.py、missing.py、engine.js、pieces.json
-   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js）
+   └─ tests/                 ← Playwright 冒煙測試（pomodoro-cycle.js、meditation-sounds.js、top3-tomorrow.js、lockscreen-noise.js、jieqi-intro.js、test-timer-log.js、sport.js、letter-sleep.js、today-notes.js、practice-rhythm.js、woodfish-pause.js、plan-units.js、notes-rhythm.js、mz-teacher.js、sport-flow.js、work-page.js、work-words.js、notes-remind.js、rhythm-report.js、work-notes.js、sync-renew.js、mistakes-v2.js、mz-adaptive.js）
 ```
 
 ---
@@ -258,6 +258,7 @@ node tools/tests/notes-remind.js
 node tools/tests/work-notes.js
 node tools/tests/sync-renew.js
 node tools/tests/mistakes-v2.js
+node tools/tests/mz-adaptive.js
 node tools/tests/rhythm-report.js
 node tools/tests/test-timer-log.js
 # 5. 提交並推送（GitHub Pages 約 1 分鐘上線）
@@ -606,6 +607,14 @@ git add -A && git commit -m "說明這次改了什麼" && git push origin main
 **《牛的印跡》**（聖嚴法師 Hoofprint of the Ox，英文版掃描 PDF，頁碼為英文版）：靜心回饋 `MZ_M` 每種狀況各加一則（昏沉、緊張、散亂、念頭、身體、擔心、低落、期待、自責、懷疑、特殊感受、坐得好），來源寫「聖嚴法師《牛的印跡》（Hoofprint of the Ox）頁 …」，老師仍歸在聖嚴法師；雁書 `LT_THEMES` 的 calm、habit、study、work、doubt、lost 各加一則，AI 回信的參考書單加上這本。
 
 測試：`mistakes-v2.js`（含第二批）、`jieqi-intro.js`（大雪前後五天每天不同）。
+
+## 36i. 靜心回饋：貼近優先、互相佐證、反覆時追問；智者大師（2026-11-27）
+
+- **選說明的順序**（`mzPickVariant(vs,txt,k)`）：先算每則說明和這次「觀察筆記＋下次怎麼做」共有幾組關鍵詞（`MZ_VOC`，同義詞一組，例如「腿、膝、腳」「飯後、吃飽」「頭痛、頭脹」），最高分的優先；同分時，最近給過的同一則往後（`sd-mzseen` 每種狀況記最近 3 則），再看老師輪流（`sd-mzt`）。指定老師時，那位老師的說明只要不比最高分低超過 1 就用他的。
+- **互相佐證**：另一位老師的說明也和這次內容有共同關鍵詞時，存成 `m2/s2`，在「看更多說明」裡以「也可以這樣看」附上，各自標出處。
+- **反覆出現**（`mzRepeat/mzFollow`）：同一種困難在最近 21 天第 3 次起（不含「坐得好」），回饋多一段 `fu`：先說這很常見、能認出它就是覺照，再溫和地問一個問題（多久之後出現、出現前在想什麼、和上次哪裡不同）；第 6 次起提到可能卡很久也不奇怪，可以調作息、換時段或找老師談。不催促。
+- **智者大師《修習止觀坐禪法要》**（小止觀，CBETA T46 No.1915，使用者上傳全文）：13 種狀況各一則（昏沉：沈相繫鼻端、調食調睡；散亂：浮相繫臍、不沈不浮；緊繃：定心急病、調息四相；身體：出定次第；念頭：繫緣止與體真止、學射；懷疑：疑自勿自輕；自責：悔已莫復憂；生氣：瞋恚蓋、慈忍；特殊感受：八觸、不憂不怖不取不捨；坐得好：正禪發相、勿貪著；期待：隨便宜、久行、知取捨；聲音：聲如響；擔心：掉悔偈）。`MZ_TEACHERS` 加入「智者大師」，達 6 種以上，可指定。
+- 測試：`tools/tests/mz-adaptive.js`。
 
 ## 37. 設計大方向（之後的文字、主題、插畫可參照，尚未全面套用）
 

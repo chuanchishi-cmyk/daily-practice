@@ -47,7 +47,7 @@ await run({[k]:{date:k,j:{practice:[P('n1','',[],{method:'看著自己的心',q:
   f=await fb(pg,'n2');ok(/聽到/.test(f.b)&&/馬哈希/.test(f.s),'默念標記＋聲音：給標記「聽到」的做法');
   const a=await fb(pg,'n3'),c=await fb(pg,'n3');ok(a.k==='method'&&a.b!==c.b,'只寫方法：再按一次換一則做法');
   await pg.$$eval('.prcard',els=>els.forEach(e=>e.closest('details')&&(e.closest('details').open=true)));await pg.$$eval('.mzmore',ds=>ds.forEach(d=>d.open=true));await pg.$$eval('.mzt',ds=>ds.forEach(d=>d.open=true));
-  const T=await pg.$$eval('.mzt [data-act=mzTeach]',bs=>[...new Set(bs.map(x=>x.dataset.v).filter(Boolean))]);ok(T.includes('達賴喇嘛')&&T.includes('帕奧禪師'),'達賴喇嘛、帕奧禪師可以指定（'+T.join('、')+'）')});
+  const T=await pg.$$eval('.mzt [data-act=mzTeach]',bs=>[...new Set(bs.map(x=>x.dataset.v).filter(Boolean))]);ok(T.includes('達賴喇嘛')&&T.includes('帕奧禪師')&&T.includes('印達卡西亞多')&&!T.includes('雷迪大師'),'達賴喇嘛、帕奧禪師、印達卡西亞多可以指定；雷迪大師還不夠 6 種（'+T.join('、')+'）')});
 // 8. 舊方法名稱仍對應（計時器記住舊名會換成新名）
 await run({[k]:{date:k,j:{practice:[]}}},async pg=>{await pg.evaluate(()=>{localStorage.setItem('sd-mtimer',JSON.stringify({min:10,method:'行走靜心',running:false,endAt:0,left:null}))});await pg.reload();await pg.waitForTimeout(600);
   const v=await pg.$eval('select[data-ch=mMethod]',e=>e.value);ok(v==='走路靜心','舊的「行走靜心」自動換成「走路靜心」')});

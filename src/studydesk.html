@@ -1374,7 +1374,7 @@ const NOTES={cloud:'資料存在你的私人雲端空間，只有你看得到。
 let PERSIST=null;
 async function askPersist(){try{if(navigator.storage&&navigator.storage.persist){PERSIST=await navigator.storage.persisted();if(!PERSIST)PERSIST=await navigator.storage.persist()}}catch{}}
 function snaps(){const v=lsGet('sd-snaps',[]);return Array.isArray(v)?v:[]}
-const APP_VER='2026.11.28.4'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
+const APP_VER='2026.11.28.5'; // 每次發版更新：換版時自動存一份改版前快照，也顯示在「更新紀錄」
 function takeSnap(force){if(backend!=='local')return;try{const t=today(),ss=snaps();if(!force&&ss.length&&ss[ss.length-1].d===t)return;if(force&&ss.length&&ss[ss.length-1].d===t)ss.pop();const data=JSON.stringify(S);if(data.length>900000||!(Object.keys(S.days).length+Object.keys(S.projects).length))return;ss.push({d:t,n:Object.keys(S.days).length,data});while(ss.length>5)ss.shift();lsSet('sd-snaps',ss)}catch{}}
 function backupJSON(){return JSON.stringify({app:'studydesk',v:1,exported:new Date().toISOString(),data:S},null,1)}
 function goLocal(why){
@@ -1998,6 +1998,8 @@ function meetDueLines(){if(!isOn('plan'))return [];return Object.keys(S.projects
 //  ANNOUNCE 公告 → 頂部橫幅，有到期日
 const WHATSNEW=[{id:'n-work',lv:'major',d:'2026-11-20',t:'新頁面：工作上班',b:'上班時用的番茄鐘：休息時提醒你護眼 20 秒、喝水、起身走走，坐太久會提醒；沒開番茄鐘的會議和雜事也能補記。今天的三件事、行程與會談放在同一頁。',btn:'打開工作上班',page:'work'},{id:'n-qn',lv:'major',d:'2026-11-20',t:'新功能：隨手記',b:'每一頁右下角都有「隨手記」。想到什麼先記下來，等一下再處理，需要的話設個提醒。今日的隨手記、計畫筆記和最近的覺察片段都會集中在這裡，可以放進三件事或轉成計畫步驟；工作上的事會另外放在「工作」。',btn:'打開隨手記'}]; // {id,lv:'major',d:'YYYY-MM-DD',t,b,go/page,btn}；新的加在最上面
 const CHANGELOG=[
+ {d:'2026-11-28',lv:'minor',t:'雁書回信改成像一封真正的長信：先接住你的心情，再從幾個不同的角度幫你轉念，給一兩個做得到的小方法，最後陪你一起；長度約是原本的三倍，不再列出書名出處'},
+ {d:'2026-11-28',lv:'fix',t:'雁書更能分辨你在煩惱什麼（例如「和家人吵架」「要不要換工作」），並新增「想早點睡卻一直拖到很晚」這類煩惱的回信'},
  {d:'2026-11-28',lv:'minor',t:'靜心書目新增阿姜查《寧靜的森林水池》、印達卡西亞多《慈心》、雷迪大師《觀禪手冊》，依狀況和練習方法分類放進回饋：慈心、默念標記、走路靜心多了詳細做法，昏沉、聲音、身體痛、期待、念頭、懷疑等也多了新的說法'},
  {d:'2026-11-28',lv:'minor',t:'「指定回應的老師」新增印達卡西亞多；雷迪大師的說法會在輪流時出現'},
  {d:'2026-11-28',lv:'minor',t:'「我的最佳狀態」的生活情境題改成複選：點出你可能會這樣做的選項（最多 3 個），也可以選「都不太像我」，不用再勉強挑最像和最不像'},
@@ -5276,22 +5278,65 @@ LT_THEMES.push({k:'anger',re:/生氣|憤怒|氣死|火大|不爽|恨|討厭|被�
   p:[["Healing Anger","達賴喇嘛講寂天的〈安忍品〉時說，瞋心像一把火，最先燒到的是自己：吃不下、睡不好，連原本親近的人看起來都變得可憎。他建議在冷靜的時候先想清楚怒氣的後果，等下一次它來時，才比較認得出來。","〈調伏心性〉"],["How to Be Compassionate","達賴喇嘛說，憤怒會毀壞慈悲，但能被安忍削弱；而安忍要有對手才練得成。他想到傷害西藏人的人時，不去專注對方的惡，而是想：這個人也和我一樣想離苦得樂，只是因為無明，才讓自己和別人受苦。","第二章、第十二章"],["菩提資糧","帕奧禪師講〈除妄念經〉：怒氣一直冒出來時，先試著換一個念頭，例如祝願對方也平安；不行，就想想這股怒氣會帶來什麼害處；再不行，就先去做別的事，不要一直餵它。","〈除妄念經〉"]],
   act:['下次火氣上來時，先離開現場幾分鐘，等身體的熱退了再回應。','把讓你生氣的事寫下來，下面再寫一句：「這件事裡，我能改變的部分是……」']});
 TC_LT.anger=['火氣上來時，先離開現場幾分鐘，等身體的熱退了再回應。','怒氣先燒到的是自己，今天對自己好一點。'];
+LT_THEMES.unshift({k:'night',re:/熬夜|拖到很晚|睡太晚|晚睡|報復性|早點睡|不想睡|捨不得睡|越晚越/,a:['白天的時間都給了別人，只有晚上那一段，好像才是自己的。','想早點睡，卻一直捨不得結束這一天，這種拉扯很多人都有。'],aw:['想早點睡，卻一直捨不得結束這一天。這份拉扯，我讀得出來。'],
+  p:[['','很多人晚睡，不是不想睡，而是白天幾乎沒有屬於自己的時間，只好從睡眠裡借。這種「報復性熬夜」，其實是在替自己討回一點自主。所以真正要照顧的，不只是幾點上床，而是白天有沒有留一小段時間給自己。',''],['','人的精力大約以九十分鐘為一個週期起伏。晚上越撐越清醒，常常不是精神變好，而是身體換到了另一種硬撐的狀態。這時候做的事，效率通常不高，代價卻是明天一整天的狀態。',''],['','習慣很受環境影響：讓想做的事變容易，讓不想做的事多一點阻力。把手機充電器放到房間外面，或設一個「關機」鬧鐘，比單靠意志力撐住容易得多。',''],['','一天需要一個結束的儀式。寫下明天的三件事、收好桌面、把燈調暗，等於告訴腦袋：今天可以下班了。沒有這個收尾，心會一直覺得還有事沒做完，自然捨不得睡。','']],
+  act:['今晚設一個「關機鬧鐘」，比平常想睡的時間早三十分鐘；鬧鐘響了，就把手機放到房間外面充電。','明天晚餐後，先留二十分鐘只給自己：看書、聽音樂、發呆都好，讓「自己的時間」不必等到深夜。','睡前花兩分鐘，在日課寫下明天的三件事，寫完就把這一天交出去。']});
+TC_LT.night=['今晚試著早十五分鐘關掉螢幕。','白天留一小段時間給自己，晚上就不必從睡眠裡借。'];
+// 回信的「接住」與「轉念」：每個主題各有幾種說法，組合時輪替
+const LT_ER={
+ night:{e:['越晚越清醒，明知道明天會累，還是想再多撐一下。','睡前那段時間，大概是一整天裡唯一沒有人來要求你的時候吧。'],r:['晚睡不一定是自制力差，它可能是在說：「我需要一段屬於自己的時間。」這個需要是真的，值得好好對待；只是可以試著把它挪早一點，不必從睡眠裡借。','也許不用把它看成一場跟自己的拉鋸戰。今晚只要比昨晚早十五分鐘就好，小小的成功，比一次大翻轉更容易留下來。']},
+ calm:{e:['心一直繃著的時候，連休息都像在備戰，身體累了，腦子還停不下來。','擔心的事在腦中轉來轉去，常常比事情本身更耗力氣。'],r:['也許可以把「我很焦慮」換成「我很在乎這件事」。焦慮常是在乎的另一面，它在提醒你這件事對你重要；重要的事，值得用穩一點的步伐去面對，而不是被它追著跑。','擔心很像在腦中預演最壞的情況。預演一次是準備，預演一百次就只是消耗。今天也許可以只預演一次，然後對自己說：該準備的，我已經準備了。']},
+ habit:{e:['想做卻一直沒做，心裡那份對自己的失望，有時比事情本身還重。','每次重新開始又停下來，久了會開始懷疑自己是不是就是做不到。'],r:['做不到，常常不是意志力不夠，而是起步的門檻太高。把事情縮到小得不可能失敗，不是降低標準，而是替自己鋪一條走得上去的路。','也許可以不把它看成「我又失敗了」，而是「我又多知道了一點：什麼時候、什麼情況下，我比較容易卡住」。這些都是線索，不是罪證。']},
+ study:{e:['花了很多時間，卻覺得沒有記住，那種白費力氣的感覺很令人沮喪。','考試越近，越容易覺得什麼都還沒準備好。'],r:['覺得「讀了卻沒進去」，有時正是在學的證明：真正的學習本來就帶著一點吃力。很順的感覺，反而可能只是熟悉，而不是記住。','成績是某一天的結果，不是你這個人的全部。你現在投入的每一段時間，都在替之後的自己打底，即使今天還看不出來。']},
+ work:{e:['一整天被事情推著走，到了晚上，好像才終於有一點屬於自己的時間。','忙到最後，常常不是事情做不完，而是連停下來的空隙都找不到。'],r:['也許可以換個角度：不是你做得不夠快，而是要你同時接住的東西太多。手上少放一件，不是偷懶，是讓手上那一件可以被好好完成。','休息不是工作的反面，而是工作的一部分。就像跑步的人要換氣，停下來的那幾分鐘，正在替下一段累積力氣。']},
+ voice:{e:['話說出口卻沒被理解，那種被卡在原地的感覺，常會在心裡重播很多次。','在意別人的反應，會讓每一次開口都變得很費力。'],r:['一次沒說清楚，不代表你說不清楚；一次被否定，也不代表你的想法沒有價值。有時只是時機、對象或順序不對，調整一下，同樣的話會被聽見。','也許可以把「我說得不好」換成「我還在找對這個人最好的說法」。溝通像調頻，不是一次就要對準。']},
+ meaning:{e:['提不起勁的時候，連原本喜歡的事都變得灰灰的，很難說清楚是哪裡不對。','日子照常過著，心卻好像不在這裡，這種空空的感覺很不好受。'],r:['提不起勁，不一定代表你出了問題；有時只是很久沒有好好充電，或手上的事已經不再挑戰你。這份無聊，也可能在提醒你：該換一點新的東西進來了。','意義不一定要先找到才能開始，很多時候是做著做著才慢慢長出來的。今天不用回答「人生的意義是什麼」，只要找一件願意多投入五分鐘的小事。']},
+ loss:{e:['有些失去不是一下子痛完的，而是在日常的某個角落，忽然又想起來。','放不下的那份重量，也是曾經很在乎的證明。'],r:['不必急著放下。想念不是停滯，難過也不是軟弱；它們只是說明那段時光、那個人，在你心裡占過很重要的位置。慢慢地，痛會變輕，留下來的會是溫柔。','也許不用把「走出來」當成目標，比較像是帶著它一起走。一開始很重，走久了，你會長出抱著它的力氣。']},
+ love:{e:['和在乎的人之間卡住，最難受的往往不是吵了什麼，而是那份說不出口的距離。','身邊有人，心卻覺得孤單，這種感覺很難向別人解釋。'],r:['關係裡的卡住，常常是兩個人都在等對方先走一步。先走一步不是認輸，而是你比較願意守護這段關係。','也許對方此刻也和你一樣，有自己說不出的辛苦。這樣想不是要你忍讓，而是讓你多一點空間，不必一個人把所有情緒都扛起來。']},
+ doubt:{e:['對自己太嚴格的時候，好像怎麼做都不夠，連做到的事都看不見了。','拿自己和別人比，常常是拿自己的幕後，去比別人的精華片段。'],r:['如果一個朋友跟你說同樣的話，你大概不會說他沒用，而是會告訴他：你已經很努力了。也許可以用對朋友的語氣，跟自己說一次。','「我不夠好」聽起來像事實，其實比較像一種說慣了的話。把它換成「我還在學」，事情沒有變，但你看自己的方式會鬆一點。']},
+ lost:{e:['不知道往哪裡走的時候，每個選項好像都有風險，連停在原地也讓人不安。','想把每一步都想清楚，是因為你很認真對待自己的人生。'],r:['方向不一定要先看清楚才能出發。很多時候是先走一小步，才知道自己喜不喜歡這條路；小一點的嘗試，犯錯的代價也小，卻能告訴你很多。','也許不必找「正確答案」，而是找「現在比較想試試看的那一個」。人生大多數的選擇都還能調整，很少是走了就回不來的。']},
+ anger:{e:['被不公平地對待，那股氣會在身體裡停很久，連睡前都還在想。','生氣的背後，常常是覺得自己沒有被尊重、沒有被看見。'],r:['生氣本身沒有錯，它在告訴你：有一條界線被踩到了。重要的是，接下來你想怎麼保護這條界線，而不是讓這股氣一直燒著自己。','也許可以把注意力，從「他怎麼可以這樣」，慢慢移回「我需要什麼」。前者會讓氣一直燒，後者才會帶你找到下一步。']},
+ gen:{e:['日子一天天過，有些感受說不上來，寫下來，就是一種整理。','願意停下來寫一封信，本身就是在照顧自己。'],r:['也許今天不用急著解決什麼。把心裡的東西放到紙上，看著它們，有時會發現事情沒有想像中那麼糾結。','生活不需要每天都很好。普通的一天，也值得被好好過完。']}};
+const LT_COMP=['不管今天過得怎麼樣，願意寫下來，就已經是在照顧自己了。','如果之後還想說說，隨時再寫信來，我會在這裡。','這些不用一次想清楚，慢慢來就好。','你不需要一個人把這些都扛著。','下次再寫信來，告訴我後來怎麼樣了。','有些事急不得，先照顧好今天的自己。'],LT_COMP_W=['我會在這裡，等你下一封信。','願你知道，有人很認真地讀了你的信。'];
 const LT_GEN={a:['收到你的信了。讀著，也看見了你最近的日子。','收到你的信了。'],aw:['謝謝你寫信來。讀著讀著，好像也看見了你最近的日子。','收到你的信了，謝謝你願意說這些。'],
   p:[["How to Calm Your Mind", "克里斯．貝利說，平靜和效率並不衝突；投資在平靜上，會在不知不覺中讓你做事更有效率。生活忙亂時，留一點空白給自己，不是浪費時間。", "Ch.8〈Calm and Productive〉"], ["最有生產力的一年", "每天一開始，先選三件今天最想完成的事，做完就好。日子不必塞滿，踏實地完成幾件，比匆忙地趕很多件更讓人安心。", "第3章〈每日必做的三件事〉"], ["故道白雲", "佛陀說，一天的二十四小時就像一顆橘子的一片片果肉。不必急著吃完，一片一片好好嚐，日子就會變得真實。", "第19章〈對橘子的專注〉"]],
   act:['今天給自己一個小小的停頓：靜心三分鐘，或出去走一走。','今晚寫下明天的三件事，然後好好睡一覺。']};
 const LT_END=['慢慢來，我們明天見。','不急，一步一步就好。','照顧好自己。','願你今天輕鬆一點。'],LT_END_W=['照顧好自己，也記得你並不孤單。','願你今天有一點點輕鬆。'];
 function ltPick(arr,seed){return arr[Math.abs(seed)%arr.length]}
 function ltSeed(s){let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))|0;return h}
-function ltQuote(text,re){const ss=text.split(/[。！？!?\n]/).map(x=>x.trim()).filter(Boolean);let s=(re&&ss.find(x=>re.test(x)))||ss[0]||'';s=s.replace(/^[，、\s]+/,'');return s.length>22?s.slice(0,22)+'…':s}
-function ltTemplate(text,seed){const th=LT_THEMES.filter(t=>t.re.test(text)).slice(0,2),t0=th[0]||LT_GEN,q=ltQuote(text,th[0]&&th[0].re);
-  const p1=ltPick(t0.p,seed),p2=th[1]?ltPick(th[1].p,seed+1):null,ref=x=>`《${x[0]}》${x[2]||''}`,books=[...new Set([ref(p1)].concat(p2&&p2[0]!==p1[0]?[ref(p2)]:[]))];
+function ltCut(s){s=String(s||'').replace(/^[，、\s]+/,'');if(s.length>26){const i=Math.max(s.lastIndexOf('，',26),s.lastIndexOf('、',26));s=i>=8?s.slice(0,i):s.slice(0,24)+'…'}const o=s.lastIndexOf('（');if(o>=0&&s.indexOf('）',o)<0)s=s.slice(0,o);return s.replace(/[，、\s]+$/,'')}
+function ltSents(text){return text.split(/[。！？!?\n]/).map(x=>x.trim()).filter(x=>x.length>=4)}
+function ltQuote(text,re){const ss=ltSents(text);return ltCut((re&&ss.find(x=>re.test(x)))||ss[0]||'')}
+// 主題判斷：依信中命中字詞的總長度排序（「要不要」「吵架」比單一個「煩」更能說明在煩惱什麼）
+function ltThemes(text){return LT_THEMES.map((t,i)=>{const m=text.match(new RegExp(t.re.source,'g'))||[];return {t,i,sc:m.reduce((a,x)=>a+x.length,0)}}).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,2).filter((x,j,A)=>!j||x.sc*2>=A[0].sc).map(x=>Object.assign({},x.t,{sc:x.sc}))}
+function ltTemplate(text,seed){const th=ltThemes(text),t0=th[0]||LT_GEN,k0=th[0]?th[0].k:'gen',q=ltQuote(text,th[0]&&th[0].re);
   const V=lsGet('sd-ltv',{})||{},pick=(arr,key,sd)=>{let i=Math.abs(sd)%arr.length;if(i===V[key]&&arr.length>1)i=(i+1)%arr.length;V[key]=i;return arr[i]};
-  const OPEN=[q=>`你在信裡說：「${q}」`,q=>`讀到你寫「${q}」，我停下來想了一會兒。`,q=>`「${q}」，這句話我讀了兩遍。`,q=>`你提到「${q}」。`];
-  const BRG=['\n\n','\n\n另外，','\n\n也想和你分享另一個角度：','\n\n換個方向想，'];
-  const ACT=['','如果願意，','可以試試：','不用多，'];
-  const W=tcWarm()||warmText(text),op=q?pick(OPEN,'o',seed):'',a1=ltPick(t0.a.concat(W&&t0.aw?t0.aw:[]),seed);
-  const body=[(q?op(q):'')+a1,p1[1]+(p2&&p2[0]!==p1[0]?pick(BRG,'b',seed+5)+p2[1]:''),pick(ACT,'a',seed+7)+ltPick(t0.act,seed+2)+ltPick(W?LT_END.concat(LT_END_W):LT_END,seed+3)].join('\n\n');lsSet('sd-ltv',V);
-  return {reply:body,src:'tpl',books}}
+  const W=tcWarm()||warmText(text),ER=LT_ER[k0]||LT_ER.gen,ER1=th[1]&&LT_ER[th[1].k];
+  // 第二句：信裡另一句話，讓回信更貼近這個人
+  const ss=ltSents(text),q2=ltCut(ss.find(x=>ltCut(x)!==q&&(th[1]?th[1].re.test(x):x.length>=8))||'');
+  // 觀點：同一主題挑兩則（避開最近用過的），有第二個主題再加一則
+  const used=V.pu||[],hp=x=>String(x[1]).slice(0,16),pool=t0.p.slice().sort((x,y)=>(used.includes(hp(x))?1:0)-(used.includes(hp(y))?1:0)||((ltSeed(hp(x))^seed)&7)-((ltSeed(hp(y))^seed)&7));
+  const ng=t=>{const g=new Set();for(let i=0;i+4<=t.length;i++)g.add(t.slice(i,i+4));return g},near=(x,y)=>{const a=ng(x[1]),b=ng(y[1]);let n=0;a.forEach(z=>{if(b.has(z))n++});return n>=6};
+  const ps=[pool[0]];const p2=pool.slice(1).find(x=>x[0]!==pool[0][0]&&!near(x,pool[0]))||pool.slice(1).find(x=>!near(x,pool[0]));if(p2)ps.push(p2);
+  if(!th[1]){const p3=pool.slice(1).find(x=>!ps.includes(x)&&!ps.some(y=>near(x,y)));if(p3)ps.push(p3)}
+  if(th[1]){const o=th[1].p.filter(x=>!ps.some(y=>near(x,y)||(x[0]&&x[0]===y[0])));const o2=o.filter(x=>!used.includes(hp(x)));if(o.length)ps.push(ltPick(o2.length?o2:o,seed+1))}
+  V.pu=used.filter(x=>!ps.some(p=>hp(p)===x)).concat(ps.map(hp)).slice(-8);
+  const OPEN=[q=>`你在信裡說：「${q}」。`,q=>`讀到你寫「${q}」，我停下來想了一會兒。`,q=>`「${q}」，這句話我讀了兩遍。`,q=>`你提到「${q}」。`];
+  const Q2=[q=>`你也寫到「${q}」，這些放在一起，難怪會覺得重。`,q=>`還有「${q}」這一句，我也記下了。`,q=>`另外，你說「${q}」，我想這也是讓你累的原因之一。`];
+  const BRG=['也想和你分享另一個角度：','換個方向想，','另外，','還有一個說法，也許對你有用：'];
+  const AIN=['如果願意，可以試試這個小練習：','給你一個很小的提議：','不用多，只要一件事：','如果今天還有一點力氣，'];
+  const AIN2=['如果這個太難，也可以只做這一步：','做完之後，也可以試試：','另一個選擇是：'];
+  const a1=ltPick(t0.a.concat(W&&t0.aw?t0.aw:[]),seed),e1=pick(ER.e,'e',seed+11),r1=pick(ER.r,'r',seed+13);
+  const P1=(q?pick(OPEN,'o',seed)(q):'')+a1+e1+(q2&&q2!==q?pick(Q2,'q2',seed+17)(q2):'');
+  const clean=t=>String(t).replace(/^書[裡中]，?(介紹)?/,'').replace(/^[他她]也(說|提醒|提到)，?/,''),P2=clean(ps[0][1]),P3=ps.slice(1).map((p,i)=>(i?pick(BRG,'b2',seed+19):pick(BRG,'b',seed+5))+clean(p[1]));
+  const R=r1+(ER1&&ER1!==ER&&th[1].sc*5>=th[0].sc*4?'\n\n'+ltPick(ER1.r,seed+23):'');
+  const acts=t0.act.slice(),x1=ltPick(acts,seed+2),rest=acts.filter(x=>x!==x1);
+  const A=(/^如果/.test(x1)?'':pick(AIN,'a',seed+7))+x1+(rest.length&&(seed>>3)%2?'\n\n'+pick(AIN2,'a2',seed+29)+ltPick(rest,seed+31):'');
+  const C=pick(W?LT_COMP.concat(LT_COMP_W):LT_COMP,'c',seed+37)+ltPick(W?LT_END.concat(LT_END_W):LT_END,seed+3);
+  // 段落順序不固定：轉念有時在觀點之前，有時在之後
+  const mid=(seed>>4)%2?[P2,R].concat(P3):[P2].concat(P3,[R]);
+  const body=[P1].concat(mid,[A,C]).join('\n\n')+'\n\n雁書';lsSet('sd-ltv',V);
+  return {reply:body,src:'tpl',books:[]}}
 function ltDue(){const R=myRhythm(),w=R&&R.wake!=null?R.wake:450,n=new Date(),m=n.getHours()*60+n.getMinutes(),d=new Date(n);if(!(m<w&&m<300))d.setDate(d.getDate()+1);d.setHours(Math.floor(w/60),w%60,0,0);return d.toISOString()}
 function lettersAll(){const L=[];Object.keys(S.days).forEach(k=>(day(k).letters||[]).forEach(x=>L.push(Object.assign({k},x))));return L.sort((a,b)=>a.t<b.t?1:-1)}
 function ltArrived(x){return x.due<=new Date().toISOString()}
@@ -5299,13 +5344,13 @@ let LT_BUSY=false;
 async function ltDeliver(){if(LT_BUSY)return;const due=lettersAll().filter(x=>!x.reply&&ltArrived(x));if(!due.length)return;LT_BUSY=true;
   try{let sample=null;try{sample=window.claude&&claude.use?await claude.use('sample'):null}catch{}
     for(const x of due){let r=null;
-      if(sample){try{const res=await sample(`你是「雁書」，一位溫和、真誠的筆友。以下是一封使用者在前一天寫來的信。請用繁體中文寫一封回信：
-- 250–400 字，書信語氣，不用條列、不用標題。
-- 語氣內斂、真誠，不誇張、不濫情；只有信本身情感很濃時，才可以更溫暖一些。
-- 第一段：引用信中的一兩個詞，讓對方感覺被讀到，先同理。
-- 第二段：從一本好書的觀點換個角度（可參考：原子習慣、牛的印跡（聖嚴法師）、The Book of Joy（達賴喇嘛、屠圖）、Healing Anger 與 How to Be Compassionate（達賴喇嘛）、森林中的法語（阿姜查）、菩提資糧（帕奧禪師）、最有生產力的一年、Intentional、心流、大腦喜歡這樣學、超速學習、Hyperfocus、How to Calm Your Mind、我可能錯了、金剛經白話講座、True Love、故道白雲、炎夏飄雪、精準表達、Working Backwards、如何成為一流職場菁英？；只寫你確定書中有的觀點，不要杜撰引文），用白話說，不說教。
-- 第三段：一個今天就做得到的小行動。
-- 最後一句溫暖的結語，署名「雁書」。
+      if(sample){try{const res=await sample(`你是「雁書」，像《解憂雜貨店》裡那位認真回信的店主：把來信反覆讀幾遍，為這個人、這件事，寫一封真正屬於他的回信。以下是一封使用者在前一天寫來的信，請用繁體中文回信：
+- 700–1000 字，書信語氣，分成幾個自然的段落，不用條列、不用標題。
+- 先讓對方感覺被讀懂：具體提到信中的細節和感受，說出他可能沒說出口的辛苦，接住他的情緒。
+- 再給幾個不同的角度，幫他轉念：可以自然融合心理學、禪修、習慣、學習與生活智慧（例如原子習慣、聖嚴法師、阿姜查、達賴喇嘛、一行禪師、心流、精力管理等的觀點），可以提到作者或老師的名字，但不需要書名、章節或出處；只寫你確定的觀點，不要杜撰引文。
+- 針對他的處境，給一到兩個具體、今天就做得到的小方法，並說明為什麼對他有幫助。
+- 結尾給陪伴感：讓他知道不是一個人，想說的時候可以再寫信來；最後署名「雁書」。
+- 語氣真誠、溫和，不說教、不誇張、不濫情；信本身情感很濃時，可以更溫暖一些。
 - 不做診斷、不給醫療建議。若信中有自傷或想死的念頭，溫和地鼓勵對方聯絡信任的人，並附上台灣安心專線 1925、生命線 1995（24 小時）。
 只輸出回信內容。
 
@@ -5324,7 +5369,7 @@ function vLetter(){if(lettersAll().some(x=>!x.reply&&ltArrived(x)))setTimeout(lt
   if(view){if(view.reply&&!view.read)setTimeout(()=>editDay(view.k,d=>{const y=(d.letters||[]).find(z=>z.id===view.id);if(y)y.read=true}),400);
     return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>${fmtMD(view.k)} 的信</h1></div><button class="ghost" data-act="ltBack">← 信匣</button></header>
     <section class="card letter mine"><p class="muted">你寫的</p>${ltEdit&&!view.reply&&!ltArrived(view)?`<textarea id="ltEditT" rows="8">${esc(view.text)}</textarea><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="ghost sm" data-act="ltEditX">不改了</button><button class="pri sm" data-act="ltEditSave">改好了，請雁子帶走</button></div>`:`<div class="ltbody">${esc(view.text)}</div>`}</section>
-    ${view.reply?`<section class="card letter reply"><p class="muted">雁書的回信</p><div class="ltbody">${esc(view.reply)}</div>${view.src==='ai'?'<p class="muted ltsrc">這封回信由 AI 書寫。</p>':`<p class="muted ltsrc">依你信裡提到的主題整理${(view.books||[]).length?'，參考'+view.books.map(b=>b.startsWith('《')?b:'《'+b+'》').join('、'):''}。</p>`}</section>`
+    ${view.reply?`<section class="card letter reply"><p class="muted">雁書的回信</p><div class="ltbody">${esc(view.reply)}</div>${view.src==='ai'?'<p class="muted ltsrc">這封回信由 AI 書寫。</p>':''}</section>`
       :`<section class="card letter"><p class="empty">信還在路上，${ltArrived(view)?'馬上就到':'明天起床後會收到回信'}。</p>${ltArrived(view)?'':'<div class="row" style="justify-content:flex-end;gap:6px"><button class="ghost sm" data-act="ltAsk" data-v="edit">修改</button><button class="ghost sm" data-act="ltAsk" data-v="back">撤回</button></div>'}</section>`}`}
   const onway=wait[0],showCompose=!onway||ltCompose;
   return `<header class="ph"><div><p class="eyebrow">雁書</p><h1>${onway&&!ltCompose?'信已啟程':'託雁捎書'}</h1></div></header>

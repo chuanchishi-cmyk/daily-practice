@@ -30,8 +30,8 @@ await adv(90);await go('today');for(let i=0;i<10&&!(await pg.$('.todaynotes'));i
 ok(/你有一封回信/.test(await pg.textContent('.todaynotes')),'隔天 07:40（起床後）：今日頁出現「你有一封回信」');
 await go('letter');await pg.click('[data-act=ltOpen]');await pg.waitForTimeout(400);
 const rep=(await pg.textContent('.letter.reply .ltbody')).trim();
-ok(rep.length>=150&&/睡不著|工作很多|腦袋/.test(rep),'回信引用了信中的話（'+rep.length+' 字）：'+rep.slice(0,60)+'…');
-ok(/參考《/.test(await pg.textContent('.letter.reply .ltsrc')),'回信標示參考書名：'+(await pg.textContent('.letter.reply .ltsrc')).trim());
+ok(rep.length>=450&&/睡不著|工作很多|腦袋/.test(rep),'回信夠長、引用了信中的話（'+rep.length+' 字）：'+rep.slice(0,60)+'…');console.log(rep);
+ok(!/參考《/.test(await pg.textContent('.letter.reply'))&&/雁書$/.test(rep),'不列書名出處，署名「雁書」');
 await pg.click('[data-act=ltBack]');await pg.waitForTimeout(200);
 await pg.fill('#ltText','我覺得好累，有時候真的不想活了。');await pg.click('[data-act=ltSend]');await pg.waitForTimeout(400);
 ok(/1925/.test(await pg.textContent('main')),'提到自傷：立刻顯示求助專線');
